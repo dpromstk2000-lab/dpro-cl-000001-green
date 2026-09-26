@@ -1,0 +1,36 @@
+name: DPRO GREEN Production Owner Auth Cleanup
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply production Owner auth cleanup
+        shell: bash
+        run: |
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgpodG1sX3BhdGggPSBQYXRoKCJvd25lci5odG1sIikKanNfcGF0aCA9IFBhdGgoIm93bmVyLmpzIikKCmh0bWwgPSBodG1sX3BhdGgucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpCmpzID0ganNfcGF0aC5yZWFkX3RleHQoZW5jb2Rpbmc9InV0Zi04IikKCm9sZF9iYWRnZSA9ICc8c3BhbiBjbGFzcz0ib3duZXItZW52LWJhZGdlIj5ERU1PPC9zcGFuPicKbmV3X2JhZGdlID0gJzxzcGFuIGNsYXNzPSJvd25lci1lbnYtYmFkZ2UiPuacrOeVqjwvc3Bhbj4nCmlmIG9sZF9iYWRnZSBpbiBodG1sOgogICAgaHRtbCA9IGh0bWwucmVwbGFjZShvbGRfYmFkZ2UsIG5ld19iYWRnZSwgMSkKCm9sZF9zaG93ID0gJ2Z1bmN0aW9uIHNob3dMb2dpbigpIHsgJCgiI2xvZ2luLXZpZXciKS5oaWRkZW4gPSBmYWxzZTsgJCgiI293bmVyLWFwcCIpLmhpZGRlbiA9IHRydWU7IH0nCm5ld19zaG93ID0gJ2Z1bmN0aW9uIHNob3dMb2dpbigpIHsgaWYgKHdpbmRvdy5EUFJPX0FVVEgpIHsgbG9jYXRpb24ucmVwbGFjZSgiLi9vd25lci1sb2dpbi5odG1sP25leHQ9Li9vd25lci5odG1sIik7IHJldHVybjsgfSAkKCIjbG9naW4tdmlldyIpLmhpZGRlbiA9IGZhbHNlOyAkKCIjb3duZXItYXBwIikuaGlkZGVuID0gdHJ1ZTsgfScKaWYgb2xkX3Nob3cgaW4ganM6CiAgICBqcyA9IGpzLnJlcGxhY2Uob2xkX3Nob3csIG5ld19zaG93LCAxKQoKb2xkX2xvZ291dCA9ICcnJyAgYXN5bmMgZnVuY3Rpb24gbG9nb3V0KCkgewogICAgdHJ5IHsgYXdhaXQgR3JlZW4uYXBpKCIvYXBpL2FkbWluL2xvZ291dCIsIHsgbWV0aG9kOiAiUE9TVCIsIGpzb246IHt9IH0pOyB9IGNhdGNoIHt9CiAgICBzdGF0ZS5zZXNzaW9uID0gbnVsbDsgR3JlZW4uc2V0Q3NyZlRva2VuKG51bGwpOyBzaG93TG9naW4oKTsKICB9JycnCm5ld19sb2dvdXQgPSAnJycgIGFzeW5jIGZ1bmN0aW9uIGxvZ291dCgpIHsKICAgIGlmICh3aW5kb3cuRFBST19BVVRIPy5sb2dvdXQpIHsKICAgICAgc3RhdGUuc2Vzc2lvbiA9IG51bGw7CiAgICAgIEdyZWVuLnNldENzcmZUb2tlbihudWxsKTsKICAgICAgYXdhaXQgd2luZG93LkRQUk9fQVVUSC5sb2dvdXQoKTsKICAgICAgcmV0dXJuOwogICAgfQogICAgdHJ5IHsgYXdhaXQgR3JlZW4uYXBpKCIvYXBpL2FkbWluL2xvZ291dCIsIHsgbWV0aG9kOiAiUE9TVCIsIGpzb246IHt9IH0pOyB9IGNhdGNoIHt9CiAgICBzdGF0ZS5zZXNzaW9uID0gbnVsbDsgR3JlZW4uc2V0Q3NyZlRva2VuKG51bGwpOyBzaG93TG9naW4oKTsKICB9JycnCmlmIG9sZF9sb2dvdXQgaW4ganM6CiAgICBqcyA9IGpzLnJlcGxhY2Uob2xkX2xvZ291dCwgbmV3X2xvZ291dCwgMSkKCmNoZWNrcyA9IHsKICAgICJwcm9kdWN0aW9uX2JhZGdlIjogbmV3X2JhZGdlIGluIGh0bWwsCiAgICAibm9fZGVtb19iYWRnZSI6IG9sZF9iYWRnZSBub3QgaW4gaHRtbCwKICAgICJkcHJvX2F1dGhfbG9naW5fcmVkaXJlY3QiOiAnaWYgKHdpbmRvdy5EUFJPX0FVVEgpIHsgbG9jYXRpb24ucmVwbGFjZSgiLi9vd25lci1sb2dpbi5odG1sP25leHQ9Li9vd25lci5odG1sIik7IHJldHVybjsgfScgaW4ganMsCiAgICAiZHByb19hdXRoX2xvZ291dCI6ICdpZiAod2luZG93LkRQUk9fQVVUSD8ubG9nb3V0KScgaW4ganMsCn0KcHJpbnQoIkNIRUNLUzoiLCBjaGVja3MpCmZhaWxlZCA9IFtrIGZvciBrLHYgaW4gY2hlY2tzLml0ZW1zKCkgaWYgbm90IHZdCmlmIGZhaWxlZDoKICAgIHJhaXNlIFN5c3RlbUV4aXQoIkZBSUxFRDogIiArICIsICIuam9pbihmYWlsZWQpKQoKaHRtbF9wYXRoLndyaXRlX3RleHQoaHRtbCwgZW5jb2Rpbmc9InV0Zi04IikKanNfcGF0aC53cml0ZV90ZXh0KGpzLCBlbmNvZGluZz0idXRmLTgiKQo=' | base64 -d > /tmp/patch_owner_production.py
+          python /tmp/patch_owner_production.py
+
+      - name: Verify diff
+        run: git diff --check && git diff --stat
+
+      - name: Commit patch
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes required."
+            exit 0
+          fi
+          git config user.name "DPRO Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add owner.html owner.js
+          git commit -m "Harden production Owner auth UX"
+          git push
