@@ -2,7 +2,7 @@
 window.GREEN_CONFIG = Object.freeze({
   API_BASE: "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev",
   FACILITY_CODE: "cl_000001_green",
-  LIFF_ID: "",
+  LIFF_ID: "2011750460-EpN149VY",
   DEMO_MEMBER_TOKEN: "",
   DEMO_CUSTOMER_NUMBER: "",
   MAX_PHOTOS: 4,
