@@ -1,0 +1,37 @@
+/* DPRO OWNER AUTH GUARD / GREEN KASUYA
+ * Version: DPRO-AUTH-7-GREEN-KASUYA-GUARD-R1-20260926
+ */
+(() => {
+  "use strict";
+  if (window.__DPRO_AUTH_GUARD_INSTALLED__) return;
+  window.__DPRO_AUTH_GUARD_INSTALLED__ = true;
+  const cfg = window.DPRO_AUTH_CONFIG || {};
+  const PROJECT = String(cfg.project || "GENERAL").toUpperCase();
+  const SYSTEM = String(cfg.system || "GREEN").toUpperCase();
+  const FACILITY = String(cfg.facility || "cl_000001_green");
+  const LOGIN_URL = String(cfg.loginUrl || "./owner-login.html");
+  const AUTH_API = PROJECT === "MEDICAL" ? "https://dpro-owner-auth-medical.dpromstk2000.workers.dev" : "https://dpro-owner-auth-general.dpromstk2000.workers.dev";
+  const PROTECTED = new Set((cfg.protectedApiOrigins || []).map(v => { try { return new URL(v).origin; } catch { return ""; } }).filter(Boolean));
+  const nativeFetch = window.fetch.bind(window);
+  const style = document.createElement("style");
+  style.textContent = `html[data-dpro-auth="checking"] body{visibility:hidden!important}.owner-code-settings-panel{display:none!important}#dproAuthSessionBar{position:fixed;right:12px;bottom:12px;z-index:2147483646;display:flex;gap:8px;align-items:center;background:rgba(18,56,45,.94);color:#fff;padding:8px 10px;border-radius:999px;box-shadow:0 8px 28px rgba(0,0,0,.18);font:700 12px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#dproAuthSessionBar button{border:0;border-radius:999px;background:#fff;color:#1f2937;padding:7px 10px;font-weight:800;cursor:pointer}`;
+  document.head.appendChild(style);
+  document.documentElement.dataset.dproAuth = "checking";
+  let resolveGate, session = null, redirecting = false;
+  const gate = new Promise(r => resolveGate = r);
+  function keys(){const s=`${PROJECT}:${SYSTEM}:${FACILITY}`;return{token:`dpro_owner_session:${s}`,expires:`dpro_owner_session_expires_at:${s}`,project:`dpro_owner_auth_project:${s}`}}
+  function token(){const k=keys();return localStorage.getItem(k.token)||sessionStorage.getItem(k.token)||""}
+  function clear(){const k=keys();for(const s of [localStorage,sessionStorage]){s.removeItem(k.token);s.removeItem(k.expires);s.removeItem(k.project)}}
+  function next(){return location.pathname+location.search+location.hash}
+  function redirect(){if(redirecting)return;redirecting=true;const p=new URLSearchParams({next:next()});location.replace(`${LOGIN_URL}?${p}`)}
+  function reqUrl(input){try{return new URL(input instanceof Request?input.url:String(input),location.href)}catch{return null}}
+  function protectedRequest(u){return Boolean(u&&PROTECTED.has(u.origin)&&u.pathname.startsWith('/api/admin/'))}
+  async function handle(res){if(res.status===401){const d=await res.clone().json().catch(()=>({}));const c=String(d.error||d.code||'');if(['DPRO_AUTH_REQUIRED','DPRO_AUTH_INVALID','SESSION_REQUIRED','SESSION_INVALID','SESSION_EXPIRED','dpro_auth_required','dpro_auth_invalid'].includes(c)){clear();redirect()}}return res}
+  async function send(input,init={}){const g=await gate;if(!g.ok)throw new Error('DPRO_OWNER_SESSION_REQUIRED');const t=token();if(!t){redirect();throw new Error('DPRO_OWNER_SESSION_REQUIRED')}if(input instanceof Request){const h=new Headers(input.headers);h.set('Authorization',`Bearer ${t}`);return handle(await nativeFetch(new Request(input,{headers:h}),init))}const h=new Headers(init.headers||{});h.set('Authorization',`Bearer ${t}`);return handle(await nativeFetch(input,{...init,headers:h}))}
+  window.fetch=function(input,init={}){const u=reqUrl(input);return protectedRequest(u)?send(input,init):nativeFetch(input,init)};
+  async function auth(path,opts={}){const t=token();if(!t)throw new Error('SESSION_REQUIRED');const res=await nativeFetch(AUTH_API+path,{...opts,headers:{...(opts.headers||{}),Authorization:`Bearer ${t}`},cache:'no-store'});let d={};try{d=await res.json()}catch{}if(!res.ok||d.ok===false){const e=new Error(d.message||'AUTH_FAILED');e.code=d.error||'AUTH_FAILED';throw e}return d}
+  async function logout(){try{await auth('/auth/logout',{method:'POST'})}catch{}clear();redirect()}
+  function finish(){document.documentElement.dataset.dproAuth='ready';document.body.style.visibility='visible';if(document.getElementById('dproAuthSessionBar'))return;const b=document.createElement('div');b.id='dproAuthSessionBar';b.innerHTML='<span>DPRO認証中</span><button type="button">ログアウト</button>';b.querySelector('button').onclick=logout;document.body.appendChild(b)}
+  async function boot(){if(!AUTH_API||!SYSTEM||!FACILITY||!token()){resolveGate({ok:false});return redirect()}try{session=await auth('/auth/session');if(String(session.systemCode||'').toUpperCase()!==SYSTEM||String(session.facilityCode||'')!==FACILITY)throw new Error('SESSION_SCOPE_MISMATCH');window.DPRO_AUTH=Object.freeze({project:PROJECT,system:SYSTEM,facility:FACILITY,session,getToken:token,logout});resolveGate({ok:true,session});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',finish,{once:true});else finish()}catch(e){console.error('DPRO AUTH GUARD',e?.code||e?.message||e);resolveGate({ok:false});clear();redirect()}}
+  boot();
+})();
