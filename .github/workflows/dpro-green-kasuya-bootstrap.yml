@@ -1,0 +1,105 @@
+name: DPRO GREEN Kasuya Production Bootstrap
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/dpro-green-kasuya-bootstrap.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout customer repository
+        uses: actions/checkout@v4
+        with:
+          path: target
+          fetch-depth: 0
+
+      - name: Checkout locked GREEN source
+        uses: actions/checkout@v4
+        with:
+          repository: dpromstk2000-lab/dpro-green-rental-line
+          ref: main
+          path: source
+          fetch-depth: 1
+
+      - name: Copy current GREEN frontend
+        shell: bash
+        run: |
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            source/ target/
+          rm -f target/demo-guide.html
+
+      - name: Apply Kasuya production config
+        shell: python
+        run: |
+          from pathlib import Path
+
+          cfg = Path("target/config.js")
+          s = cfg.read_text(encoding="utf-8")
+          repl = {
+              'API_BASE: "https://dpro-green-rental-line-api.dpromstk2000.workers.dev"':
+                  'API_BASE: "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev"',
+              'FACILITY_CODE: "dpro_green_rental_demo"':
+                  'FACILITY_CODE: "cl_000001_green"',
+              'DEMO_MEMBER_TOKEN: "GREEN-DEMO"':
+                  'DEMO_MEMBER_TOKEN: ""',
+              'DEMO_CUSTOMER_NUMBER: "DEMO-GREEN-001"':
+                  'DEMO_CUSTOMER_NUMBER: ""',
+              'enabled: true,\n    websiteUrl: "https://dpromstk2000-lab.github.io/dpro-green-website/shop.html",\n    storageMode: "demo-local"':
+                  'enabled: false,\n    websiteUrl: "",\n    storageMode: "disabled"',
+          }
+          for old, new in repl.items():
+              if old not in s:
+                  raise SystemExit(f"config.js expected text not found: {old[:80]}")
+              s = s.replace(old, new)
+          cfg.write_text(s, encoding="utf-8")
+
+          cfg_txt = Path("target/config_JS_TEXT.txt")
+          if cfg_txt.exists():
+              t = cfg_txt.read_text(encoding="utf-8")
+              for old, new in repl.items():
+                  t = t.replace(old, new)
+              cfg_txt.write_text(t, encoding="utf-8")
+
+          contact = Path("target/contact-green-config.js")
+          if contact.exists():
+              c = contact.read_text(encoding="utf-8")
+              c = c.replace(
+                  'apiBaseUrl: "https://dpro-green-contact-api.dpromstk2000.workers.dev"',
+                  'apiBaseUrl: "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev"'
+              )
+              contact.write_text(c, encoding="utf-8")
+
+      - name: Production safety checks
+        shell: bash
+        run: |
+          test -f target/index.html
+          test -f target/owner.html
+          test -f target/member.html
+          test -f target/staff.html
+          test -f target/system-check.html
+          grep -q 'FACILITY_CODE: "cl_000001_green"' target/config.js
+          grep -q 'https://dpro-cl-000001-green-core.dpromstk2000.workers.dev' target/config.js
+          ! grep -q 'DEMO_MEMBER_TOKEN: "GREEN-DEMO"' target/config.js
+          ! grep -q 'FACILITY_CODE: "dpro_green_rental_demo"' target/config.js
+
+      - name: Commit customer production frontend
+        shell: bash
+        working-directory: target
+        run: |
+          git config user.name "DPRO GREEN Production Bootstrap"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Bootstrap Green Pocket Kasuya production frontend"
+          git push origin HEAD:main
