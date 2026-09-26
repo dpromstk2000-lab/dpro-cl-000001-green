@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#12382d">
+  <title>DPRO GREEN オーナー画面 QAプレビュー</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="owner.css?v=GREEN-EVG-R2-20260923">
+  <style>
+    .qa-banner{position:sticky;top:0;z-index:9999;background:#fff7d6;border-bottom:1px solid #ead48a;padding:10px 16px;font-weight:800;color:#624b00;text-align:center}
+    .qa-note{padding:12px 14px;border:1px solid #dce7e1;border-radius:12px;background:#fff;margin-bottom:16px;color:#53665d}
+    .owner-env-badge{background:#fff7d6!important;color:#624b00!important}
+    .owner-table tbody td{color:#65776e}
+    .qa-disabled{opacity:.55;pointer-events:none}
+  </style>
+</head>
+<body class="owner-body">
+  <div class="qa-banner">QA PREVIEW｜閲覧確認専用・本番データの追加／更新は行いません</div>
+  <div class="owner-app" id="owner-app">
+    <aside class="owner-sidebar" id="owner-sidebar">
+      <div class="owner-side-brand"><span aria-hidden="true">🌿</span><div><strong>DPRO GREEN</strong><small>グリーン・ポケット福岡粕屋店</small></div></div>
+      <nav class="owner-nav" aria-label="管理メニュー">
+        <button data-view="dashboard" class="is-active"><span>▦</span>ダッシュボード</button>
+        <button data-view="inquiries"><span>✉</span>問い合わせ</button>
+        <button data-view="leads"><span>↗</span>営業対応</button>
+        <button data-view="site-checks"><span>⌂</span>現地確認</button>
+        <button data-view="customers"><span>人</span>顧客</button>
+        <button data-view="sites"><span>●</span>拠点・設置場所</button>
+        <button data-view="contracts"><span>✓</span>利用・契約状態</button>
+        <button data-view="assets"><span>葉</span>植物・鉢台帳</button>
+        <button data-view="installations"><span>設</span>設置・移動</button>
+        <button data-view="visits"><span>巡</span>巡回予定</button>
+        <button data-view="reports"><span>報</span>作業報告</button>
+        <button data-view="replacements"><span>換</span>交換・回収・養生</button>
+        <button data-view="contact"><span>話</span>LINE・顧客対応</button>
+        <button data-view="messages"><span>送</span>LINE・メッセージ</button>
+        <button data-view="line-access"><span>閲</span>LINE閲覧者</button>
+        <button data-view="stock"><span>庫</span>簡易在庫</button>
+        <button data-view="facility-settings"><span>店</span>店舗・事業所設定</button>
+        <button data-view="business-calendar"><span>休</span>営業日・休日</button>
+        <button data-view="announcements"><span>知</span>公開お知らせ</button>
+        <button data-view="features"><span>⚙</span>機能設定</button>
+      </nav>
+      <div class="owner-side-bottom">
+        <a href="index.html" target="_blank" rel="noopener">公開相談画面</a>
+        <a href="member.html" target="_blank" rel="noopener">お客様画面</a>
+        <a href="owner-ipad.html" target="_blank" rel="noopener">共有iPad画面</a>
+      </div>
+    </aside>
+
+    <div class="owner-workspace">
+      <header class="owner-topbar">
+        <button class="owner-menu-button" id="owner-menu-button" type="button">☰</button>
+        <div><p class="owner-top-kicker">DPRO グリーンレンタル LINE</p><h1 id="view-title">ダッシュボード</h1></div>
+        <div class="owner-top-actions"><span class="owner-env-badge">QA PREVIEW</span></div>
+      </header>
+
+      <main class="owner-main" id="owner-main">
+        <div class="qa-note">このページは、オーナー本人のSMS初期設定前に画面構成・文字・導線を確認するためのプレビューです。正式な本番操作は <strong>owner.html</strong> でのみ行います。</div>
+
+        <section class="owner-view is-active" data-view-panel="dashboard">
+          <div class="owner-heading"><div><p class="eyebrow">TODAY</p><h2>今日の状況</h2><p>本番オーナー画面の構成確認用です。</p></div><button class="btn btn--primary qa-disabled">＋ 電話受付</button></div>
+          <div class="owner-stat-grid">
+            <article class="owner-panel"><h3>問い合わせ</h3><strong style="font-size:32px">0</strong><p>未対応</p></article>
+            <article class="owner-panel"><h3>本日の訪問</h3><strong style="font-size:32px">0</strong><p>予定</p></article>
+            <article class="owner-panel"><h3>対応中</h3><strong style="font-size:32px">0</strong><p>相談</p></article>
+            <article class="owner-panel"><h3>交換・回収</h3><strong style="font-size:32px">0</strong><p>要確認</p></article>
+          </div>
+          <div class="owner-grid-two">
+            <article class="owner-panel"><div class="owner-panel-head"><h3>対応が必要な項目</h3></div><div class="owner-empty">現在、確認が必要な項目はありません。</div></article>
+            <article class="owner-panel"><div class="owner-panel-head"><h3>クイック操作</h3></div><div class="owner-quick-grid"><button class="qa-disabled">電話問い合わせを登録</button><button class="qa-disabled">顧客を登録</button><button class="qa-disabled">現地確認を登録</button><button class="qa-disabled">利用状態を登録</button></div></article>
+          </div>
+        </section>
+
+        <section class="owner-view" data-view-panel="inquiries">
+          <div class="owner-heading"><div><p class="eyebrow">INQUIRIES</p><h2>問い合わせ管理</h2><p>ホームページ、LINE、電話の相談を一つの一覧で確認します。</p></div></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>受付番号</th><th>顧客</th><th>相談区分</th><th>受付元</th><th>状態</th><th>受付日時</th></tr></thead><tbody><tr><td colspan="6">QAプレビュー：データ表示は本番ログイン後に確認</td></tr></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="leads"><div class="owner-heading"><div><p class="eyebrow">SALES</p><h2>営業対応</h2><p>次回対応、保留、失注、現地確認までの進捗を追跡します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="site-checks"><div class="owner-heading"><div><p class="eyebrow">SITE CHECK</p><h2>現地確認</h2><p>訪問予定、現場環境、設置候補、確認結果を管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="customers"><div class="owner-heading"><div><p class="eyebrow">CUSTOMERS</p><h2>顧客台帳</h2><p>電話番号を正規化して検索し、重複候補を確認しながら登録します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="sites"><div class="owner-heading"><div><p class="eyebrow">SITES</p><h2>拠点・設置場所</h2><p>拠点の住所、入館方法、駐車情報、設置場所を管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="contracts"><div class="owner-heading"><div><p class="eyebrow">SERVICE STATUS</p><h2>利用・契約状態</h2><p>開始日、訪問内容、休止、解約、撤去予定を管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="assets"><div class="owner-heading"><div><p class="eyebrow">PLANT ASSETS</p><h2>植物・鉢台帳</h2><p>植物品種、一鉢資産、鉢資産、現在地、状態、移動履歴を管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="installations"><div class="owner-heading"><div><p class="eyebrow">INSTALLATION</p><h2>設置・移動</h2><p>植物選定、確保、積込、搬入、設置完了までを管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="visits"><div class="owner-heading"><div><p class="eyebrow">VISIT ROUTE</p><h2>巡回予定・担当・訪問順</h2><p>定期訪問ルールから予定を生成し、担当者と訪問順を調整します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="reports"><div class="owner-heading"><div><p class="eyebrow">MAINTENANCE REPORTS</p><h2>作業報告・写真</h2><p>一括作業、一鉢別状態、写真、お客様公開状況を確認します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="replacements"><div class="owner-heading"><div><p class="eyebrow">REPLACEMENT & CARE</p><h2>交換・回収・養生・再利用</h2><p>交換提案から代替割当、現地交換、回収、養生、再利用・廃棄まで追跡します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="contact"><div class="owner-heading"><div><p class="eyebrow">CONTACT</p><h2>LINE・顧客対応</h2><p>LINEで継続中のお客様対応を確認・返信します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="messages"><div class="owner-heading"><div><p class="eyebrow">LINE & MESSAGE</p><h2>LINE・メッセージ</h2><p>作業完了文面の確認、コピー履歴、通知待ちを管理します。</p></div></div></section>
+
+        <section class="owner-view" data-view-panel="line-access">
+          <div class="owner-heading"><div><p class="eyebrow">LINE CUSTOMER ACCESS</p><h2>LINE閲覧者</h2><p>お客様からの利用申請を承認し、閲覧できる拠点を設定します。</p></div></div>
+          <article class="owner-panel">
+            <div class="owner-panel-head"><div><h3>本番QA 様</h3><p>お客様番号：QA-GREEN-001</p></div><span>利用中</span></div>
+            <p>本番では「承認待ち／利用中／解除済み」を確認し、全拠点または指定拠点のみを設定できます。</p>
+          </article>
+        </section>
+
+        <section class="owner-view" data-view-panel="stock"><div class="owner-heading"><div><p class="eyebrow">SIMPLE STOCK</p><h2>簡易在庫</h2><p>数量と保管場所を管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="facility-settings"><div class="owner-heading"><div><p class="eyebrow">FACILITY SETTINGS</p><h2>店舗・事業所設定</h2><p>お客様に表示する事業所情報、連絡先、営業時間、通知先を管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="business-calendar"><div class="owner-heading"><div><p class="eyebrow">BUSINESS CALENDAR</p><h2>営業日・休日</h2><p>定休日、臨時休業、年末年始などを管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="announcements"><div class="owner-heading"><div><p class="eyebrow">ANNOUNCEMENTS</p><h2>公開お知らせ</h2><p>お客様マイページに表示するお知らせを管理します。</p></div></div></section>
+        <section class="owner-view" data-view-panel="features"><div class="owner-heading"><div><p class="eyebrow">FEATURE SETTINGS</p><h2>機能設定</h2><p>利用する機能を店舗運用に合わせて切り替えます。</p></div></div></section>
+      </main>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const title = document.getElementById('view-title');
+  const labels = {
+    dashboard:'ダッシュボード', inquiries:'問い合わせ', leads:'営業対応', 'site-checks':'現地確認',
+    customers:'顧客', sites:'拠点・設置場所', contracts:'利用・契約状態', assets:'植物・鉢台帳',
+    installations:'設置・移動', visits:'巡回予定', reports:'作業報告', replacements:'交換・回収・養生',
+    contact:'LINE・顧客対応', messages:'LINE・メッセージ', 'line-access':'LINE閲覧者',
+    stock:'簡易在庫', 'facility-settings':'店舗・事業所設定', 'business-calendar':'営業日・休日',
+    announcements:'公開お知らせ', features:'機能設定'
+  };
+  document.querySelectorAll('.owner-nav [data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      document.querySelectorAll('.owner-nav [data-view]').forEach(b => b.classList.toggle('is-active', b === btn));
+      document.querySelectorAll('[data-view-panel]').forEach(p => p.classList.toggle('is-active', p.dataset.viewPanel === view));
+      title.textContent = labels[view] || view;
+      if (window.innerWidth < 900) document.getElementById('owner-sidebar')?.classList.remove('is-open');
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  });
+  document.getElementById('owner-menu-button')?.addEventListener('click',()=>document.getElementById('owner-sidebar')?.classList.toggle('is-open'));
+})();
+</script>
+</body>
+</html>
