@@ -1,0 +1,46 @@
+name: DPRO GREEN Kasuya LIFF Config
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/dpro-green-kasuya-liff-config.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set production LIFF ID
+        shell: python
+        run: |
+          import base64
+          exec(base64.b64decode("CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAoKcGF0aCA9IFBhdGgoImNvbmZpZy5qcyIpCnRleHQgPSBwYXRoLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQoKb2xkID0gJyAgTElGRl9JRDogIiIsJwpuZXcgPSAnICBMSUZGX0lEOiAiMjAxMTc1MDQ2MC1FcE4xNDlWWSIsJwoKaWYgb2xkIGluIHRleHQ6CiAgICB0ZXh0ID0gdGV4dC5yZXBsYWNlKG9sZCwgbmV3LCAxKQplbGlmIG5ldyBub3QgaW4gdGV4dDoKICAgIHJhaXNlIFN5c3RlbUV4aXQoIkxJRkZfSUQgdGFyZ2V0IG5vdCBmb3VuZCBvciBhbHJlYWR5IGNoYW5nZWQgdW5leHBlY3RlZGx5IikKCnBhdGgud3JpdGVfdGV4dCh0ZXh0LCBlbmNvZGluZz0idXRmLTgiKQo=").decode("utf-8"))
+
+      - name: Safety checks
+        shell: bash
+        run: |
+          grep -q 'LIFF_ID: "2011750460-EpN149VY"' config.js
+          grep -q 'FACILITY_CODE: "cl_000001_green"' config.js
+          ! grep -q 'LIFF_ID: ""' config.js
+          ! grep -q 'DEMO_MEMBER_TOKEN: "GREEN-DEMO"' config.js
+
+      - name: Commit
+        shell: bash
+        run: |
+          git config user.name "DPRO GREEN LIFF Config"
+          git config user.email "actions@users.noreply.github.com"
+          git add config.js
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Configure Kasuya production LIFF ID"
+          git push origin HEAD:main
