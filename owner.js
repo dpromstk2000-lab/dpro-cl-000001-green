@@ -202,7 +202,7 @@
     }
   }
 
-  function showLogin() { $("#login-view").hidden = false; $("#owner-app").hidden = true; }
+  function showLogin() { if (window.DPRO_AUTH) { location.replace("./owner-login.html?next=./owner.html"); return; } $("#login-view").hidden = false; $("#owner-app").hidden = true; }
   function showApp() { $("#login-view").hidden = true; $("#owner-app").hidden = false; }
 
   async function login(event) {
@@ -220,6 +220,12 @@
   }
 
   async function logout() {
+    if (window.DPRO_AUTH?.logout) {
+      state.session = null;
+      Green.setCsrfToken(null);
+      await window.DPRO_AUTH.logout();
+      return;
+    }
     try { await Green.api("/api/admin/logout", { method: "POST", json: {} }); } catch {}
     state.session = null; Green.setCsrfToken(null); showLogin();
   }
