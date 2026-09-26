@@ -313,3 +313,50 @@ textarea { resize: vertical; min-height: 130px; }
   .public-store-grid{grid-template-columns:1fr}
   .public-store-card-wide{grid-column:auto}
 }
+
+
+/* GREEN KASUYA HOLIDAY SYNC R1 */
+.green12-public-holidays{
+  width:min(1100px,calc(100% - 32px));
+  margin:18px auto 0;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:10px;
+}
+.green12-public-holidays[hidden]{display:none!important}
+.green12-public-holiday{
+  padding:14px 16px;
+  border:1px solid #b9d5c2;
+  border-radius:14px;
+  background:#f4faf6;
+  color:#173d2b;
+}
+.green12-public-holiday.is-closed{
+  border-color:#e2b36d;
+  background:#fff8ec;
+  color:#65430d;
+}
+.green12-public-holiday.is-special-open{
+  border-color:#92c9a5;
+  background:#eef9f1;
+}
+.green12-public-holiday-date{
+  display:block;
+  margin-bottom:4px;
+  font-size:12px;
+  font-weight:800;
+  opacity:.72;
+}
+.green12-public-holiday strong{
+  display:block;
+  font-size:16px;
+}
+.green12-public-holiday small{
+  display:block;
+  margin-top:4px;
+  font-weight:700;
+}
+.green12-public-holiday p{
+  margin:7px 0 0;
+  line-height:1.7;
+}

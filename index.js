@@ -429,22 +429,42 @@
   initialize();
 
   async function loadPublicSiteProfile() {
-    const region = document.querySelector("#public-announcements");
-    if (!region) return;
+    const announcementRegion = document.querySelector("#public-announcements");
+    const holidayRegion = document.querySelector("#public-holidays");
+    if (!announcementRegion && !holidayRegion) return;
     try {
       const response = await Green.api("/api/public/site-profile?target=public_form");
       const profile = response.data || {};
       document.querySelectorAll("[data-facility-name]").forEach((node) => {
         if (profile.facilityName) node.textContent = profile.facilityName;
       });
+
+      const holidays = profile.upcomingHolidays || [];
+      if (holidayRegion) {
+        holidayRegion.hidden = holidays.length === 0;
+        holidayRegion.innerHTML = holidays.map((item) => {
+          const date = String(item.date || "");
+          const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          const dateLabel = match ? `${match[1]}年${Number(match[2])}月${Number(match[3])}日` : date;
+          const hours = item.isClosed
+            ? "休業"
+            : [item.openTime, item.closeTime].filter(Boolean).join("〜") || "特別営業";
+          const note = item.note ? `<p>${escapeHtml(item.note).replace(/\n/g,"<br>")}</p>` : "";
+          return `<article class="green12-public-holiday${item.isClosed ? " is-closed" : " is-special-open"}"><span class="green12-public-holiday-date">${escapeHtml(dateLabel)}</span><strong>${escapeHtml(item.title || (item.isClosed ? "臨時休業" : "特別営業"))}</strong><small>${escapeHtml(hours)}</small>${note}</article>`;
+        }).join("");
+      }
+
       const items = profile.announcements || [];
-      region.hidden = items.length === 0;
-      region.innerHTML = items.map((item) =>
-        `<article class="green12-public-notice${item.isImportant ? " is-important" : ""}"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body).replace(/\n/g,"<br>")}</p>${item.period ? `<small>${escapeHtml(item.period)}</small>` : ""}</article>`
-      ).join("");
+      if (announcementRegion) {
+        announcementRegion.hidden = items.length === 0;
+        announcementRegion.innerHTML = items.map((item) =>
+          `<article class="green12-public-notice${item.isImportant ? " is-important" : ""}"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.body).replace(/\n/g,"<br>")}</p>${item.period ? `<small>${escapeHtml(item.period)}</small>` : ""}</article>`
+        ).join("");
+      }
     } catch (error) {
-      console.warn(`[DPRO GREEN] ${VERSION} public announcement load failed`, error);
-      region.hidden = true;
+      console.warn(`[DPRO GREEN] ${VERSION} public site profile load failed`, error);
+      if (holidayRegion) holidayRegion.hidden = true;
+      if (announcementRegion) announcementRegion.hidden = true;
     }
   }
 
