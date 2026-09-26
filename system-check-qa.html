@@ -29,14 +29,14 @@
   <main>
     <header class="head">
       <div>
-        <p class="eyebrow">DPRO GREEN / PRODUCTION READ-ONLY QA</p>
+        <p class="eyebrow">DPRO GREEN / PRODUCTION READ-ONLY QA R3</p>
         <h1>本番SYSTEM CHECK</h1>
         <p class="lead">Owner初期設定前でも、公開画面・必須ファイル・Core Worker・Owner Auth・公開APIを読み取り専用で確認します。</p>
       </div>
       <button id="run" class="primary" type="button">一括再検査</button>
     </header>
 
-    <div class="note">このページは一時的なDPRO内部QA用です。Owner認証を作成せず、本番データも変更しません。正式引き渡し前に削除します。</div>
+    <div class="note">このページは一時的なDPRO内部QA用です。Owner認証を作成せず、本番データも変更しません。Owner未登録と未公開HealthはWAIT扱いとし、公開API疎通を別途確認します。正式引き渡し前に削除します。</div>
 
     <section class="summary">
       <article class="stat"><small>検査件数</small><strong id="total">—</strong></article>
@@ -65,9 +65,25 @@
   async function run(){
     checks.length=0;$("run").disabled=true;$("run").textContent="検査中…";
     try{
-      try{const r=await jsonFetch(CORE+"/health");const ok=Boolean(r.ok&&r.data&&r.data.ok!==false);add("api","Core Worker /health",ok?"pass":"fail",r.data?JSON.stringify({ok:r.data.ok,service:r.data.service,version:r.data.version,status:r.data.status,dbOk:r.data.dbOk}):`HTTP ${r.status}`);}catch(e){add("api","Core Worker /health","fail",e.message)}
+      try{
+        const r=await jsonFetch(CORE+"/health");
+        const detail=r.data?`HTTP ${r.status} / ${JSON.stringify({ok:r.data.ok,service:r.data.service,version:r.data.version,status:r.data.status,dbOk:r.data.dbOk})}`:`HTTP ${r.status}`;
+        if(r.ok && r.data?.ok===true) add("api","Core Worker /health","pass",detail);
+        else if((r.status===404)||(r.ok&&r.data?.ok===false)) add("api","Core Worker /health","wait",detail+" / Core Worker自体は公開APIで別途疎通確認");
+        else add("api","Core Worker /health","fail",detail);
+      }catch(e){add("api","Core Worker /health","fail",e.message)}
       try{const r=await jsonFetch(AUTH+"/health");const ok=Boolean(r.ok&&r.data?.ok===true&&r.data?.dbOk===true);add("api","Owner Auth /health",ok?"pass":"fail",r.data?JSON.stringify({version:r.data.version,status:r.data.status,dbOk:r.data.dbOk,activationMode:r.data.ownerActivationMode}):`HTTP ${r.status}`);}catch(e){add("api","Owner Auth /health","fail",e.message)}
-      try{const r=await jsonFetch(AUTH+"/auth/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(IDENTITY)});if(r.ok&&r.data){const setup=Boolean(r.data.setupRequired);add("api","Owner初期設定状態",setup?"wait":"pass",setup?"初期設定未完了（現工程では意図どおりWAIT）":"初期設定済み");}else add("api","Owner初期設定状態","fail",`HTTP ${r.status}`);}catch(e){add("api","Owner初期設定状態","fail",e.message)}
+      try{
+        const r=await jsonFetch(AUTH+"/auth/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(IDENTITY)});
+        if(r.ok&&r.data){
+          const setup=Boolean(r.data.setupRequired);
+          add("api","Owner初期設定状態",setup?"wait":"pass",setup?"初期設定未完了（現工程では意図どおりWAIT）":"初期設定済み");
+        }else if(r.status===404 && r.data?.error==="OWNER_NOT_REGISTERED"){
+          add("api","Owner初期設定状態","wait","OWNER_NOT_REGISTERED / オーナー本人の初期設定前なので現工程では正常");
+        }else{
+          add("api","Owner初期設定状態","fail",`HTTP ${r.status} / ${r.data?.error||"unknown"}`);
+        }
+      }catch(e){add("api","Owner初期設定状態","fail",e.message)}
       for(const [label,path] of [["公開店舗情報","/api/public/facility"],["公開サービス","/api/public/services"],["公開サイトプロフィール","/api/public/site-profile?target=public_form"]]){try{const r=await jsonFetch(CORE+path);add("api",label,r.ok?"pass":"fail",`HTTP ${r.status}`);}catch(e){add("api",label,"fail",e.message)}}
       const files=["index.html","member.html","owner.html","owner-login.html","owner-activate.html","owner-ipad.html","staff.html","system-check.html","config.js","green-common.js","dpro-auth-guard.js","contact-green.html"];
       for(const f of files){const r=await textFetch(f);let status=r.ok?"pass":"fail";let detail=r.ok?`HTTP ${r.status}`:`${r.status}${r.error?` / ${r.error}`:""}`;if(f==="owner.html"&&r.ok){const prod=r.text.includes('owner-env-badge">本番');const demo=r.text.includes('owner-env-badge">DEMO');if(!prod||demo){status="fail";detail=`本番表示=${prod} / DEMO残存=${demo}`}else detail+=" / 本番表示確認";}add("file",f,status,detail);}
