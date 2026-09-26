@@ -1,18 +1,31 @@
 (() => {
   "use strict";
-  const VERSION = "GREEN-SHOP-OWNER-PROD-R2.0-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-PROD-R2.1-20260927";
   const API = String(window.GREEN_CONFIG?.SHOP_MODULE?.apiBase || "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev").replace(/\/$/, "");
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const state={settings:null,products:[],orders:[],loading:false};
 
   function esc(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
   function yen(n){return new Intl.NumberFormat("ja-JP",{style:"currency",currency:"JPY",maximumFractionDigits:0}).format(Number(n)||0);}
+  const BUILD_CODE_KEY="dpro_green_shop_build_code";
   function token(){return window.DPRO_AUTH?.getToken?.() || sessionStorage.getItem("green_admin_session_token") || "";}
+  function buildCode(){
+    if(!window.__DPRO_BUILD_ACCESS__) return "";
+    let code=sessionStorage.getItem(BUILD_CODE_KEY)||"";
+    if(!code){
+      code=prompt("構築・QA用の管理コードを入力してください。")||"";
+      if(code) sessionStorage.setItem(BUILD_CODE_KEY,code);
+    }
+    return code;
+  }
   async function csrf(){try{return (await window.Green.api("/api/admin/session")).data?.csrfToken || "";}catch{return "";}}
   async function api(path,options={}){
-    const t=token(); if(!t) throw new Error("オーナーログインを確認できません。");
+    const t=token();
+    const b=buildCode();
+    if(!t&&!b) throw new Error("オーナーセッションを確認できません。");
     const headers=new Headers(options.headers||{});
-    headers.set("Authorization",`Bearer ${t}`);
+    if(t) headers.set("Authorization",`Bearer ${t}`);
+    if(b) headers.set("X-DPRO-Build-Code",b);
     if(options.json!==undefined) headers.set("Content-Type","application/json");
     if(!["GET","HEAD"].includes(String(options.method||"GET").toUpperCase())){
       const c=await csrf(); if(c) headers.set("X-CSRF-Token",c);
