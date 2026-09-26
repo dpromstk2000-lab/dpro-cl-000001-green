@@ -1,0 +1,8 @@
+:root{
+  --green-850: var(--green-900, #184a3a);
+}
+
+/* GREEN STAFF R2.8
+   staff.css references --green-850 for route badges, primary action buttons,
+   staff counters and bottom navigation. Define the missing token so those
+   controls render visibly and consistently. */

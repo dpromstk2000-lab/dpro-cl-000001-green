@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12382d">
+  <meta name="description" content="設置植物、次回訪問、作業報告を確認できるお客様マイページです。">
+  <title>お客様マイページ | DPRO グリーンレンタル</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script defer src="config.js"></script>
+  <script defer src="green-common.js"></script>
+  <script defer src="member.js"></script>
+</head>
+<body class="member-body">
+  <a class="skip-link" href="#main">本文へ移動</a>
+  <header class="member-header">
+    <div class="header-inner"><a class="brand" href="member.html"><span class="brand-mark" aria-hidden="true">🌿</span><span><small>DPRO GREEN RENTAL</small>お客様マイページ</span></a><button id="logout" class="button button-ghost" type="button">ログアウト</button></div>
+  </header>
+  <main id="main">
+    <div id="global-error" class="alert alert-error" role="alert" hidden style="width:min(900px,calc(100% - 32px));margin:20px auto"></div>
+    <section id="login-panel" class="login-shell" hidden>
+      <div class="login-copy"><p class="eyebrow">CUSTOMER PORTAL</p><h1>植物の状態と、<br>次の訪問がひと目で。</h1><p>設置中の植物、次回の巡回、作業報告を確認できます。植物の異常や追加相談も、写真付きで送れます。</p><div class="login-feature-list"><div class="login-feature"><span>📅</span><strong>次回訪問予定を確認</strong></div><div class="login-feature"><span>🪴</span><strong>設置中の植物を確認</strong></div><div class="login-feature"><span>📷</span><strong>作業報告・公開写真を確認</strong></div></div></div>
+      <div class="login-card"><p class="eyebrow">LOGIN</p><h2>マイページを開く</h2><p class="label-note">本番ではLINE本人確認後、確認済みのお客様情報だけを表示します。</p><button id="line-login" class="button button-primary" type="button">LINEで本人確認して開く</button><div class="divider">デモ確認</div><label>デモ顧客番号<input id="demo-customer-number" value="DEMO-GREEN-001" autocomplete="off"></label><button id="demo-login" class="button button-secondary" type="button">デモマイページを開く</button><p class="label-note">デモ基本データはGREEN-10で準備します。準備前はログインできません。</p></div>
+    </section>
+
+    <section id="portal" class="portal-shell" hidden>
+      <div class="portal-hero"><div><p class="eyebrow" style="color:#bfe0c8">WELCOME</p><h1><span id="member-name">お客様</span> 様</h1><p>お客様番号：<span id="member-number">—</span></p></div><div class="portal-stats"><div class="portal-stat"><strong id="next-visit-count">0</strong><span>次回予定</span></div><div class="portal-stat"><strong id="site-count">0</strong><span>ご利用拠点</span></div><div class="portal-stat"><strong id="issue-count">0</strong><span>対応中相談</span></div></div></div>
+      <nav class="portal-nav" aria-label="マイページメニュー"><button class="is-active" type="button" data-tab="home">ホーム</button><button type="button" data-tab="contracts">ご利用内容</button><button type="button" data-tab="plants">設置植物</button><button type="button" data-tab="visits">訪問予定</button><button type="button" data-tab="reports">作業報告</button><button type="button" data-tab="replacements">交換履歴</button><button type="button" data-tab="requests">ご相談</button></nav>
+      <div id="tab-content" aria-live="polite"></div>
+    </section>
+  </main>
+</body>
+</html>

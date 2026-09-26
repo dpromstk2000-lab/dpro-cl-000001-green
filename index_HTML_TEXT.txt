@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#184a3a">
+  <meta name="description" content="観葉植物レンタル、定期メンテナンス、写真付き相談の受付フォームです。">
+  <title>植物レンタル・グリーン相談受付 | DPRO グリーンレンタル</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="config.js"></script>
+  <script defer src="green-common.js"></script>
+  <script defer src="index.js"></script>
+</head>
+<body data-source="website">
+  <a class="skip-link" href="#main">本文へ移動</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="DPRO グリーンレンタル トップへ">
+        <span class="brand-mark" aria-hidden="true">🌿</span>
+        <span><small>DPRO GREEN RENTAL</small><span data-facility-name>DPRO グリーンレンタル</span></span>
+      </a>
+      <span class="header-support">植物レンタル・定期巡回・メンテナンス相談</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">GREEN CONSULTATION</p>
+          <h1>空間に合うグリーンを、<br>無理なく育て続ける。</h1>
+          <p class="hero-lead">オフィス・店舗・施設の観葉植物レンタルから、定期メンテナンス、植物の異常、追加・入替えまで。写真を添えて気軽にご相談ください。</p>
+          <ul class="hero-points">
+            <li>現地確認の候補受付</li><li>写真付き相談</li><li>定期巡回のご相談</li><li>引取り・処分相談</li>
+          </ul>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="plant-orbit"></div>
+          <div class="plant-illustration"><span class="plant-icon">🪴</span><strong>植物のある心地よい空間へ</strong><span>設置後の管理まで一緒に考えます</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="page-shell">
+      <section aria-labelledby="category-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">SELECT CONSULTATION</p><h2 id="category-title">ご相談内容を選択</h2></div>
+          <p id="service-note">状況をお聞きしたうえで、担当者からご連絡します。</p>
+        </div>
+        <div class="service-choices">
+          <button class="service-choice" type="button" data-category="regular_rental"><span>🪴</span><strong>定期レンタル</strong><small>オフィス・店舗・施設へ</small></button>
+          <button class="service-choice" type="button" data-category="site_check"><span>📍</span><strong>現地確認</strong><small>設置場所を確認してほしい</small></button>
+          <button class="service-choice" type="button" data-category="photo_consultation"><span>📷</span><strong>写真で相談</strong><small>植物や設置場所を送る</small></button>
+          <button class="service-choice" type="button" data-category="plant_addition"><span>🌱</span><strong>植物を追加</strong><small>既存設置への追加相談</small></button>
+          <button class="service-choice" type="button" data-category="spot_event"><span>🎪</span><strong>スポット利用</strong><small>イベント・短期利用</small></button>
+          <button class="service-choice" type="button" data-category="maintenance"><span>✂️</span><strong>メンテナンス</strong><small>剪定・給水・植替え</small></button>
+          <button class="service-choice" type="button" data-category="pickup_disposal"><span>♻️</span><strong>引取り・処分</strong><small>不要植物や鉢の相談</small></button>
+          <button class="service-choice" type="button" data-category="other"><span>💬</span><strong>その他</strong><small>内容が決まっていなくても可</small></button>
+        </div>
+      </section>
+
+      <form id="inquiry-form" class="form-card" novalidate>
+        <div id="form-error" class="alert alert-error" role="alert" hidden></div>
+        <input class="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input type="hidden" name="pageUrl"><input type="hidden" name="utmSource"><input type="hidden" name="utmMedium"><input type="hidden" name="utmCampaign">
+
+        <section class="form-section">
+          <div class="form-section-title"><span class="form-step">1</span><h3>ご連絡先</h3></div>
+          <div class="form-grid">
+            <label>法人名・屋号 <span class="label-note">個人の方は空欄でも構いません</span><input name="companyName" maxlength="200" autocomplete="organization"></label>
+            <label>ご担当者名 <span class="required">必須</span><input name="contactName" maxlength="100" required autocomplete="name"></label>
+            <label>電話番号 <span class="label-note">メールとどちらか必須</span><input name="phone" inputmode="tel" maxlength="50" autocomplete="tel" placeholder="090-1234-5678"></label>
+            <label>メールアドレス <span class="label-note">電話とどちらか必須</span><input name="email" type="email" maxlength="254" autocomplete="email" placeholder="example@example.jp"></label>
+            <label>郵便番号<input name="postalCode" inputmode="numeric" maxlength="20" autocomplete="postal-code" placeholder="811-2200"></label>
+            <label>住所<input name="address" maxlength="500" autocomplete="street-address" placeholder="市区町村・番地・建物名"></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section-title"><span class="form-step">2</span><h3>設置・ご希望内容</h3></div>
+          <div class="form-grid">
+            <label class="full">相談区分 <span class="required">必須</span>
+              <select id="inquiry-category" name="inquiryCategory" required><option value="">選択してください</option><option value="regular_rental">定期レンタルを相談</option><option value="site_check">現地確認を依頼</option><option value="photo_consultation">写真を送って相談</option><option value="plant_addition">植物を追加したい</option><option value="spot_event">スポット利用を相談</option><option value="maintenance">メンテナンスを相談</option><option value="pickup_disposal">引取り・処分を相談</option><option value="other">その他</option></select>
+            </label>
+            <label>設置場所の種類<select name="siteType"><option value="">未定・相談したい</option><option value="office">オフィス</option><option value="clinic">クリニック・医療施設</option><option value="store">店舗</option><option value="care">介護・福祉施設</option><option value="home">個人宅</option><option value="outdoor">屋外・テラス</option><option value="event">イベント会場</option><option value="other">その他</option></select></label>
+            <label>希望本数<input name="desiredCount" type="number" min="0" max="999" inputmode="numeric" placeholder="例：5"></label>
+            <label>希望サイズ<select name="desiredSize"><option value="">未定・おまかせ</option><option value="S">小型（卓上など）</option><option value="M">中型</option><option value="L">大型</option><option value="mixed">組み合わせたい</option></select></label>
+            <label>導入希望時期<input name="desiredStartPeriod" maxlength="100" placeholder="例：9月頃・できるだけ早く"></label>
+            <label>希望連絡方法<select name="preferredContactMethod"><option value="">おまかせ</option><option value="line">LINE</option><option value="phone">電話</option><option value="email">メール</option></select></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section-title"><span class="form-step">3</span><h3>現地確認の希望候補</h3></div>
+          <p class="label-note">確定予約ではありません。担当者が確認後にご連絡します。</p>
+          <div class="form-grid">
+            <label>第1候補<input name="candidate1" type="datetime-local"></label>
+            <label>第2候補<input name="candidate2" type="datetime-local"></label>
+            <label>第3候補<input name="candidate3" type="datetime-local"></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="form-section-title"><span class="form-step">4</span><h3>写真・相談内容</h3></div>
+          <div class="photo-drop">
+            <strong>植物や設置場所の写真</strong><p class="label-note">JPEG・PNG・WebP／最大4枚。送信前にブラウザで縮小します。</p>
+            <input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+            <div id="photo-preview" class="photo-preview" aria-live="polite"></div>
+          </div>
+          <div class="form-grid" style="margin-top:20px">
+            <label class="full">相談内容 <span class="required">必須</span><textarea name="inquiryText" required minlength="5" maxlength="4000" placeholder="設置したい場所、現在困っていること、植物の状態などをご記入ください。"></textarea></label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <label class="checkbox-row"><input name="consent" type="checkbox" required><span>入力した情報を、相談対応・現地確認・連絡のために利用することへ同意します。<span class="required"> 必須</span></span></label>
+        </section>
+        <div class="form-actions"><button id="submit-button" class="button button-primary" type="submit">この内容で相談を送る</button></div>
+      </form>
+
+      <section id="completion" class="completion" tabindex="-1" hidden>
+        <div class="completion-icon" aria-hidden="true">✓</div><p class="eyebrow">RECEIVED</p><h2>ご相談を受け付けました</h2>
+        <p>内容を確認し、担当者からご連絡します。現地確認希望は、この時点ではまだ確定していません。</p>
+        <div class="reception-box"><span>受付番号</span><strong id="reception-number"></strong></div>
+        <p id="duplicate-note" class="alert alert-warning" hidden>過去のお問い合わせと一致する可能性があります。担当者が重複を確認して対応します。</p>
+        <button id="new-inquiry" class="button button-secondary" type="button">別の相談を入力する</button>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><span data-facility-name>DPRO グリーンレンタル</span><br>このフォームでは料金・見積金額の確定は行いません。</footer>
+</body>
+</html>

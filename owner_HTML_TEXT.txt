@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#12382d">
+  <meta name="robots" content="noindex,nofollow">
+  <title>DPRO グリーンレンタル管理</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="owner.css">
+</head>
+<body class="owner-body">
+  <a class="skip-link" href="#owner-main">本文へ移動</a>
+
+  <section class="owner-login" id="login-view" aria-labelledby="login-title">
+    <div class="owner-login-card">
+      <div class="owner-login-brand"><span aria-hidden="true">🌿</span><div><strong>DPRO グリーンレンタル</strong><small>管理画面</small></div></div>
+      <p class="eyebrow">OWNER CONSOLE</p>
+      <h1 id="login-title">管理コードでログイン</h1>
+      <p>問い合わせ、現地確認、顧客、拠点、利用状態をまとめて管理します。</p>
+      <form id="login-form" class="owner-login-form">
+        <label>事業所コード<input id="login-facility" name="facilityCode" autocomplete="organization" required></label>
+        <label>管理コード
+          <span class="owner-code-row"><input id="login-code" name="code" type="password" inputmode="numeric" autocomplete="current-password" required><button type="button" class="owner-link-button" id="clear-login-code">削除</button></span>
+        </label>
+        <p class="form-error" id="login-error" hidden></p>
+        <button class="btn btn--primary owner-login-submit" type="submit">ログイン</button>
+      </form>
+      <p class="owner-login-note">デモ管理コード：1234</p>
+    </div>
+  </section>
+
+  <div class="owner-app" id="owner-app" hidden>
+    <aside class="owner-sidebar" id="owner-sidebar">
+      <div class="owner-side-brand"><span aria-hidden="true">🌿</span><div><strong>DPRO GREEN</strong><small id="side-facility">管理画面</small></div></div>
+      <nav class="owner-nav" aria-label="管理メニュー">
+        <button data-view="dashboard" class="is-active"><span>▦</span>ダッシュボード</button>
+        <button data-view="inquiries"><span>✉</span>問い合わせ</button>
+        <button data-view="leads"><span>↗</span>営業対応</button>
+        <button data-view="site-checks"><span>⌂</span>現地確認</button>
+        <button data-view="customers"><span>人</span>顧客</button>
+        <button data-view="sites"><span>●</span>拠点・設置場所</button>
+        <button data-view="contracts"><span>✓</span>利用・契約状態</button>
+        <button data-view="assets"><span>葉</span>植物・鉢台帳</button>
+        <button data-view="installations"><span>設</span>設置・移動</button>
+        <button data-view="visits"><span>巡</span>巡回予定</button>
+        <button data-view="reports"><span>報</span>作業報告</button>
+        <button data-view="replacements"><span>換</span>交換・回収・養生</button>
+        <button data-view="messages"><span>送</span>LINE・メッセージ</button>
+        <button data-view="stock"><span>庫</span>簡易在庫</button>
+        <button data-view="features"><span>⚙</span>機能設定</button>
+      </nav>
+      <div class="owner-side-bottom">
+        <a href="index.html" target="_blank" rel="noopener">公開相談画面</a>
+        <a href="member.html" target="_blank" rel="noopener">お客様画面</a>
+        <a href="owner-ipad.html" target="_blank" rel="noopener">共有iPad画面</a>
+        <button id="logout-button" class="owner-logout">ログアウト</button>
+      </div>
+    </aside>
+
+    <div class="owner-workspace">
+      <header class="owner-topbar">
+        <button class="owner-menu-button" id="owner-menu-button" type="button" aria-label="メニューを開く">☰</button>
+        <div><p class="owner-top-kicker">DPRO グリーンレンタル LINE</p><h1 id="view-title">ダッシュボード</h1></div>
+        <div class="owner-top-actions"><span class="owner-env-badge">DEMO</span><span id="session-expiry" class="owner-session-expiry"></span><button class="btn btn--secondary btn--small" id="reload-button">再読込</button></div>
+      </header>
+
+      <main id="owner-main" class="owner-main" tabindex="-1">
+        <section class="owner-view is-active" data-view-panel="dashboard">
+          <div class="owner-heading"><div><p class="eyebrow">TODAY</p><h2>今日の状況</h2><p id="dashboard-date">読み込み中です。</p></div><button class="btn btn--primary" data-action="phone-inquiry">＋ 電話受付</button></div>
+          <div class="owner-stat-grid" id="dashboard-stats" aria-live="polite"></div>
+          <div class="owner-grid-two">
+            <article class="owner-panel"><div class="owner-panel-head"><h3>対応が必要な項目</h3></div><div id="dashboard-attention" class="owner-empty">読み込み中です。</div></article>
+            <article class="owner-panel"><div class="owner-panel-head"><h3>クイック操作</h3></div><div class="owner-quick-grid"><button data-action="phone-inquiry">電話問い合わせを登録</button><button data-action="new-customer">顧客を登録</button><button data-action="new-site-check">現地確認を登録</button><button data-action="new-contract">利用状態を登録</button></div></article>
+          </div>
+        </section>
+
+        <section class="owner-view" data-view-panel="inquiries">
+          <div class="owner-heading"><div><p class="eyebrow">INQUIRIES</p><h2>問い合わせ管理</h2><p>ホームページ、LINE、電話の相談を一つの一覧で確認します。</p></div><button class="btn btn--primary" data-action="phone-inquiry">＋ 電話受付</button></div>
+          <div class="owner-toolbar"><label class="owner-search">検索<input id="inquiry-search" placeholder="受付番号・法人名・氏名・電話番号"></label><label>状態<select id="inquiry-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="inquiries">検索</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>受付番号</th><th>顧客</th><th>相談区分</th><th>受付元</th><th>状態</th><th>受付日時</th><th></th></tr></thead><tbody id="inquiry-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="leads">
+          <div class="owner-heading"><div><p class="eyebrow">SALES</p><h2>営業対応</h2><p>次回対応、保留、失注、現地確認までの進捗を追跡します。</p></div></div>
+          <div class="owner-toolbar"><label>状態<select id="lead-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="leads">再表示</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>案件番号</th><th>状態</th><th>次回対応</th><th>対応日時</th><th>更新</th><th></th></tr></thead><tbody id="lead-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="site-checks">
+          <div class="owner-heading"><div><p class="eyebrow">SITE CHECK</p><h2>現地確認</h2><p>訪問予定、現場環境、設置候補、確認結果を管理します。</p></div><button class="btn btn--primary" data-action="new-site-check">＋ 現地確認</button></div>
+          <div class="owner-toolbar"><label>状態<select id="site-check-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="site-checks">再表示</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>確認番号</th><th>予定日時</th><th>状態</th><th>顧客・拠点</th><th>更新</th><th></th></tr></thead><tbody id="site-check-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="customers">
+          <div class="owner-heading"><div><p class="eyebrow">CUSTOMERS</p><h2>顧客台帳</h2><p>電話番号を正規化して検索し、重複候補を確認しながら登録します。</p></div><button class="btn btn--primary" data-action="new-customer">＋ 顧客登録</button></div>
+          <div class="owner-toolbar"><label class="owner-search">検索<input id="customer-search" placeholder="法人名・担当者・電話・顧客番号・住所"></label><label>状態<select id="customer-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="customers">検索</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>顧客番号</th><th>法人名・担当者</th><th>電話</th><th>住所</th><th>状態</th><th></th></tr></thead><tbody id="customer-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="sites">
+          <div class="owner-heading"><div><p class="eyebrow">SITES</p><h2>拠点・設置場所</h2><p>拠点の住所、入館方法、駐車情報、設置場所を管理します。</p></div><button class="btn btn--primary" data-action="new-site">＋ 拠点登録</button></div>
+          <div class="owner-toolbar"><label class="owner-search">検索<input id="site-search" placeholder="拠点名・住所・電話"></label><button class="btn btn--secondary" data-load="sites">検索</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>拠点コード</th><th>拠点名</th><th>住所</th><th>連絡先</th><th>状態</th><th></th></tr></thead><tbody id="site-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="contracts">
+          <div class="owner-heading"><div><p class="eyebrow">SERVICE STATUS</p><h2>利用・契約状態</h2><p>金額を扱わず、開始日、訪問内容、休止、解約、撤去予定を管理します。</p></div><button class="btn btn--primary" data-action="new-contract">＋ 利用状態登録</button></div>
+          <div class="owner-toolbar"><label>状態<select id="contract-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="contracts">再表示</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>利用番号</th><th>顧客</th><th>状態</th><th>開始日</th><th>終了予定</th><th></th></tr></thead><tbody id="contract-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="assets">
+          <div class="owner-heading"><div><p class="eyebrow">PLANT ASSETS</p><h2>植物・鉢台帳</h2><p>植物品種、一鉢資産、鉢資産、現在地、状態、移動履歴を管理します。</p></div><div class="owner-heading-actions"><button class="btn btn--secondary" data-action="new-species">＋ 植物品種</button><button class="btn btn--secondary" data-action="new-container-model">＋ 鉢モデル</button><button class="btn btn--primary" data-action="new-asset">＋ 資産登録</button></div></div>
+          <article class="owner-panel owner-feature-panel"><div class="owner-panel-head"><div><h3>GREEN-6 管理方式</h3><p>設定変更後も既存データは削除しません。</p></div><button class="btn btn--secondary btn--small" id="asset-settings-save">設定を保存</button></div><div class="owner-feature-grid"><label>植物管理方式<select id="asset-plant-mode"><option value="asset">一鉢管理</option><option value="count">本数管理</option><option value="hybrid">併用管理</option></select></label><label>鉢管理方式<select id="asset-container-mode"><option value="none">管理しない</option><option value="with_plant">植物と一体</option><option value="separate_asset">別資産</option></select></label><label class="owner-check"><input type="checkbox" id="asset-use-qr">植物QRを使う</label><label class="owner-check"><input type="checkbox" id="asset-use-hq-code">本部管理番号を使う</label><label class="owner-check"><input type="checkbox" id="asset-use-inventory">簡易在庫を使う</label></div><p class="owner-form-help" id="asset-settings-note"></p></article>
+          <div class="owner-tabs" role="tablist" aria-label="植物・鉢台帳切替"><button class="is-active" data-asset-tab="plants">植物資産</button><button data-asset-tab="containers">鉢資産</button><button data-asset-tab="species">植物品種</button><button data-asset-tab="models">鉢モデル</button></div>
+          <div class="owner-toolbar"><label class="owner-search">検索<input id="asset-search" placeholder="資産コード・表示名・QR・本部番号"></label><label>状態<select id="asset-status"><option value="">すべて</option></select></label><label>現在地<select id="asset-location"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="assets">検索</button></div>
+          <div class="owner-table-wrap" data-asset-table="plants"><table class="owner-table"><thead><tr><th>資産コード</th><th>植物</th><th>サイズ</th><th>状態</th><th>現在地</th><th>植物状態</th><th></th></tr></thead><tbody id="plant-asset-rows"></tbody></table></div>
+          <div class="owner-table-wrap" data-asset-table="containers" hidden><table class="owner-table"><thead><tr><th>鉢コード</th><th>モデル</th><th>状態</th><th>現在地</th><th>状態メモ</th><th></th></tr></thead><tbody id="container-asset-rows"></tbody></table></div>
+          <div class="owner-table-wrap" data-asset-table="species" hidden><table class="owner-table"><thead><tr><th>品種コード</th><th>植物名</th><th>分類</th><th>屋内外</th><th>標準サイズ</th><th></th></tr></thead><tbody id="species-rows"></tbody></table></div>
+          <div class="owner-table-wrap" data-asset-table="models" hidden><table class="owner-table"><thead><tr><th>モデルコード</th><th>モデル名</th><th>種別</th><th>サイズ</th><th>素材・色</th><th></th></tr></thead><tbody id="container-model-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="installations">
+          <div class="owner-heading"><div><p class="eyebrow">INSTALLATION</p><h2>設置・移動</h2><p>植物選定、確保、積込、搬入、設置完了までを管理します。</p></div><button class="btn btn--primary" data-action="new-installation">＋ 設置計画</button></div>
+          <div class="owner-toolbar"><label>状態<select id="installation-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="installations">再表示</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>設置番号</th><th>顧客・拠点</th><th>管理方式</th><th>状態</th><th>設置予定</th><th>更新</th><th></th></tr></thead><tbody id="installation-rows"></tbody></table></div>
+        </section>
+
+
+        <section class="owner-view" data-view-panel="visits">
+          <div class="owner-heading"><div><p class="eyebrow">VISIT ROUTE</p><h2>巡回予定・担当・訪問順</h2><p>定期訪問ルールから予定を生成し、担当者と訪問順を調整します。</p></div><div class="owner-heading-actions"><button class="btn btn--secondary" data-action="generate-visits">予定を一括生成</button><button class="btn btn--primary" data-action="new-visit">＋ 訪問予定</button></div></div>
+          <div class="owner-tabs" role="tablist" aria-label="巡回管理切替"><button class="is-active" data-visit-tab="schedules">訪問予定</button><button data-visit-tab="rules">定期訪問ルール</button></div>
+          <div data-visit-panel="schedules">
+            <div class="owner-toolbar"><label>開始日<input id="visit-from" type="date"></label><label>終了日<input id="visit-to" type="date"></label><label>状態<select id="visit-status"><option value="">すべて</option></select></label><label>担当<select id="visit-staff"><option value="">すべて</option></select></label><label class="owner-search">検索<input id="visit-search" placeholder="訪問番号・顧客・拠点・電話"></label><button class="btn btn--secondary" data-load="visits">表示</button></div>
+            <div class="owner-route-summary" id="visit-summary"></div>
+            <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>順</th><th>日時</th><th>顧客・拠点</th><th>予定作業</th><th>担当</th><th>状態</th><th></th></tr></thead><tbody id="visit-rows"></tbody></table></div>
+          </div>
+          <div data-visit-panel="rules" hidden>
+            <div class="owner-heading owner-subheading"><div><h3>定期訪問ルール</h3><p>曜日、頻度、時間帯、標準作業時間を登録します。</p></div><button class="btn btn--primary" data-action="new-visit-rule">＋ ルール登録</button></div>
+            <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>ルール</th><th>利用番号</th><th>拠点</th><th>頻度</th><th>曜日・時間</th><th>有効期間</th><th></th></tr></thead><tbody id="visit-rule-rows"></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="owner-view" data-view-panel="reports">
+          <div class="owner-heading"><div><p class="eyebrow">MAINTENANCE REPORTS</p><h2>作業報告・写真</h2><p>一括作業、一鉢別状態、写真、お客様公開状況を確認します。</p></div></div>
+          <div class="owner-toolbar"><label>開始日<input id="report-from" type="date"></label><label>終了日<input id="report-to" type="date"></label><label>状態<select id="report-status"><option value="">すべて</option><option value="draft">下書き</option><option value="in_progress">作業中</option><option value="completed">完了</option><option value="corrected">訂正済み</option><option value="cancelled">取消</option></select></label><label class="owner-search">検索<input id="report-search" placeholder="報告番号・訪問番号・顧客・拠点"></label><button class="btn btn--secondary" data-load="reports">表示</button></div>
+          <div class="owner-route-summary" id="report-summary"></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>作業日</th><th>顧客・拠点</th><th>報告番号</th><th>写真</th><th>お客様公開</th><th>状態</th><th></th></tr></thead><tbody id="report-rows"></tbody></table></div>
+        </section>
+
+
+        <section class="owner-view" data-view-panel="replacements">
+          <div class="owner-heading"><div><p class="eyebrow">REPLACEMENT & CARE</p><h2>交換・回収・養生・再利用</h2><p>交換提案から代替割当、現地交換、回収、養生、再利用・廃棄まで追跡します。</p></div><div class="owner-heading-actions"><button class="btn btn--secondary" data-action="new-care">＋ 養生開始</button><button class="btn btn--primary" data-action="new-replacement">＋ 交換依頼</button></div></div>
+          <div class="owner-tabs" role="tablist" aria-label="交換管理切替"><button class="is-active" data-replacement-tab="requests">交換・回収</button><button data-replacement-tab="care">養生・再利用</button><button data-replacement-tab="disposals">廃棄・返却</button></div>
+          <div data-replacement-panel="requests">
+            <div class="owner-toolbar"><label>状態<select id="replacement-status"><option value="">すべて</option></select></label><label>緊急度<select id="replacement-severity"><option value="">すべて</option></select></label><label class="owner-search">検索<input id="replacement-search" placeholder="交換番号・理由・メモ"></label><button class="btn btn--secondary" data-load="replacements">表示</button></div>
+            <div class="owner-route-summary" id="replacement-summary"></div>
+            <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>交換番号</th><th>顧客・拠点</th><th>交換植物</th><th>緊急度</th><th>予定</th><th>状態</th><th>回収</th><th></th></tr></thead><tbody id="replacement-rows"></tbody></table></div>
+          </div>
+          <div data-replacement-panel="care" hidden>
+            <div class="owner-heading owner-subheading"><div><h3>養生・再利用</h3><p>帰庫した植物の状態、作業、確認期限、再利用判定を管理します。</p></div><button class="btn btn--primary" data-action="new-care">＋ 養生開始</button></div>
+            <div class="owner-toolbar"><label>状態<select id="care-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="replacements">表示</button></div>
+            <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>養生番号</th><th>植物</th><th>場所</th><th>開始</th><th>次回確認</th><th>状態</th><th></th></tr></thead><tbody id="care-rows"></tbody></table></div>
+          </div>
+          <div data-replacement-panel="disposals" hidden>
+            <div class="owner-heading owner-subheading"><div><h3>廃棄・返却記録</h3><p>廃棄、リサイクル、仕入先・本部返却の履歴を保存します。</p></div><button class="btn btn--primary" data-action="new-disposal">＋ 記録登録</button></div>
+            <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>記録番号</th><th>植物</th><th>処理</th><th>日時</th><th>理由</th><th>証跡</th></tr></thead><tbody id="disposal-rows"></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="owner-view" data-view-panel="messages">
+          <div class="owner-heading"><div><p class="eyebrow">LINE & MESSAGE</p><h2>LINE・メッセージ</h2><p>作業完了文面の確認、コピー履歴、通知待ちを管理します。</p></div></div>
+          <div class="owner-tabs" role="tablist" aria-label="メッセージ管理切替"><button class="is-active" data-message-tab="templates">文面テンプレート</button><button data-message-tab="notifications">通知ログ</button></div>
+          <div data-message-panel="templates"><div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>テンプレート</th><th>区分</th><th>チャネル</th><th>状態</th><th></th></tr></thead><tbody id="message-template-rows"></tbody></table></div></div>
+          <div data-message-panel="notifications" hidden><div class="owner-toolbar"><label>状態<select id="notification-status"><option value="">すべて</option><option value="pending">文面コピー待ち</option><option value="ready">自動送信待ち</option><option value="sending">送信中</option><option value="sent">送信済み</option><option value="skipped">対象外</option><option value="failed">失敗</option><option value="cancelled">取消</option></select></label><button class="btn btn--secondary" data-load="messages">表示</button></div><div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>作成日時</th><th>顧客</th><th>通知区分</th><th>方式</th><th>状態</th><th>文面</th></tr></thead><tbody id="notification-rows"></tbody></table></div></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="stock">
+          <div class="owner-heading"><div><p class="eyebrow">SIMPLE STOCK</p><h2>簡易在庫</h2><p>数量と保管場所を管理します。金額・原価・会計評価は扱いません。</p></div><button class="btn btn--primary" data-action="new-stock">＋ 在庫品目</button></div>
+          <div class="owner-toolbar"><label class="owner-search">検索<input id="stock-search" placeholder="在庫コード・品目名・保管場所"></label><button class="btn btn--secondary" data-load="stock">検索</button></div>
+          <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>在庫コード</th><th>品目</th><th>保管場所</th><th>現在数</th><th>利用可能</th><th>予約</th><th>養生</th><th>警告</th><th></th></tr></thead><tbody id="stock-rows"></tbody></table></div>
+        </section>
+
+        <section class="owner-view" data-view-panel="features">
+          <div class="owner-heading"><div><p class="eyebrow">FEATURE SETTINGS</p><h2>機能設定</h2><p>店舗運用に合わせて機能を切り替えます。OFFにしても既存データは削除しません。</p></div><button class="btn btn--primary" id="feature-save-all">変更を保存</button></div>
+          <div class="owner-warning-box" id="feature-dependency-box">依存関係を確認しています。</div>
+          <div id="feature-groups" class="feature-groups"></div>
+          <article class="owner-panel"><div class="owner-panel-head"><div><h3>変更履歴</h3><p>誰がいつ、どの設定を変更したか確認できます。</p></div><button class="btn btn--secondary btn--small" id="feature-history-reload">再表示</button></div><div id="feature-history" class="feature-history"></div></article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <button class="owner-sidebar-backdrop" id="owner-sidebar-backdrop" hidden aria-label="メニューを閉じる"></button>
+
+  <dialog class="owner-dialog" id="owner-dialog">
+    <form method="dialog" class="owner-dialog-shell" id="dialog-shell">
+      <header><div><p class="eyebrow" id="dialog-kicker">DETAIL</p><h2 id="dialog-title">詳細</h2></div><button type="button" class="owner-dialog-close" id="dialog-close" aria-label="閉じる">×</button></header>
+      <div class="owner-dialog-body" id="dialog-body"></div>
+      <footer id="dialog-footer"><button type="button" class="btn btn--secondary" id="dialog-cancel">閉じる</button></footer>
+    </form>
+  </dialog>
+
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="green-common.js"></script>
+  <script src="owner.js"></script>
+  <script src="feature-settings.js"></script>
+</body>
+</html>
