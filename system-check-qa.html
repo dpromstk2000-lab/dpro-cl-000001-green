@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#12382d">
+  <title>QA SYSTEM CHECK - DPRO GREEN</title>
+  <style>
+    :root{color-scheme:light;--g:#0f513c;--g2:#1f7a5a;--bg:#f4f8f5;--card:#fff;--line:#d8e6de;--muted:#64766d;--ok:#157347;--wait:#9a6700;--bad:#b42318}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#17372d;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
+    .bar{background:#fff4cc;border-bottom:1px solid #ecd989;padding:10px 16px;text-align:center;font-weight:800;color:#6b5200}
+    main{width:min(1120px,calc(100% - 32px));margin:28px auto 56px}.head{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;margin-bottom:20px}
+    h1{font-size:clamp(28px,4vw,48px);margin:4px 0}.eyebrow{color:var(--g2);font-weight:900;letter-spacing:.16em;font-size:12px}.lead{color:var(--muted);margin:0}
+    button{border:0;border-radius:12px;padding:12px 18px;font-weight:800;cursor:pointer}.primary{background:var(--g);color:#fff}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.stat,.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 28px rgba(20,60,45,.06)}
+    .stat{padding:18px}.stat small{display:block;color:var(--muted);font-weight:700}.stat strong{display:block;font-size:30px;margin-top:6px}
+    .panel{padding:20px;margin-top:16px}.panel h2{margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .item{border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;background:#fff}
+    .dot{width:11px;height:11px;border-radius:99px;margin-top:5px;background:#aaa}.item[data-status="pass"] .dot{background:var(--ok)}.item[data-status="wait"] .dot{background:var(--wait)}.item[data-status="fail"] .dot{background:var(--bad)}
+    .badge{font-size:11px;font-weight:900;border-radius:999px;padding:5px 8px;background:#eef3f0}.item[data-status="pass"] .badge{color:var(--ok)}.item[data-status="wait"] .badge{color:var(--wait)}.item[data-status="fail"] .badge{color:var(--bad)}
+    .item strong{display:block}.item small{display:block;color:var(--muted);margin-top:5px;overflow-wrap:anywhere}.note{background:#eef7f2;border:1px solid #cfe2d9;border-radius:14px;padding:14px;color:#35584a}
+    .footer{margin-top:18px;color:var(--muted);font-size:12px}
+    @media(max-width:760px){.head{display:grid}.summary{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="bar">TEMP QA PREVIEW｜閲覧確認専用・本番データの追加／更新は行いません</div>
+  <main>
+    <header class="head">
+      <div>
+        <p class="eyebrow">DPRO GREEN / PRODUCTION READ-ONLY QA</p>
+        <h1>本番SYSTEM CHECK</h1>
+        <p class="lead">Owner初期設定前でも、公開画面・必須ファイル・Core Worker・Owner Auth・公開APIを読み取り専用で確認します。</p>
+      </div>
+      <button id="run" class="primary" type="button">一括再検査</button>
+    </header>
+
+    <div class="note">このページは一時的なDPRO内部QA用です。Owner認証を作成せず、本番データも変更しません。正式引き渡し前に削除します。</div>
+
+    <section class="summary">
+      <article class="stat"><small>検査件数</small><strong id="total">—</strong></article>
+      <article class="stat"><small>PASS</small><strong id="passed">—</strong></article>
+      <article class="stat"><small>WAIT</small><strong id="waiting">—</strong></article>
+      <article class="stat"><small>FAIL</small><strong id="failed">—</strong></article>
+    </section>
+
+    <section class="panel"><h2>本番環境・API</h2><div id="apiChecks" class="grid"></div></section>
+    <section class="panel"><h2>公開画面・必須ファイル</h2><div id="fileChecks" class="grid"></div></section>
+    <p class="footer" id="checkedAt">未実行</p>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+  const CORE = "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev";
+  const AUTH = "https://dpro-owner-auth-general.dpromstk2000.workers.dev";
+  const IDENTITY = {systemCode:"GREEN",facilityCode:"cl_000001_green"};
+  const $ = id => document.getElementById(id);
+  const checks = [];
+  function esc(v){return String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+  function add(group,label,status,detail){checks.push({group,label,status,detail});}
+  async function jsonFetch(url,opts={}){const r=await fetch(url,{cache:"no-store",...opts});const data=await r.json().catch(()=>null);return {ok:r.ok,status:r.status,data};}
+  async function textFetch(url){try{const r=await fetch(url,{cache:"no-store"});return {ok:r.ok,status:r.status,text:await r.text()};}catch(e){return {ok:false,status:"通信失敗",text:"",error:e.message};}}
+  async function run(){
+    checks.length=0;$("run").disabled=true;$("run").textContent="検査中…";
+    try{
+      try{const r=await jsonFetch(CORE+"/health");const ok=Boolean(r.ok&&r.data&&r.data.ok!==false);add("api","Core Worker /health",ok?"pass":"fail",r.data?JSON.stringify({ok:r.data.ok,service:r.data.service,version:r.data.version,status:r.data.status,dbOk:r.data.dbOk}):`HTTP ${r.status}`);}catch(e){add("api","Core Worker /health","fail",e.message)}
+      try{const r=await jsonFetch(AUTH+"/health");const ok=Boolean(r.ok&&r.data?.ok===true&&r.data?.dbOk===true);add("api","Owner Auth /health",ok?"pass":"fail",r.data?JSON.stringify({version:r.data.version,status:r.data.status,dbOk:r.data.dbOk,activationMode:r.data.ownerActivationMode}):`HTTP ${r.status}`);}catch(e){add("api","Owner Auth /health","fail",e.message)}
+      try{const r=await jsonFetch(AUTH+"/auth/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(IDENTITY)});if(r.ok&&r.data){const setup=Boolean(r.data.setupRequired);add("api","Owner初期設定状態",setup?"wait":"pass",setup?"初期設定未完了（現工程では意図どおりWAIT）":"初期設定済み");}else add("api","Owner初期設定状態","fail",`HTTP ${r.status}`);}catch(e){add("api","Owner初期設定状態","fail",e.message)}
+      for(const [label,path] of [["公開店舗情報","/api/public/facility"],["公開サービス","/api/public/services"],["公開サイトプロフィール","/api/public/site-profile?target=public_form"]]){try{const r=await jsonFetch(CORE+path);add("api",label,r.ok?"pass":"fail",`HTTP ${r.status}`);}catch(e){add("api",label,"fail",e.message)}}
+      const files=["index.html","member.html","owner.html","owner-login.html","owner-activate.html","owner-ipad.html","staff.html","system-check.html","config.js","green-common.js","dpro-auth-guard.js","contact-green.html"];
+      for(const f of files){const r=await textFetch(f);let status=r.ok?"pass":"fail";let detail=r.ok?`HTTP ${r.status}`:`${r.status}${r.error?` / ${r.error}`:""}`;if(f==="owner.html"&&r.ok){const prod=r.text.includes('owner-env-badge">本番');const demo=r.text.includes('owner-env-badge">DEMO');if(!prod||demo){status="fail";detail=`本番表示=${prod} / DEMO残存=${demo}`}else detail+=" / 本番表示確認";}add("file",f,status,detail);}
+      render();
+    } finally {$("run").disabled=false;$("run").textContent="一括再検査";}
+  }
+  function render(){const pass=checks.filter(x=>x.status==="pass").length,wait=checks.filter(x=>x.status==="wait").length,fail=checks.filter(x=>x.status==="fail").length;$("total").textContent=checks.length;$("passed").textContent=pass;$("waiting").textContent=wait;$("failed").textContent=fail;const html=group=>checks.filter(x=>x.group===group).map(x=>`<div class="item" data-status="${x.status}"><span class="dot"></span><div><strong>${esc(x.label)}</strong><small>${esc(x.detail)}</small></div><span class="badge">${x.status.toUpperCase()}</span></div>`).join("");$("apiChecks").innerHTML=html("api");$("fileChecks").innerHTML=html("file");$("checkedAt").textContent="Checked: "+new Date().toLocaleString("ja-JP");}
+  $("run").addEventListener("click",run);run();
+})();
+</script>
+</body>
+</html>
