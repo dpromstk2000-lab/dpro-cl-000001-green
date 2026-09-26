@@ -242,6 +242,41 @@
     })[char]);
   }
 
+  function applyPublicFacilityProfile(facility) {
+    const section = document.querySelector("[data-dpro-store-sync]");
+    if (!section || !facility) return;
+
+    document.querySelectorAll("[data-facility-name]").forEach((node) => {
+      if (facility.facilityName) node.textContent = facility.facilityName;
+    });
+
+    const addressNode = section.querySelector("[data-public-address]");
+    const hoursNode = section.querySelector("[data-public-hours]");
+    const closedNode = section.querySelector("[data-public-closed]");
+    const phoneNode = section.querySelector("[data-public-phone]");
+
+    if (addressNode) {
+      const fullAddress = [facility.postalCode ? `〒${facility.postalCode}` : "", facility.address || ""]
+        .filter(Boolean)
+        .join(" ");
+      addressNode.textContent = fullAddress || "所在地はお問い合わせください";
+    }
+    if (hoursNode) hoursNode.textContent = facility.businessHours || "営業時間はお問い合わせください";
+    if (closedNode) closedNode.textContent = facility.closedDays || "休業日はお問い合わせください";
+
+    if (phoneNode) {
+      if (facility.phone) {
+        phoneNode.textContent = facility.phone;
+        phoneNode.href = `tel:${String(facility.phone).replace(/[^0-9+]/g, "")}`;
+      } else {
+        phoneNode.textContent = "電話番号はお問い合わせください";
+        phoneNode.removeAttribute("href");
+      }
+    }
+
+    section.hidden = false;
+  }
+
   async function initialize() {
     bindEvents();
     prefillTracking();
@@ -250,7 +285,7 @@
       const [facilityResponse, servicesResponse] = await Promise.all([
         api("/api/public/facility"), api("/api/public/services"),
       ]);
-      document.querySelectorAll("[data-facility-name]").forEach((node) => { node.textContent = facilityResponse.data.facilityName; });
+      applyPublicFacilityProfile(facilityResponse.data || {});
       const serviceCount = servicesResponse.data.services?.length || 0;
       document.querySelector("#service-note").textContent = `${serviceCount}種類のご相談に対応しています。金額の確定ではなく、まず状況をお聞きする受付フォームです。`;
     } catch (error) {
