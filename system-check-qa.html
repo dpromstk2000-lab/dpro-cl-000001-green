@@ -29,14 +29,14 @@
   <main>
     <header class="head">
       <div>
-        <p class="eyebrow">DPRO GREEN / PRODUCTION READ-ONLY QA R3</p>
+        <p class="eyebrow">DPRO GREEN / PRODUCTION READ-ONLY QA R4</p>
         <h1>本番SYSTEM CHECK</h1>
         <p class="lead">Owner初期設定前でも、公開画面・必須ファイル・Core Worker・Owner Auth・公開APIを読み取り専用で確認します。</p>
       </div>
       <button id="run" class="primary" type="button">一括再検査</button>
     </header>
 
-    <div class="note">このページは一時的なDPRO内部QA用です。Owner認証を作成せず、本番データも変更しません。Owner未登録と未公開HealthはWAIT扱いとし、公開API疎通を別途確認します。正式引き渡し前に削除します。</div>
+    <div class="note">このページは一時的なDPRO内部QA用です。Owner認証を作成せず、本番データも変更しません。Owner未登録はWAIT扱いとし、Core Workerは本番実装の /api/health を確認します。正式引き渡し前に削除します。</div>
 
     <section class="summary">
       <article class="stat"><small>検査件数</small><strong id="total">—</strong></article>
@@ -66,9 +66,9 @@
     checks.length=0;$("run").disabled=true;$("run").textContent="検査中…";
     try{
       try{
-        const r=await jsonFetch(CORE+"/health");
+        const r=await jsonFetch(CORE+"/api/health");
         const detail=r.data?`HTTP ${r.status} / ${JSON.stringify({ok:r.data.ok,service:r.data.service,version:r.data.version,status:r.data.status,dbOk:r.data.dbOk})}`:`HTTP ${r.status}`;
-        if(r.ok && r.data?.ok===true) add("api","Core Worker /health","pass",detail);
+        if(r.ok && r.data?.ok===true) add("api","Core Worker /api/health","pass",detail);
         else if((r.status===404)||(r.ok&&r.data?.ok===false)) add("api","Core Worker /health","wait",detail+" / Core Worker自体は公開APIで別途疎通確認");
         else add("api","Core Worker /health","fail",detail);
       }catch(e){add("api","Core Worker /health","fail",e.message)}
