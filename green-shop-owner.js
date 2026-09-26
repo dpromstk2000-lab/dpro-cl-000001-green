@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const VERSION = "GREEN-SHOP-OWNER-PROD-R2.1-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-PROD-R2.2-20260927";
   const API = String(window.GREEN_CONFIG?.SHOP_MODULE?.apiBase || "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev").replace(/\/$/, "");
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const state={settings:null,products:[],orders:[],loading:false};
@@ -30,8 +30,28 @@
     if(!["GET","HEAD"].includes(String(options.method||"GET").toUpperCase())){
       const c=await csrf(); if(c) headers.set("X-CSRF-Token",c);
     }
-    const res=await fetch(API+path,{method:options.method||"GET",headers,body:options.json===undefined?undefined:JSON.stringify(options.json),cache:"no-store"});
-    const data=await res.json().catch(()=>({}));
+    const requestInit={method:options.method||"GET",headers,body:options.json===undefined?undefined:JSON.stringify(options.json),cache:"no-store"};
+    let res=await fetch(API+path,requestInit);
+    let data=await res.json().catch(()=>({}));
+
+    // BUILD ACCESS: if a stale/wrong build code is cached, clear it and retry once.
+    if((res.status===401 || data?.error==="session_invalid") && window.__DPRO_BUILD_ACCESS__ && b && options.__buildRetry!==false){
+      sessionStorage.removeItem(BUILD_CODE_KEY);
+      const retryCode=prompt("構築・QA用の管理コードをもう一度入力してください。")||"";
+      if(retryCode){
+        sessionStorage.setItem(BUILD_CODE_KEY,retryCode);
+        const retryHeaders=new Headers(options.headers||{});
+        if(t) retryHeaders.set("Authorization",`Bearer ${t}`);
+        retryHeaders.set("X-DPRO-Build-Code",retryCode);
+        if(options.json!==undefined) retryHeaders.set("Content-Type","application/json");
+        if(!["GET","HEAD"].includes(String(options.method||"GET").toUpperCase())){
+          const c=await csrf(); if(c) retryHeaders.set("X-CSRF-Token",c);
+        }
+        res=await fetch(API+path,{...requestInit,headers:retryHeaders});
+        data=await res.json().catch(()=>({}));
+      }
+    }
+
     if(!res.ok||data.ok===false) throw new Error(data.message||"SHOP API処理に失敗しました。");
     return data;
   }
