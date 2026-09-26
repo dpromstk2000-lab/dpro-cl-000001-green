@@ -1,0 +1,39 @@
+name: DPRO GREEN QA System Check R4
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch QA R4
+        shell: bash
+        run: |
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgpwID0gUGF0aCgic3lzdGVtLWNoZWNrLXFhLmh0bWwiKQpzID0gcC5yZWFkX3RleHQoZW5jb2Rpbmc9InV0Zi04IikKCm9sZCA9ICdjb25zdCByPWF3YWl0IGpzb25GZXRjaChDT1JFKyIvaGVhbHRoIik7JwpuZXcgPSAnY29uc3Qgcj1hd2FpdCBqc29uRmV0Y2goQ09SRSsiL2FwaS9oZWFsdGgiKTsnCmlmIG9sZCBub3QgaW4gczoKICAgIHJhaXNlIFN5c3RlbUV4aXQoIkVSUk9SOiBvbGQgQ29yZSBoZWFsdGggZW5kcG9pbnQgbm90IGZvdW5kIikKcyA9IHMucmVwbGFjZShvbGQsIG5ldywgMSkKCnMgPSBzLnJlcGxhY2UoJ0NvcmUgV29ya2VyIC9oZWFsdGgnLCdDb3JlIFdvcmtlciAvYXBpL2hlYWx0aCcsMSkKcyA9IHMucmVwbGFjZSgKICAgICdEUFJPIEdSRUVOIC8gUFJPRFVDVElPTiBSRUFELU9OTFkgUUEgUjMnLAogICAgJ0RQUk8gR1JFRU4gLyBQUk9EVUNUSU9OIFJFQUQtT05MWSBRQSBSNCcsCiAgICAxCikKcyA9IHMucmVwbGFjZSgKICAgICdPd25lcuacqueZu+mMsuOBqOacquWFrOmWi0hlYWx0aOOBr1dBSVTmibHjgYTjgajjgZfjgIHlhazplotBUEnnlo7pgJrjgpLliKXpgJTnorroqo3jgZfjgb7jgZnjgIInLAogICAgJ093bmVy5pyq55m76Yyy44GvV0FJVOaJseOBhOOBqOOBl+OAgUNvcmUgV29ya2Vy44Gv5pys55Wq5a6f6KOF44GuIC9hcGkvaGVhbHRoIOOCkueiuuiqjeOBl+OBvuOBmeOAgicsCiAgICAxCikKCmNoZWNrcyA9IHsKICAgICJyNF9tYXJrZXIiOiAiUFJPRFVDVElPTiBSRUFELU9OTFkgUUEgUjQiIGluIHMsCiAgICAiYXBpX2hlYWx0aCI6ICdDT1JFKyIvYXBpL2hlYWx0aCInIGluIHMsCiAgICAibGFiZWwiOiAiQ29yZSBXb3JrZXIgL2FwaS9oZWFsdGgiIGluIHMsCn0KcHJpbnQoIkNIRUNLUzoiLCBjaGVja3MpCmJhZD1bayBmb3Igayx2IGluIGNoZWNrcy5pdGVtcygpIGlmIG5vdCB2XQppZiBiYWQ6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCJGQUlMRUQ6ICIrIiwgIi5qb2luKGJhZCkpCgpwLndyaXRlX3RleHQocywgZW5jb2Rpbmc9InV0Zi04IikK' | base64 -d > /tmp/patch_qa_r4.py
+          python /tmp/patch_qa_r4.py
+
+      - name: Verify
+        run: |
+          git diff --check
+          grep -q "PRODUCTION READ-ONLY QA R4" system-check-qa.html
+          grep -q 'CORE+"/api/health"' system-check-qa.html
+
+      - name: Commit
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes required."
+            exit 0
+          fi
+          git config user.name "DPRO Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add system-check-qa.html
+          git commit -m "Use production Core health endpoint in QA"
+          git push
