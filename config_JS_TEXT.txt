@@ -1,4 +1,4 @@
-/** DPRO GREEN LINE / CONTACT-V1-7-GREEN-1 / CUSTOMER-HERO-2 / SHOP-R1.3 / OWNER-FLOW-R1 / OWNER-UX-FIX-R1 */
+/** DPRO GREEN LINE / CONTACT-V1-7-GREEN-1 / CUSTOMER-HERO-2 / SHOP-R2.0 / OWNER-FLOW-R1 / OWNER-UX-FIX-R1 */
 window.GREEN_CONFIG = Object.freeze({
   API_BASE: "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev",
   FACILITY_CODE: "cl_000001_green",
@@ -11,9 +11,10 @@ window.GREEN_CONFIG = Object.freeze({
   CONTACT_ENABLED: true,
   CONTACT_URL: "contact-green.html",
   SHOP_MODULE: Object.freeze({
-    enabled: false,
+    enabled: true,
     websiteUrl: "https://dpromstk2000-lab.github.io/dpro-green-website/shop.html",
-    storageMode: "disabled",
+    apiBase: "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev",
+    storageMode: "backend",
   }),
   CUSTOMER_HERO: Object.freeze({
     enabled: true,
@@ -32,7 +33,7 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
 (() => {
   "use strict";
   const HERO_ADMIN_VERSION = "DPRO-CUSTOMER-HERO-2-20260808";
-  const SHOP_OWNER_VERSION = "GREEN-SHOP-OWNER-R1.3-20260923";
+  const SHOP_OWNER_VERSION = "GREEN-SHOP-OWNER-PROD-R2.0-20260927";
   const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";
   const OWNER_UX_FIX_VERSION = "GREEN-OWNER-UX-FIX-R2.9-20260915";
   const OWNER_JST_FIX_VERSION = "GREEN-OWNER-JST-DATETIME-FIX-R1.4-20260916";
