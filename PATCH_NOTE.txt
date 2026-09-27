@@ -1,27 +1,22 @@
-DPRO GREEN SHOP V3-C.2 / DIALOG SCROLL FIX
+DPRO GREEN SHOP V3-C.3 / DIALOG HARD FIT
 2026-09-27
 
-症状
-====
-商品編集ダイアログで下へスクロールしても、
-一番下の説明・フッターボタンが完全に見えない。
+V3-C.2でも最下部が見えない環境があったため、
+固定高さ計算をさらに廃止し、表示中ブラウザの実Viewportへ強制フィット。
 
-原因
-====
-ダイアログ内部のスクロール領域を
-固定の max-height 計算で作っていたため、
-ブラウザ倍率・実表示高さによって
-ヘッダー / タブ / 本文 / フッターの合計とずれる場合があった。
+修正:
+- dialogをposition:fixed + viewport insetで完全固定
+- dialog内部を3段Grid
+  1. ヘッダー
+  2. タブ
+  3. form
+- form内部を2段Grid
+  1. スクロール本文
+  2. 常時見えるフッター
+- 本文下余白120px
+- sticky footer
+- visualViewport.heightをJSでも取得して高さを強制設定
+- ブラウザ倍率やアドレスバー表示差にも追従
+- resize時にも再計算
 
-修正
-====
-- dialog を縦Flexレイアウト化
-- 画面高さを 100dvh 基準へ変更
-- 本文だけを flex:1 + overflow-y:auto に変更
-- 固定 max-height 計算を廃止
-- フッターは常に画面内に残す
-- 本文下余白を追加
-- safe-area-inset-bottom 対応
-- 狭い画面ではほぼ全画面ダイアログ
-
-Worker / Supabase / 公開SHOPへの変更なし。
+Worker / DB / 公開SHOP変更なし。

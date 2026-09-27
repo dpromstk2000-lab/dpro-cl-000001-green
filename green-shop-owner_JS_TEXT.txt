@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-V3.1.1-DIALOG-SCROLL-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-V3.1.2-DIALOG-HARDFIT-20260927";
   const API = String(
     window.GREEN_CONFIG?.SHOP_MODULE?.apiBase ||
     "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev"
@@ -220,9 +220,9 @@
       .shopv3-orders th,.shopv3-orders td{padding:10px 11px;border-bottom:1px solid #edf1ef;text-align:left;vertical-align:middle}
       .shopv3-orders th{font-size:11px;color:#65736c;background:#f8faf9}
       .shopv3-orders select{border:1px solid #ccd9d2;border-radius:8px;padding:7px;background:#fff}
-      .shopv3-dialog{width:min(980px,calc(100vw - 24px));height:min(94dvh,920px);max-height:calc(100dvh - 16px);border:0;border-radius:20px;padding:0;box-shadow:0 28px 90px #0005;overflow:hidden;margin:auto}
-      .shopv3-dialog[open]{display:flex;flex-direction:column}
-      .shopv3-dialog:not([open]){display:none}
+      .shopv3-dialog{box-sizing:border-box!important;position:fixed!important;inset:6px!important;width:min(980px,calc(100vw - 12px))!important;height:calc(100vh - 12px)!important;height:calc(100dvh - 12px)!important;max-width:none!important;max-height:none!important;border:0;border-radius:18px;padding:0;box-shadow:0 28px 90px #0005;overflow:hidden!important;margin:auto!important}
+      .shopv3-dialog[open]{display:grid!important;grid-template-rows:auto auto minmax(0,1fr)!important}
+      .shopv3-dialog:not([open]){display:none!important}
       .shopv3-dialog::backdrop{background:#0a2118ba}
       .shopv3-dialog-head{padding:16px 20px;border-bottom:1px solid #e2e9e5;background:#fbfdfc;display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto}
       .shopv3-dialog-head strong{font-size:17px}
@@ -230,8 +230,8 @@
       .shopv3-tabs{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid #edf1ef;overflow-x:auto;overflow-y:hidden;background:#fff;flex:0 0 auto}
       .shopv3-tab{border:0;background:transparent;padding:9px 12px;border-radius:9px;font-weight:800;white-space:nowrap;color:#64726b;cursor:pointer}
       .shopv3-tab.is-active{background:#e8f4ed;color:#175c3b}
-      .shopv3-dialog form#shopv3-form{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden}
-      .shopv3-dialog-body{padding:18px 20px 34px;overflow-y:auto;overflow-x:hidden;max-height:none;min-height:0;flex:1 1 auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+      .shopv3-dialog form#shopv3-form{display:grid!important;grid-template-rows:minmax(0,1fr) auto!important;min-height:0!important;height:100%!important;overflow:hidden!important}
+      .shopv3-dialog-body{box-sizing:border-box;padding:18px 20px 120px!important;overflow-y:auto!important;overflow-x:hidden!important;max-height:none!important;min-height:0!important;height:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable;scroll-padding-bottom:120px}
       .shopv3-pane{display:none}
       .shopv3-pane.is-active{display:block}
       .shopv3-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
@@ -264,7 +264,7 @@
       .shopv3-media-item input{width:100%;box-sizing:border-box}
       .shopv3-media-actions{display:flex;gap:5px;flex-wrap:wrap}
       .shopv3-pending{border:1px dashed #c9d7d0;border-radius:10px;padding:8px;background:#fbfdfc;font-size:12px}
-      .shopv3-dialog-foot{padding:13px 20px calc(13px + env(safe-area-inset-bottom));border-top:1px solid #e2e9e5;display:flex;justify-content:space-between;gap:10px;background:#fff;flex:0 0 auto;position:relative;z-index:3;box-shadow:0 -8px 20px #173d2b0a}
+      .shopv3-dialog-foot{box-sizing:border-box;padding:13px 20px calc(13px + env(safe-area-inset-bottom));border-top:1px solid #e2e9e5;display:flex;justify-content:space-between;gap:10px;background:#fff;position:sticky!important;bottom:0!important;z-index:10;box-shadow:0 -8px 20px #173d2b18}
       .shopv3-dialog-foot>div{display:flex;gap:8px;flex-wrap:wrap}
       .shopv3-preview{border:1px solid #dce6e1;border-radius:16px;padding:14px;background:#f9fcfa}
       .shopv3-preview-card{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:start}
@@ -275,8 +275,8 @@
         .shopv3-products{grid-template-columns:1fr}
       }
       @media(max-width:680px){
-        .shopv3-dialog{width:calc(100vw - 8px);height:calc(100dvh - 8px);max-height:calc(100dvh - 8px);border-radius:14px}
-        .shopv3-dialog-body{padding:14px 14px 34px}
+        .shopv3-dialog{inset:4px!important;width:calc(100vw - 8px)!important;height:calc(100dvh - 8px)!important;border-radius:14px}
+        .shopv3-dialog-body{padding:14px 14px 120px!important}
         .shopv3-dialog-foot{padding-left:14px;padding-right:14px}
         .shopv3-setting-grid,.shopv3-summary,.shopv3-grid,.shopv3-choice-grid{grid-template-columns:1fr}
         .shopv3-product{grid-template-columns:92px minmax(0,1fr)}
@@ -663,6 +663,30 @@
     drawEditor();
   }
 
+  function fitDialogToViewport(d){
+    if(!d) return;
+    const apply=()=>{
+      const vv=window.visualViewport;
+      const h=Math.max(360,Math.floor((vv?.height||window.innerHeight)-12));
+      const w=Math.max(320,Math.floor((vv?.width||window.innerWidth)-12));
+      d.style.setProperty("height",`${h}px`,"important");
+      d.style.setProperty("max-height",`${h}px`,"important");
+      d.style.setProperty("width",`${Math.min(980,w)}px`,"important");
+      d.style.setProperty("max-width",`${w}px`,"important");
+      d.style.setProperty("top","6px","important");
+      d.style.setProperty("bottom","auto","important");
+      d.style.setProperty("left","0","important");
+      d.style.setProperty("right","0","important");
+      d.style.setProperty("margin","0 auto","important");
+    };
+    apply();
+    if(!d.__shopv3ViewportBound){
+      d.__shopv3ViewportBound=true;
+      window.addEventListener("resize",apply,{passive:true});
+      window.visualViewport?.addEventListener("resize",apply,{passive:true});
+    }
+  }
+
   function drawEditor(){
     const d=ensureDialog();
     const p=state.editProduct;
@@ -724,6 +748,12 @@
     };
 
     if(!d.open) d.showModal();
+    fitDialogToViewport(d);
+    requestAnimationFrame(()=>{
+      const body=$(".shopv3-dialog-body",d);
+      if(body && !d.__shopv3KeepScroll) body.scrollTop=0;
+      d.__shopv3KeepScroll=false;
+    });
   }
 
   function tabButton(key,label){
