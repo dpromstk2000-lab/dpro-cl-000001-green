@@ -1,5 +1,5 @@
-DPRO CONTACT R3.3
-Fix:
-- Preserve selected File objects before resetting the file input.
-- Selected attachments now remain available for preview and upload.
-No SQL or Worker changes required.
+DPRO GREEN LINE CONTACT R3.6 DISPLAY CLEANUP
+- Corrected inaccurate security note (removed unsupported encryption claim).
+- Updated contact-green-config.js cache-busting query to R3.3.
+- No Worker / SQL / Secret / Variable changes.
+Upload both files to repository root.
