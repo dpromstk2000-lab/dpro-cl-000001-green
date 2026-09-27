@@ -1,16 +1,10 @@
 /* DPRO GREEN CONTACT / ZERO-JUMP BACKGROUND POLL
- * Version: DPRO-CONTACT-ZERO-JUMP-R4-20260927
- *
- * Design:
- * - Never auto-call DPRO_CONTACT_UI.refresh().
- * - Poll only the API every 30s.
- * - If new data exists, show a notice; update only when the operator clicks it.
- * - Therefore background checking cannot change message DOM or scrollTop.
+ * Version: DPRO-CONTACT-ZERO-JUMP-R4.1-20260927
  */
 (() => {
   "use strict";
 
-  const VERSION = "DPRO-CONTACT-ZERO-JUMP-R4-20260927";
+  const VERSION = "DPRO-CONTACT-ZERO-JUMP-R4.1-20260927";
   const POLL_MS = 30000;
   let timer = null;
   let button = null;
@@ -19,7 +13,9 @@
   const list = () => document.getElementById("messageList");
   const apiBase = () => String(window.DPRO_CONTACT_CONFIG?.apiBaseUrl || "").replace(/\/$/, "");
   const threadId = () => String(window.DPRO_CONTACT_UI?.getSelectedThreadId?.() || "");
-  const visibleCount = () => document.querySelectorAll("#messageList > .dc-message").length;
+  const visibleCount = () =>
+    Number(window.DPRO_CONTACT_UI?.getVisibleMessageCount?.()) ||
+    document.querySelectorAll("#messageList > .dc-message").length;
 
   function ensureButton() {
     if (button?.isConnected) return button;
@@ -37,7 +33,7 @@
     button.addEventListener("click", async () => {
       button.hidden = true;
       try {
-        await window.DPRO_CONTACT_UI?.refresh?.();
+        await window.DPRO_CONTACT_UI?.refresh?.({scrollMode:"bottom"});
       } finally {
         setTimeout(() => {
           const current = list();

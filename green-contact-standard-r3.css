@@ -1,4 +1,4 @@
-/* DPRO CONTACT STANDARD R3 / GREEN */
+/* DPRO CONTACT STANDARD R3.4 / GREEN */
 .dc-composer{position:relative}
 .dc-composer-r3-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
 .dc-r3-tool{min-height:38px;border:1px solid #cfe1da;border-radius:10px;background:#f8fbf9;color:#1e6a52;padding:0 12px;font-weight:900;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
@@ -14,7 +14,7 @@
 .dc-r3-attachment strong{font-size:11px}.dc-r3-attachment small{margin-top:3px;color:#6c7b75;font-size:9px}
 .dc-r3-remove{border:0;background:#fff0f0;color:#8d3030;border-radius:8px;padding:7px 9px;font-weight:900;cursor:pointer}
 .dc-r3-history-attachment{margin-top:8px;border-top:1px solid rgba(0,0,0,.08);padding-top:8px}
-.dc-r3-history-attachment img{display:block;max-width:min(320px,100%);max-height:260px;border-radius:10px;object-fit:contain;background:#fff}
+.dc-r3-history-attachment img{display:block;width:min(320px,100%);height:200px;max-height:200px;border-radius:10px;object-fit:contain;background:#fff}
 .dc-r3-history-attachment a{display:inline-flex;align-items:center;gap:6px;color:#1e6a52;font-weight:900;font-size:11px;text-decoration:none}
 .dc-r3-send-note{font-size:9px;color:#687872;line-height:1.5}
 @media(max-width:760px){

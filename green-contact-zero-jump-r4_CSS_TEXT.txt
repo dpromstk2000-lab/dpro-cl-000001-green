@@ -1,27 +1,10 @@
-/* DPRO GREEN CONTACT R3.10.4 / ZERO-JUMP */
+/* DPRO GREEN CONTACT / ZERO-JUMP R4.1 */
 .dc-conversation{position:relative}
-
-/* Disable browser scroll anchoring inside the message pane.
-   The app, not the browser, decides when the view moves. */
 .dc-messages{
   overflow-anchor:none !important;
   scroll-behavior:auto !important;
 }
-
-/* Reserve a stable box for history images so late image decoding
-   cannot change the conversation height and nudge the scrollbar. */
-.dc-r3-history-attachment img{
-  display:block !important;
-  width:min(320px,100%) !important;
-  height:200px !important;
-  max-height:200px !important;
-  object-fit:contain !important;
-  background:#fff !important;
-}
-
-/* Keep message bubbles out of native scroll anchoring calculations too. */
 .dc-message{overflow-anchor:none !important}
-
 .dc-new-message-notice{
   position:absolute;
   left:50%;

@@ -1,28 +1,63 @@
-DPRO GREEN CONTACT R3.10.4 / ZERO-JUMP
+DPRO GREEN CONTACT R3.11 / FINAL HARDENING
 2026-09-27
 
-R3.10.3でも動いたため、方式を変更。
+目的:
+R3.10.4 ZERO-JUMPで実機PASSした動作を守ったまま、
+CONTACT内部に残っていた旧処理を整理する。
 
-今回の完成方針:
-- 30秒ごとに新着確認は続ける
-- バックグラウンド確認では visible DOM を絶対に再描画しない
-- 新着があれば「新しいメッセージがあります ↓」だけ表示
-- オペレーターがそのボタンを押した時だけ履歴を更新
-- タブ復帰時のbase CONTACT自動refreshも抑止
-- browser scroll anchoringをOFF
-- 履歴画像は高さ200pxを先に確保し、画像読み込み後のレイアウト変動を防止
+主な変更:
+1. contact-green.js をR4へ更新
+   - renderMessages()の無条件 scrollTop=scrollHeight を廃止
+   - 新しい会話を開く時だけ最新位置へ
+   - 再読み込み時はmessage ID基準で閲覧位置を復元
+   - タブ復帰時の自動再読込は autoRefresh=true の時だけ
+   - 非同期中に別会話へ移動した場合の古いレスポンス描画を防止
+   - message DOMへ data-message-id を付与
 
-これにより:
-新着確認 = 自動
-画面移動 = ユーザー操作時だけ
+2. 添付履歴をbase rendererへ統合
+   - array indexで添付を後付けする方式を廃止
+   - Workerが返す message.id と同じメッセージDOMで直接描画
+   - 追加API fetch / MutationObserver依存を削除
+   - 画像の表示枠を200pxで先に確保しレイアウトずれ防止
+
+3. green-contact-standard-r3.js をR3.4へ
+   - deprecated DOMNodeRemovedを廃止
+   - object URLを明示的にrevoke
+   - 添付送信後は正式にbottom refresh
+
+4. contact-green.html
+   - 古いquery stringを更新
+   - standard / ZERO-JUMP CSS・JSをHTMLから明示ロード
+   - config.jsの動的loader依存を解除
+
+5. contact-green-config.js
+   - 設定専用へ整理
+   - R3.10.4で必要だったvisibility抑止overlayを撤去
+   - BUILD QAの古い通常セッション除去だけ維持
+
+維持:
+- LINE text双方向
+- LINE画像/PDF/Office/TXT/CSV添付
+- private Storage
+- 送信確認
+- R3.10.4 ZERO-JUMP
+- BUILDアクセス遷移
+- Security文言
 
 変更なし:
-LINE送受信 / 画像 / PDF / 送信確認 / Worker / SQL / Secret
+Worker / SQL / Supabase / Secret / LINE公式設定
 
-確認:
-1. contact-green.html?dpro_build=1 をCtrl+F5
-2. 任意の位置で3〜5分そのまま待つ
-3. スクロール位置が動かない
-4. スマホLINEから新着を1件送る
-5. 位置は動かず「新しいメッセージがあります ↓」が出る
-6. ボタンを押した時だけ最新へ移動
+アップロード先:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+確認URL:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/contact-green.html?dpro_build=1
+
+回帰QA:
+A. 画面表示・会話一覧
+B. 3〜5分放置してスクロール不動
+C. 過去履歴中の新着通知
+D. 新着通知ボタン→最新
+E. plain text送信確認→送信
+F. 画像履歴表示
+G. PDF履歴リンク

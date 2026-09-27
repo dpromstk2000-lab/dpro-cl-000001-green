@@ -1,10 +1,10 @@
 /**
  * DPRO GREEN RENTAL × DPRO CONTACT
- * CONTACT-V1-7-GREEN-1 / OWNER-FLOW-R1.1
+ * HARDENED CONTACT R3.11
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10.4-20260927",
+  version: "DPRO-CONTACT-GREEN-HARDENED-R3.11-20260927",
   enabled: true,
   features: {
     line: true, lineReply: true, search: true, statusManagement: true,
@@ -47,59 +47,9 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
   ui: { autoRefreshSeconds: 30, closeSidebarAfterNavigate: true, showSecurityNote: true }
 });
 
-/* BUILD QA: stale normal session must not override BUILD credential. */
+/* BUILD QA only: an expired normal admin session must not override BUILD auth. */
 (() => {
   "use strict";
   if (new URLSearchParams(location.search).get("dpro_build") !== "1") return;
   try { sessionStorage.removeItem("green_admin_session_token"); } catch {}
-})();
-
-/* Base CONTACT refreshes on tab return. Suppress that here.
-   R3.10.4 performs background polling without changing the visible DOM. */
-(() => {
-  "use strict";
-  if (!/\/contact-green\.html$/.test(location.pathname)) return;
-  document.addEventListener("visibilitychange", (event) => {
-    if (!document.hidden) event.stopImmediatePropagation();
-  }, true);
-})();
-
-(() => {
-  "use strict";
-  if (!/\/contact-green\.html$/.test(location.pathname)) return;
-  const VERSION = "DPRO-CONTACT-STANDARD-R3.3-20260927";
-  if (!document.querySelector('link[data-dpro-contact-r3]')) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = `green-contact-standard-r3.css?v=${encodeURIComponent(VERSION)}`;
-    link.dataset.dproContactR3 = VERSION;
-    document.head.append(link);
-  }
-  if (!document.querySelector('script[data-dpro-contact-r3]')) {
-    const script = document.createElement("script");
-    script.src = `green-contact-standard-r3.js?v=${encodeURIComponent(VERSION)}`;
-    script.defer = true;
-    script.dataset.dproContactR3 = VERSION;
-    document.head.append(script);
-  }
-})();
-
-(() => {
-  "use strict";
-  if (!/\/contact-green\.html$/.test(location.pathname)) return;
-  const VERSION = "DPRO-CONTACT-ZERO-JUMP-R4-20260927";
-  if (!document.querySelector('link[data-dpro-contact-zero-jump-r4]')) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = `green-contact-zero-jump-r4.css?v=${encodeURIComponent(VERSION)}`;
-    link.dataset.dproContactZeroJumpR4 = VERSION;
-    document.head.append(link);
-  }
-  if (!document.querySelector('script[data-dpro-contact-zero-jump-r4]')) {
-    const script = document.createElement("script");
-    script.src = `green-contact-zero-jump-r4.js?v=${encodeURIComponent(VERSION)}`;
-    script.defer = true;
-    script.dataset.dproContactZeroJumpR4 = VERSION;
-    document.head.append(script);
-  }
 })();
