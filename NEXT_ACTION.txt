@@ -1,16 +1,9 @@
 次のアクション
 
-Worker V3-F1を先にDeployし、health PASS後にこのZIPをGitHubへ入れる。
+Worker F1.1 Deploy後、このZIPをGitHub直下へ上書き。
+Ctrl+F5 → 販売・SHOP。
 
-Owner:
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
-
-販売・SHOP → 注文・受付管理
-
-確認:
-1. 新規/進行中/完了の件数
-2. 通常販売/取り置き/レンタルのカード
-3. unpaid が「未決済」表示
-4. 各カードに「次にやること」
-5. レンタルテストの「次へ：内容確認」
-6. 詳細・更新で内部メモ/履歴
+期待:
+注文・受付管理に既存4件が再表示。
+新規・要確認 = 4
+通常販売1 / 取り置き2 / レンタル1

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-ORDERS-V3F1-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-ORDERS-V3F1.1-20260927";
   if (window.__DPRO_GREEN_SHOP_OWNER_ORDERS_V3F1__) return;
   window.__DPRO_GREEN_SHOP_OWNER_ORDERS_V3F1__ = VERSION;
 
@@ -309,10 +309,19 @@
     if (state.loading) return;
     state.loading = true;
     try {
-      const r = await request("/api/admin/bootstrap");
-      state.orders = r.data.orders || [];
-      state.orderItems = r.data.orderItems || [];
-      state.orderStatusHistory = r.data.orderStatusHistory || [];
+      let r;
+      try {
+        r = await request("/api/admin/order-workflow");
+      } catch (primaryError) {
+        console.warn(VERSION, "dedicated order endpoint failed; fallback bootstrap", primaryError);
+        r = await request("/api/admin/bootstrap");
+      }
+
+      const payload = r?.data || {};
+      state.orders = Array.isArray(payload.orders) ? payload.orders : [];
+      state.orderItems = Array.isArray(payload.orderItems) ? payload.orderItems : [];
+      state.orderStatusHistory = Array.isArray(payload.orderStatusHistory) ? payload.orderStatusHistory : [];
+
       render();
     } catch (e) {
       const card = orderCard();
@@ -594,7 +603,7 @@
       clearTimeout(timer);
       timer = setTimeout(() => {
         const card = orderCard();
-        if (card && card.dataset.shopv3fOrderWorkflow !== VERSION) {
+        if (card && card.dataset.shopv3fOrderWorkflow !== VERSION && !state.loading && state.orders.length) {
           render();
         }
       }, 80);

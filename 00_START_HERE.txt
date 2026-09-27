@@ -1,29 +1,17 @@
-DPRO GREEN SHOP V3-F1 / OWNER ORDER WORKFLOW
+DPRO GREEN SHOP V3-F1.1 OWNER FIX
 
-対象GitHub:
+実画面QA:
+V3-F1画面は表示されたが、DBに4件ある既存注文が0件表示になった。
+
+修正:
+- 専用 /api/admin/order-workflow を優先利用
+- 失敗時だけ既存 /api/admin/bootstrap にフォールバック
+- 初期state=0件のままMutationObserverが先に描画する競合を抑止
+- 既存注文を削除・変更しない
+
+GitHub:
 https://github.com/dpromstk2000-lab/dpro-cl-000001-green
 
-追加:
+追加/上書き:
 green-shop-orders-owner-v3f.js
-
-上書き:
 config.js
-
-販売・SHOPの注文管理を
-「注文・受付管理」へ本番化します。
-
-主な仕様:
-- 通常販売 / 取り置き / レンタル / 問い合わせ別の進捗
-- 新規・進行中・完了の件数
-- 区分フィルター
-- 「次にやること」を各受付に表示
-- ワンクリックで次の進捗へ
-- 詳細画面
-- お客様情報 / 住所 / 希望日 / 商品明細
-- 決済状態を日本語表示
-- オーナー内部メモ
-- 進捗変更履歴
-- LINE希望の場合「LINE顧客対応」への導線
-
-BUILD ACCESSは維持。
-FINAL切替はまだ行いません。
