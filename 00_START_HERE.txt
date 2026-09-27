@@ -1,0 +1,22 @@
+00_START_HERE
+
+SHOP-V3-C OWNER UI
+
+GitHub:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+ZIPの中身をリポジトリ直下へ上書きしてください。
+
+対象:
+green-shop-owner.js
+config.js
+
+アップロード後の確認URL:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+確認:
+左メニュー「販売・SHOP」
+→ 写真付き商品カード表示
+→ 商品編集を開く
+→ ①基本 / ②写真 / ③販売方法 / ④受取方法 / ⑤公開
+が表示されればV3-C反映OK。
