@@ -1,63 +1,31 @@
-DPRO GREEN CONTACT R3.11 / FINAL HARDENING
-2026-09-27
+DPRO GREEN LIFF RICH MENU ROUTER R1
 
 目的:
-R3.10.4 ZERO-JUMPで実機PASSした動作を守ったまま、
-CONTACT内部に残っていた旧処理を整理する。
+LINE公式のリッチメニューから、DPRO GREENのお客様専用画面へ直接入れる。
 
-主な変更:
-1. contact-green.js をR4へ更新
-   - renderMessages()の無条件 scrollTop=scrollHeight を廃止
-   - 新しい会話を開く時だけ最新位置へ
-   - 再読み込み時はmessage ID基準で閲覧位置を復元
-   - タブ復帰時の自動再読込は autoRefresh=true の時だけ
-   - 非同期中に別会話へ移動した場合の古いレスポンス描画を防止
-   - message DOMへ data-message-id を付与
+追加:
+green-liff-richmenu-router-r1.js
 
-2. 添付履歴をbase rendererへ統合
-   - array indexで添付を後付けする方式を廃止
-   - Workerが返す message.id と同じメッセージDOMで直接描画
-   - 追加API fetch / MutationObserver依存を削除
-   - 画像の表示枠を200pxで先に確保しレイアウトずれ防止
+変更:
+member.html にrouter scriptを1本追加。
 
-3. green-contact-standard-r3.js をR3.4へ
-   - deprecated DOMNodeRemovedを廃止
-   - object URLを明示的にrevoke
-   - 添付送信後は正式にbottom refresh
+動作:
+?tab=plants
+  → 設置植物
+?tab=home
+  → ホーム（次回訪問＋最近の作業報告）
+?tab=requests&request=issue
+  → ご相談 → 植物異常フォームへスクロール
+?tab=requests&request=change
+  → ご相談 → 変更相談フォーム
+?tab=requests&request=additional
+  → ご相談 → 追加相談フォーム
 
-4. contact-green.html
-   - 古いquery stringを更新
-   - standard / ZERO-JUMP CSS・JSをHTMLから明示ロード
-   - config.jsの動的loader依存を解除
+LINE未ログイン:
+既存の「LINEで本人確認して開く」を使用。
+liff.login() のredirectUriはlocation.hrefなので、tab/requestパラメータを保持したまま戻る。
 
-5. contact-green-config.js
-   - 設定専用へ整理
-   - R3.10.4で必要だったvisibility抑止overlayを撤去
-   - BUILD QAの古い通常セッション除去だけ維持
+既にLINE/DPROログイン済み:
+そのまま指定タブへ移動。
 
-維持:
-- LINE text双方向
-- LINE画像/PDF/Office/TXT/CSV添付
-- private Storage
-- 送信確認
-- R3.10.4 ZERO-JUMP
-- BUILDアクセス遷移
-- Security文言
-
-変更なし:
-Worker / SQL / Supabase / Secret / LINE公式設定
-
-アップロード先:
-https://github.com/dpromstk2000-lab/dpro-cl-000001-green
-
-確認URL:
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/contact-green.html?dpro_build=1
-
-回帰QA:
-A. 画面表示・会話一覧
-B. 3〜5分放置してスクロール不動
-C. 過去履歴中の新着通知
-D. 新着通知ボタン→最新
-E. plain text送信確認→送信
-F. 画像履歴表示
-G. PDF履歴リンク
+Secret / Worker / SQL変更なし。
