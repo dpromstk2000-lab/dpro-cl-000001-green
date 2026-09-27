@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-V3.1.2-DIALOG-HARDFIT-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-V3.1.3-PENDING-PHOTO-UX-20260927";
   const API = String(
     window.GREEN_CONFIG?.SHOP_MODULE?.apiBase ||
     "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev"
@@ -26,6 +26,7 @@
     editProduct:null,
     editingTab:"basic",
     pendingFiles:[],
+    pendingPrimaryIndex:0,
     uploadBusy:false,
   };
 
@@ -252,7 +253,7 @@
       .shopv3-file-button:hover{filter:brightness(.97)}
       .shopv3-pending-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
       .shopv3-pending-card{border:1px solid #dce6e1;border-radius:13px;overflow:hidden;background:#fff}
-      .shopv3-pending-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#f2f4f3}
+      .shopv3-pending-card img{width:100%;aspect-ratio:4/3;object-fit:contain;display:block;background:#f7f8f7}
       .shopv3-pending-card>div{padding:8px;display:grid;gap:6px}
       .shopv3-pending-name{font-size:11px;font-weight:800;word-break:break-all;color:#42534a}
       .shopv3-legacy-photo{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;border:1px solid #dce6e1;border-radius:13px;padding:10px;margin-top:12px;background:#fff}
@@ -627,6 +628,7 @@
       try{ if(item?.previewUrl) URL.revokeObjectURL(item.previewUrl); }catch{}
     }
     state.pendingFiles=[];
+    state.pendingPrimaryIndex=0;
   }
 
   function normalizePendingFiles(files){
@@ -653,6 +655,9 @@
         file,
         previewUrl:URL.createObjectURL(file),
       });
+    }
+    if(state.pendingFiles.length && !Number.isInteger(state.pendingPrimaryIndex)){
+      state.pendingPrimaryIndex=0;
     }
   }
 
@@ -838,7 +843,9 @@
       ${media.length
         ?`<div style="margin-top:14px"><strong>登録済み写真 ${media.length}枚</strong></div>
           <div class="shopv3-media-grid">${media.map((m,i)=>mediaItemHtml(m,i)).join("")}</div>`
-        :`<div class="shopv3-empty" style="margin-top:12px">新しい写真はまだ登録されていません。<br><small>写真を選ぶと、保存前にここへプレビュー表示します。</small></div>`}
+        :state.pendingFiles.length
+          ?`<div class="shopv3-note" style="margin-top:12px"><strong>まだ未保存です。</strong> 下の「変更を保存」を押すと、上の${state.pendingFiles.length}枚が登録されます。</div>`
+          :`<div class="shopv3-empty" style="margin-top:12px">新しい写真はまだ登録されていません。<br><small>写真を選ぶと、保存前にここへプレビュー表示します。</small></div>`}
     </section>`;
   }
 
@@ -853,6 +860,10 @@
         ${state.pendingFiles.map((item,i)=>`<article class="shopv3-pending-card">
           <img src="${esc(item.previewUrl)}" alt="">
           <div>
+            <label class="shopv3-choice" style="padding:7px">
+              <input type="radio" name="pendingPrimary" value="${i}" ${state.pendingPrimaryIndex===i?"checked":""}>
+              <span><strong>${state.pendingPrimaryIndex===i?"メイン写真":"メイン写真にする"}</strong><small>一覧に表示する写真</small></span>
+            </label>
             <div class="shopv3-pending-name">${esc(item.file.name)}</div>
             <div class="shopv3-help">${Math.max(1,Math.round(item.file.size/1024))}KB</div>
             <button type="button" class="shopv3-mini danger" data-pending-remove="${i}">この写真を外す</button>
@@ -1002,11 +1013,23 @@
       });
     }
 
+    $$('input[name="pendingPrimary"]',d).forEach(r=>r.onchange=()=>{
+      state.pendingPrimaryIndex=Number(r.value)||0;
+      drawEditor();
+    });
+
     $$("[data-pending-remove]",d).forEach(b=>b.onclick=()=>{
       const i=Number(b.dataset.pendingRemove);
       const item=state.pendingFiles[i];
       try{ if(item?.previewUrl) URL.revokeObjectURL(item.previewUrl); }catch{}
       state.pendingFiles.splice(i,1);
+      if(!state.pendingFiles.length){
+        state.pendingPrimaryIndex=0;
+      }else if(i < state.pendingPrimaryIndex){
+        state.pendingPrimaryIndex=Math.max(0,state.pendingPrimaryIndex-1);
+      }else if(i === state.pendingPrimaryIndex){
+        state.pendingPrimaryIndex=0;
+      }
       drawEditor();
     });
 
@@ -1129,7 +1152,7 @@
           fd.set("file",state.pendingFiles[i].file);
           fd.set("altText",p.name);
           fd.set("sortOrder",String(((p.media||[]).length+i+1)*10));
-          fd.set("isPrimary",String((p.media||[]).length===0 && i===0));
+          fd.set("isPrimary",String(i===state.pendingPrimaryIndex));
           await uploadRequest(`/api/admin/products/${p.dbId}/media`,fd);
         }
       }

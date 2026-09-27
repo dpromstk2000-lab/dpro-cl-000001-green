@@ -1,20 +1,16 @@
 00_START_HERE
 
-SHOP-V3-C.3 DIALOG HARD FIT
+SHOP-V3-C.4 PENDING PHOTO UX
+
+今回の実QAで5枚選択できていることを確認。
+保存前UIの矛盾だけ修正します。
 
 GitHub直下へ上書き:
-green-shop-owner.js
-config.js
+- green-shop-owner.js
+- config.js
 
 GitHub:
 https://github.com/dpromstk2000-lab/dpro-cl-000001-green
 
 確認URL:
 https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
-
-販売・SHOP → パキラ6号 → 写真
-
-今回は:
-- 下の「キャンセル」「変更を保存」が常に完全表示
-- 本文はその上だけでスクロール
-- 一番下までスクロール可能
