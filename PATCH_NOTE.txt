@@ -1,26 +1,21 @@
-DPRO GREEN CONTACT R3.10.1 / BUILD LOGIN FIX
+DPRO GREEN R3.10.2 / BUILD NAVIGATION FIX
 2026-09-27
 
-症状:
-?dpro_build=1 でLINE・顧客対応を開いた時、以前の通常管理セッションが残っていると、
-期限切れの通常トークンがBUILD認証より先に使われ、ログイン画面へ戻されることがある。
-
-原因:
-contact-green-auth.js は通常管理トークンが存在すると、それをBUILDコードより優先する設計。
-QAを長時間続けた時に古い通常トークンがsessionStorageへ残るとBUILDログインを邪魔する。
+確認した原因:
+owner.html?dpro_build=1 の「LINE・顧客対応」ボタンが
+contact-green.html へ遷移するときに ?dpro_build=1 を落としていました。
+そのためBUILD QAではなく本番Owner認証へ入り、
+「初回設定がまだ完了していません」画面へ戻っていました。
 
 修正:
-- ?dpro_build=1 の時だけ green_admin_session_token をクリア
-- BUILDコードの保存値は削除しない
-- 本番URL（dpro_buildなし）には一切影響しない
-- R3.10の閲覧位置固定・新着通知は維持
-- Worker / SQL / Secret / LINE設定は変更なし
+- Owner BUILD → LINE・顧客対応 で dpro_build=1 を維持
+- LINE・顧客対応 → GREEN管理画面 でも dpro_build=1 を維持
+- 本番URLには影響なし
+- R3.10閲覧位置固定＋新着通知を維持
+- Worker / SQL / Secret変更なし
 
-適用:
-GitHubリポジトリ直下へZIP内ファイルを上書き。
-その後、BUILD URLをCtrl+F5。
+アップロード先:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
 
-URL:
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/contact-green.html?dpro_build=1
-
-※ 管理コードはチャットへ貼らないでください。
+確認URL:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1

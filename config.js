@@ -55,7 +55,11 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
     button.innerHTML = "<span>話</span>LINE・顧客対応";
     button.setAttribute("aria-label", "LINEで継続中のお客様対応を開く");
     button.title = "LINEで継続中の会話を確認・返信";
-    button.addEventListener("click", () => { location.href = window.GREEN_CONFIG.CONTACT_URL || "contact-green.html"; });
+    button.addEventListener("click", () => {
+      const target = new URL(window.GREEN_CONFIG.CONTACT_URL || "contact-green.html", location.href);
+      if (new URLSearchParams(location.search).get("dpro_build") === "1") target.searchParams.set("dpro_build", "1");
+      location.href = target.toString();
+    });
     const messageButton = nav.querySelector('[data-view="messages"]');
     if (messageButton) nav.insertBefore(button, messageButton); else nav.append(button);
   }

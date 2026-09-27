@@ -4,7 +4,7 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10.1-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10.2-20260927",
   enabled: true,
   features: {
     line: true, lineReply: true, search: true, statusManagement: true,
@@ -22,9 +22,9 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
     pageLead: "相談受付後や契約中のお客様とのLINE会話を確認し、そのまま返信できます。新しい相談の一覧はGREEN管理画面の「相談受付」で確認します。",
     topbarDescription: "LINEで継続中の会話を確認・返信",
     channelName: "GREEN RENTAL LINE公式",
-    homeUrl: "owner.html",
+    homeUrl: new URLSearchParams(location.search).get("dpro_build") === "1" ? "owner.html?dpro_build=1" : "owner.html",
     homeLabel: "GREEN管理画面",
-    loginUrl: "owner.html",
+    loginUrl: new URLSearchParams(location.search).get("dpro_build") === "1" ? "owner.html?dpro_build=1" : "owner.html",
     primaryColor: "#1e6a52",
     primaryColor2: "#2f8b68",
     deepColor: "#12382d",
