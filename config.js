@@ -1,104 +1,260 @@
-/** DPRO GREEN LINE / CONTACT-V1-7-GREEN-1 / CUSTOMER-HERO-2 / SHOP-V3.1.3 / OWNER-FLOW-R1 / OWNER-UX-FIX-R1 */
-window.GREEN_CONFIG = Object.freeze({
-  API_BASE: "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev",
-  FACILITY_CODE: "cl_000001_green",
-  LIFF_ID: "2011750460-EpN149VY",
-  DEMO_MEMBER_TOKEN: "",
-  DEMO_CUSTOMER_NUMBER: "",
-  MAX_PHOTOS: 4,
-  MAX_IMAGE_EDGE: 1600,
-  JPEG_QUALITY: 0.82,
-  CONTACT_ENABLED: true,
-  CONTACT_URL: "contact-green.html",
-  SHOP_MODULE: Object.freeze({
-    enabled: true,
-    websiteUrl: "https://dpromstk2000-lab.github.io/dpro-green-website/shop.html",
-    apiBase: "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev",
-    storageMode: "backend",
-  }),
-  CUSTOMER_HERO: Object.freeze({
-    enabled: true,
-    desktopImage: "https://dpromstk2000-lab.github.io/dpro-green-website/owner-hero.webp",
-    mobileImage: "https://dpromstk2000-lab.github.io/dpro-green-website/hero-mobile-lobby.webp",
-    eyebrow: "GREEN RENTAL CUSTOMER PORTAL",
-    title: "空間に、やすらぎと品格を。",
-    badge: "ご利用中のお客様専用マイページ",
-    lead: "設置植物・次回訪問・作業報告・ご相談を、ひとつの画面で。",
-    alt: "観葉植物のある心地よい空間",
-  }),
-});
+window.GREEN_WEB_CONFIG = Object.freeze({
+  version: "WEB-GREEN-SHOP-V3D-20260927",
 
-window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
+  site: {
+    publicName: "グリーン・ポケット福岡粕屋店",
+    serviceName: "観葉植物レンタル・定期メンテナンス",
+    region: "福岡県糟屋郡粕屋町を拠点に対応",
+    operatorName: "グリーン・ポケット福岡粕屋店",
+    postalCode: "811-2307",
+    address: "福岡県糟屋郡粕屋町原町4-3-5 八昭ビル1階",
+    businessHours: "09:00～17:30",
+    closedDays: "土日祝日・GW・年末年始",
+    managerName: "西津 佳宏",
+    managerTitle: "店長",
+    fax: "092-719-0338",
+    officialStorePage: "https://green-pocket.biz/shop_list/fukuoka-kasuya",
+    officialContactUrl: "https://green-pocket.biz/shop_contact.html?post_id=326",
+    demo: false
+  },
+
+  release: {
+    mode: "production",
+    demoUrl: "",
+    productionPlatform: "github-pages",
+    productionUrl: "https://dpromstk2000-lab.github.io/dpro-green-website/",
+    customDomain: "",
+    allowIndexing: false,
+    searchConsoleVerification: "",
+    analyticsEnabled: false,
+    analyticsProvider: "",
+    analyticsId: ""
+  },
+
+  publication: {
+    ownerConfirmed: true,
+    storeInformationApproved: true,
+    logoApproved: false,
+    brandNameApproved: true,
+    headquartersTextApproved: true,
+    lineApproved: true,
+    customerDataStorageApproved: false,
+    realPhotosApproved: false,
+    customerCasesApproved: false,
+    googleMapApproved: true,
+    privacyOperatorApproved: false,
+    customDomainApproved: false
+  },
+
+  brand: {
+    logoUrl: "",
+    logoAlt: "",
+    headquartersName: "グリーン・ポケット",
+    headquartersLabel: "グリーン・ポケット公式サイト",
+    officialBrandName: "グリーン・ポケット",
+    approvedNotice: "店舗情報をご案内しています。"
+  },
+
+  media: {
+    useRealPhotos: false,
+    images: {
+      hero: { src: "owner-hero.webp", alt: "明るいオフィスに観葉植物を配置した空間", caption: "", width: 1440, height: 960 },
+      caseOffice: { src: "owner-office.webp", alt: "観葉植物を配置したオフィス受付", caption: "", width: 1200, height: 800 },
+      caseClinic: { src: "owner-clinic-green.webp", alt: "観葉植物を配置したクリニック待合室", caption: "", width: 1200, height: 800 },
+      caseWelfare: { src: "owner-welfare-green.webp", alt: "観葉植物を配置した福祉施設共用部", caption: "", width: 1200, height: 800 },
+      caseStore: { src: "owner-store.webp", alt: "観葉植物を配置した店舗エントランス", caption: "", width: 1200, height: 800 },
+      photoGuide: { src: "owner-photo-consult.webp", alt: "スマートフォンで設置場所の写真を撮影して相談する様子", caption: "", width: 1200, height: 900 },
+      maintenance: { src: "owner-maintenance.webp", alt: "スタッフが観葉植物を手入れする様子", caption: "", width: 1200, height: 900 }
+    }
+  },
+
+  map: {
+    embedUrl: "https://www.google.com/maps?q=%E7%A6%8F%E5%B2%A1%E7%9C%8C%E7%B3%9F%E5%B1%8B%E9%83%A1%E7%B2%95%E5%B1%8B%E7%94%BA%E5%8E%9F%E7%94%BA4-3-5%20%E5%85%AB%E6%98%AD%E3%83%93%E3%83%AB1%E9%9A%8E&output=embed",
+    viewUrl: "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E7%9C%8C%E7%B3%9F%E5%B1%8B%E9%83%A1%E7%B2%95%E5%B1%8B%E7%94%BA%E5%8E%9F%E7%94%BA4-3-5%20%E5%85%AB%E6%98%AD%E3%83%93%E3%83%AB1%E9%9A%8E",
+    title: "店舗所在地のGoogleマップ",
+    note: "公式店舗ページに掲載されている住所をもとに表示しています。"
+  },
+
+  seo: {
+    canonicalBaseUrl: "https://dpromstk2000-lab.github.io/dpro-green-website",
+    defaultShareImage: "og-image.png",
+    localBusinessSchemaEnabled: false,
+    sameAs: ["https://green-pocket.biz/shop_list/fukuoka-kasuya", "https://green-pocket.biz/"],
+    areaServed: ["福岡県糟屋郡粕屋町"],
+    address: { postalCode: "811-2307", addressRegion: "福岡県", addressLocality: "糟屋郡粕屋町", streetAddress: "原町4-3-5 八昭ビル1階", addressCountry: "JP" },
+    geo: { latitude: "", longitude: "" },
+    openingHours: ["Mo-Fr 09:00-17:30"]
+  },
+
+  links: {
+    contact: "contact.html",
+    lineGuide: "line.html",
+    line: "https://line.me/R/ti/p/%40358xjlgr",
+    phone: "092-719-0336",
+    customerGuide: "line.html#customer-portal",
+    customerPortal: "https://dpromstk2000-lab.github.io/dpro-cl-000001-green/member.html",
+    headquarters: "https://green-pocket.biz/",
+    privacy: "privacy.html",
+    officialStore: "https://green-pocket.biz/shop_list/fukuoka-kasuya",
+    officialContact: "https://green-pocket.biz/shop_contact.html?post_id=326",
+    guide: "https://green-pocket.biz/about_guide.html"
+  },
+
+  api: {
+    baseUrl: "https://dpro-cl-000001-green-core.dpromstk2000.workers.dev",
+    facilityCode: "cl_000001_green",
+    maxPhotos: 4,
+    maxOriginalImageBytes: 12582912,
+    maxUploadImageBytes: 5242880,
+    maxImageEdge: 1600,
+    jpegQuality: 0.82
+  },
+
+  liveSync: {
+    enabled: true,
+    endpointPath: "/api/public/site-profile?target=website",
+    timeoutMs: 8000,
+    cacheMinutes: 10,
+    adapterVersion: "GREEN-WEBSITE-LIVE-SYNC-20260804",
+    fallbackSource: "config.js",
+    showSyncStatus: true
+  },
+
+  line: {
+    templates: {
+      consultation: { title: "観葉植物レンタルをLINEで相談", note: "設置場所、希望時期、現在のお悩みが分かる範囲でお送りください。", message: "グリーン・ポケット福岡粕屋店へ観葉植物レンタルについて相談したいです。設置を考えている場所と希望時期をお伝えします。" },
+      photo: { title: "設置場所の写真から相談", note: "LINEへ移動後、設置を考えている場所の写真を添えてください。個人情報や機密情報が写っていないかご確認ください。", message: "グリーン・ポケット福岡粕屋店へ、設置場所の写真から観葉植物レンタルを相談したいです。写真を送りますので、植物の大きさや配置について案内をお願いします。" },
+      visit: { title: "訪問予定について確認", note: "お客様番号や会社名が分かる場合は、個人情報を送りすぎない範囲で添えてください。", message: "契約中のお客様です。次回の訪問予定について確認したいです。" },
+      report: { title: "作業報告について確認", note: "対象の訪問日が分かる場合は、日付を添えると確認がスムーズです。", message: "契約中のお客様です。作業報告と植物の状態について確認したいです。" },
+      plant_issue: { title: "植物の状態を相談", note: "植物全体と気になる部分の写真があると、状況を共有しやすくなります。", message: "契約中の植物について相談したいです。気になる状態があるため、写真と状況を送ります。" },
+      additional: { title: "植物の追加・変更を相談", note: "追加したい場所や変更したい植物が分かる写真があれば添えてください。", message: "契約中のお客様です。植物の追加または配置変更について相談したいです。" },
+      after_inquiry: { title: "受付番号をLINEで伝える", note: "受付番号だけで確認できない場合は、担当者から必要事項をご案内します。", message: "グリーン・ポケット福岡粕屋店のホームページから相談しました。受付番号は {receptionNumber} です。続けてLINEで相談したいです。" },
+      portal_help: { title: "お客様画面の利用方法を確認", note: "LINE本人確認後、確認済みのお客様情報だけを表示します。", message: "契約中のお客様です。お客様画面の開き方について確認したいです。" }
+    }
+  },
+
+  lineFallbackMessage: "グリーン・ポケット福岡粕屋店へ観葉植物レンタルについて相談したいです。設置を考えている場所と希望時期をお伝えします。",
+
+  featureFlags: {
+    show_price_information: false,
+    show_personal_home_service: false,
+    show_outdoor_plants: false,
+    show_seasonal_service: false,
+    show_spot_rental: false,
+    show_plant_disposal: false,
+    show_staff_introduction: false,
+    show_case_studies: true,
+    show_customer_reviews: false,
+    show_recruitment: false,
+    show_line_consultation: true,
+    show_photo_inquiry: true,
+    show_customer_portal_link: true,
+    show_maintenance_report_feature: true,
+    show_google_map: true,
+    show_headquarters_branding: true,
+    show_online_shop: true
+  }
+});
 
 (() => {
   "use strict";
-  const HERO_ADMIN_VERSION = "DPRO-CUSTOMER-HERO-2-20260808";
-  const SHOP_OWNER_VERSION = "GREEN-SHOP-OWNER-V3.1.3-PENDING-PHOTO-UX-20260927";
-  const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";
-  const OWNER_UX_FIX_VERSION = "GREEN-OWNER-UX-FIX-R2.9-20260915";
-  const OWNER_JST_FIX_VERSION = "GREEN-OWNER-JST-DATETIME-FIX-R1.4-20260916";
-  const ANNOUNCEMENT_JST_FIX_VERSION = "GREEN-ANNOUNCEMENT-JST-FIX-R1.2-20260916";
-  const LINE_ACCESS_VERSION = "GREEN-LINE-ACCESS-R1-20260916";
-  const BRUSHUP_VERSION = "GREEN-BRUSHUP-R30-20260916";
-  const STAFF_MANAGEMENT_VERSION = "GREEN-STAFF-MANAGEMENT-R31.2-20260923";
-  const INSTALLATION_UI_VERSION = "GREEN-INSTALLATION-UI-R32-20260917";
-  const CARE_OVERDUE_VERSION = "GREEN-CARE-OVERDUE-R33-20260917";
+  const liveSync = window.GREEN_WEB_CONFIG?.liveSync;
+  if (!liveSync?.enabled || document.querySelector('script[data-green-live-sync]')) return;
+  const version = encodeURIComponent(liveSync.adapterVersion || "latest");
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = `green-live-sync.css?v=${version}`;
+  stylesheet.dataset.greenLiveSync = "style";
+  document.head.append(stylesheet);
 
-  function installContactMenu() {
-    if (!window.GREEN_CONFIG?.CONTACT_ENABLED) return;
-    if (!/\/owner\.html$/.test(location.pathname)) return;
-    const nav = document.querySelector(".owner-nav");
-    if (!nav || document.getElementById("green-contact-menu")) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.id = "green-contact-menu";
-    button.innerHTML = "<span>話</span>LINE・顧客対応";
-    button.setAttribute("aria-label", "LINEで継続中のお客様対応を開く");
-    button.title = "LINEで継続中の会話を確認・返信";
-    button.addEventListener("click", () => {
-      const target = new URL(window.GREEN_CONFIG.CONTACT_URL || "contact-green.html", location.href);
-      if (new URLSearchParams(location.search).get("dpro_build") === "1") target.searchParams.set("dpro_build", "1");
-      location.href = target.toString();
-    });
-    const messageButton = nav.querySelector('[data-view="messages"]');
-    if (messageButton) nav.insertBefore(button, messageButton); else nav.append(button);
+  const script = document.createElement("script");
+  script.src = `green-live-sync.js?v=${version}`;
+  script.async = false;
+  script.dataset.greenLiveSync = "script";
+  document.head.append(script);
+})();
+
+(() => {
+  "use strict";
+  const standalone = document.querySelector('meta[name="dpro-green-shop-standalone"]');
+  const version = "GREEN-SHOP-PUBLIC-PROD-R3.0-20260927";
+  const detailVersion = "GREEN-SHOP-PUBLIC-DETAIL-V3D-20260927";
+  const experienceVersion = "GREEN-SHOP-PUBLIC-V3E2-20260927";
+
+  if (standalone) {
+    if (!document.querySelector('link[data-green-shop-detail-v3]')) {
+      const style = document.createElement("link");
+      style.rel = "stylesheet";
+      style.href = `green-shop-detail-v3.css?v=${encodeURIComponent(detailVersion)}`;
+      style.dataset.greenShopDetailV3 = detailVersion;
+      document.head.appendChild(style);
+    }
+
+    window.addEventListener("load", () => {
+      if (!document.querySelector('script[data-green-shop-runtime-r30]')) {
+        const script = document.createElement("script");
+        script.src = `green-shop-module.js?v=${encodeURIComponent(version)}`;
+        script.async = false;
+        script.dataset.greenShopRuntimeR30 = version;
+        document.body.appendChild(script);
+      }
+
+      if (!document.querySelector('script[data-green-shop-detail-v3]')) {
+        const detail = document.createElement("script");
+        detail.src = `green-shop-detail-v3.js?v=${encodeURIComponent(detailVersion)}`;
+        detail.async = false;
+        detail.dataset.greenShopDetailV3 = detailVersion;
+        document.body.appendChild(detail);
+      }
+
+      if (!document.querySelector('script[data-green-shop-v3e2]')) {
+        const experience = document.createElement("script");
+        experience.src = `green-shop-v3e.js?v=${encodeURIComponent(experienceVersion)}`;
+        experience.async = false;
+        experience.dataset.greenShopV3e2 = experienceVersion;
+        document.body.appendChild(experience);
+      }
+    }, { once: true });
+    return;
   }
 
-  function installCustomerHeroAdmin() {
-    if (!/\/owner\.html$/.test(location.pathname)) return;
-    if (!document.querySelector('link[data-customer-hero-admin]')) { const link=document.createElement("link"); link.rel="stylesheet"; link.href=`customer-hero-admin.css?v=${encodeURIComponent(HERO_ADMIN_VERSION)}`; link.dataset.customerHeroAdmin=HERO_ADMIN_VERSION; document.head.append(link); }
-    if (!document.querySelector('script[data-customer-hero-admin]')) { const script=document.createElement("script"); script.src=`customer-hero-admin.js?v=${encodeURIComponent(HERO_ADMIN_VERSION)}`; script.defer=true; script.dataset.customerHeroAdmin=HERO_ADMIN_VERSION; document.head.append(script); }
-  }
-  function installTutorialRuntime() {
-    if (document.documentElement.dataset.dproTutorialRuntime === "green-r3") return;
-    document.documentElement.dataset.dproTutorialRuntime="green-r3";
-    if (!document.querySelector('link[data-dpro-tutorial-green]')) { const link=document.createElement("link"); link.rel="stylesheet"; link.href="dpro-tutorial-green.css?v=GREEN-TUTORIAL-R3.1-20260822"; link.dataset.dproTutorialGreen="R3"; document.head.append(link); }
-    if (!document.querySelector('script[data-dpro-tutorial-green]')) { const script=document.createElement("script"); script.src="dpro-tutorial-green.js?v=GREEN-TUTORIAL-R3.1-20260822"; script.defer=true; script.dataset.dproTutorialGreen="R3"; document.head.append(script); }
-  }
-  function installShopModule() {
-    if (!window.GREEN_CONFIG?.SHOP_MODULE?.enabled) return;
-    if (!/\/owner\.html$/.test(location.pathname)) return;
-    if (document.querySelector('script[data-green-shop-owner]')) return;
-    const script=document.createElement("script"); script.src=`green-shop-owner.js?v=${encodeURIComponent(SHOP_OWNER_VERSION)}`; script.defer=true; script.dataset.greenShopOwner=SHOP_OWNER_VERSION; document.head.append(script);
-  }
-  function installContactFlowCopy() {
-    if (!/\/contact-green\.html$/.test(location.pathname)) return;
-    const setTextIfChanged=(element,text)=>{ if(element&&element.textContent!==text) element.textContent=text; };
-    const apply=()=>{ const pageTitle=document.getElementById("pageTitle"),pageLead=document.getElementById("pageLead"),topDescription=document.getElementById("topbarDescription"); setTextIfChanged(pageTitle,"LINEでの継続対応をひとつに"); if(pageLead){ const preparing=window.DPRO_CONTACT_CONFIG?.features?.line===false; setTextIfChanged(pageLead,preparing?"現在はLINE公式アカウント接続前の準備モードです。接続後は、相談受付後や契約中のお客様とのLINE会話をこの画面で確認・返信できます。":"相談受付後や契約中のお客様とのLINE会話を確認し、そのまま返信できます。新しい相談の一覧はGREEN管理画面の「相談受付」で確認します。"); } if(window.DPRO_CONTACT_CONFIG?.features?.line!==false) setTextIfChanged(topDescription,"LINEで継続中の会話を確認・返信"); };
-    const start=()=>{ apply(); const target=document.getElementById("app")||document.body; if(!target)return; const observer=new MutationObserver(()=>{ clearTimeout(start._timer); start._timer=setTimeout(apply,10); }); observer.observe(target,{childList:true,subtree:true,characterData:true}); };
-    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>setTimeout(start,0),{once:true}); else setTimeout(start,0);
-  }
-  function injectCss(attr,href,version){ if(document.querySelector(`link[${attr}]`))return; const l=document.createElement("link"); l.rel="stylesheet"; l.href=`${href}?v=${encodeURIComponent(version)}`; l.setAttribute(attr,version); document.head.append(l); }
-  function injectJs(attr,src,version){ if(document.querySelector(`script[${attr}]`))return; const s=document.createElement("script"); s.src=`${src}?v=${encodeURIComponent(version)}`; s.defer=true; s.setAttribute(attr,version); document.head.append(s); }
-  function installOwnerFlowClarity(){ if(!/\/owner\.html$/.test(location.pathname))return; injectCss("data-green-owner-flow","green-owner-flow.css",OWNER_FLOW_VERSION); injectJs("data-green-owner-flow","green-owner-flow.js",OWNER_FLOW_VERSION); }
-  function installOwnerUxFix(){ if(!/\/owner\.html$/.test(location.pathname))return; injectCss("data-green-owner-ux-fix","green-owner-ux-fix.css",OWNER_UX_FIX_VERSION); injectJs("data-green-owner-ux-fix","green-owner-ux-fix.js",OWNER_UX_FIX_VERSION); }
-  function installOwnerJstDatetimeFix(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-owner-jst-fix","green-owner-jst-fix.js",OWNER_JST_FIX_VERSION); }
-  function installAnnouncementJstFix(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-announcement-jst-fix","green-announcement-jst-fix.js",ANNOUNCEMENT_JST_FIX_VERSION); }
-  function installLineAccess(){ const isOwner=/\/owner\.html$/.test(location.pathname),isMember=/\/member\.html$/.test(location.pathname); if(!isOwner&&!isMember)return; const attr=isOwner?"data-green-line-access-owner":"data-green-line-access-member"; injectJs(attr,isOwner?"green-line-access-owner.js":"green-line-access-member.js",LINE_ACCESS_VERSION); }
-  function installBrushupR30(){ if(!/\/(owner|member)\.html$/.test(location.pathname))return; injectJs("data-green-brushup-r30","green-brushup-r30.js",BRUSHUP_VERSION); }
-  function installStaffManagementR31(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-staff-management-r31","green-staff-management-r31.js",STAFF_MANAGEMENT_VERSION); }
-  function installInstallationUiR32(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-installation-ui-r32","green-installation-ui-r32.js",INSTALLATION_UI_VERSION); }
-  function installCareOverdueR33(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-care-overdue-r33","green-care-overdue-r33.js",CARE_OVERDUE_VERSION); }
-  function boot(){ installContactMenu(); installCustomerHeroAdmin(); installTutorialRuntime(); installShopModule(); installOwnerFlowClarity(); installOwnerUxFix(); installOwnerJstDatetimeFix(); installAnnouncementJstFix(); installLineAccess(); installBrushupR30(); installStaffManagementR31(); installInstallationUiR32(); installCareOverdueR33(); installContactFlowCopy(); }
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
+  if (document.querySelector('script[data-green-shop-module]')) return;
+  const script = document.createElement("script");
+  script.src = `green-shop-module.js?v=${encodeURIComponent(version)}`;
+  script.async = false;
+  script.dataset.greenShopModule = version;
+  document.head.append(script);
+})();
+
+(() => {
+  "use strict";
+  const version = "GREEN-WRAP-FIX-R1-20260831";
+  if (document.querySelector('link[data-green-wrap-fix]')) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `green-wrap-fix.css?v=${encodeURIComponent(version)}`;
+  link.dataset.greenWrapFix = version;
+  document.head.append(link);
+})();
+
+(() => {
+  "use strict";
+  const version = "GREEN-LINE-QR-LIVE-R1-20260927";
+  if (document.querySelector('script[data-green-line-qr-live]')) return;
+  const script = document.createElement("script");
+  script.src = `kasuya-line-qr-live.js?v=${encodeURIComponent(version)}`;
+  script.defer = true;
+  script.dataset.greenLineQrLive = version;
+  document.head.appendChild(script);
+})();
+
+(() => {
+  "use strict";
+  const version = "GREEN-WELCOME-LOGO-LIVE-R1-20260927";
+  if (document.querySelector('link[data-green-welcome-logo-live]')) return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `kasuya-welcome-logo-live.css?v=${encodeURIComponent(version)}`;
+  link.dataset.greenWelcomeLogoLive = version;
+  document.head.appendChild(link);
 })();

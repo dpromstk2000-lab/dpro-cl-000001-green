@@ -1,16 +1,22 @@
-00_START_HERE
-
-SHOP-V3-C.4 PENDING PHOTO UX
-
-今回の実QAで5枚選択できていることを確認。
-保存前UIの矛盾だけ修正します。
-
-GitHub直下へ上書き:
-- green-shop-owner.js
-- config.js
+SHOP V3-E2 PUBLIC
 
 GitHub:
-https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+https://github.com/dpromstk2000-lab/dpro-green-website
 
-確認URL:
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+ZIP直下のファイルをリポジトリ直下へ上書き/追加。
+
+追加:
+green-shop-v3e.js
+
+上書き:
+config.js
+
+公開SHOP:
+https://dpromstk2000-lab.github.io/dpro-green-website/shop.html
+
+Owner側でおすすめ/セットをDB登録すると、
+固定カードの代わりにDB内容が公開SHOPへ表示されます。
+
+商品に「取り置き」「レンタル」を設定し、
+SHOP全体設定もONにすると、
+商品詳細に受付ボタンが表示されます。
