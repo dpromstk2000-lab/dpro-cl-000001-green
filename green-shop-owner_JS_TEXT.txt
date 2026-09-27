@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-V3.0-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-V3.1-PHOTO-UX-20260927";
   const API = String(
     window.GREEN_CONFIG?.SHOP_MODULE?.apiBase ||
     "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev"
@@ -244,7 +244,16 @@
       .shopv3-choice small{display:block;color:#74817a;line-height:1.45;margin-top:2px}
       .shopv3-media-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
       .shopv3-drop{border:2px dashed #bcd0c5;border-radius:14px;padding:16px;text-align:center;background:#f9fcfa}
-      .shopv3-drop input{display:block;margin:10px auto 0;max-width:100%}
+      .shopv3-drop input{display:none}
+      .shopv3-file-button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin-top:10px;padding:0 18px;border-radius:11px;background:#1f7a51;color:#fff;font-weight:900;cursor:pointer;box-shadow:0 6px 18px #1f7a5120}
+      .shopv3-file-button:hover{filter:brightness(.97)}
+      .shopv3-pending-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+      .shopv3-pending-card{border:1px solid #dce6e1;border-radius:13px;overflow:hidden;background:#fff}
+      .shopv3-pending-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#f2f4f3}
+      .shopv3-pending-card>div{padding:8px;display:grid;gap:6px}
+      .shopv3-pending-name{font-size:11px;font-weight:800;word-break:break-all;color:#42534a}
+      .shopv3-legacy-photo{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:center;border:1px solid #dce6e1;border-radius:13px;padding:10px;margin-top:12px;background:#fff}
+      .shopv3-legacy-photo img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#f2f4f3}
       .shopv3-media-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
       .shopv3-media-item{border:1px solid #dce6e1;border-radius:13px;overflow:hidden;background:#fff}
       .shopv3-media-item img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#f2f4f3}
@@ -266,7 +275,8 @@
         .shopv3-setting-grid,.shopv3-summary,.shopv3-grid,.shopv3-choice-grid{grid-template-columns:1fr}
         .shopv3-product{grid-template-columns:92px minmax(0,1fr)}
         .shopv3-product-media,.shopv3-product-media img{min-height:92px}
-        .shopv3-media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .shopv3-media-grid,.shopv3-pending-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .shopv3-legacy-photo{grid-template-columns:110px 1fr}
         .shopv3-preview-card{grid-template-columns:1fr}
       }
     `;
@@ -606,10 +616,44 @@
     return JSON.parse(JSON.stringify(p||freshProduct()));
   }
 
+  function clearPendingFiles(){
+    for(const item of state.pendingFiles||[]){
+      try{ if(item?.previewUrl) URL.revokeObjectURL(item.previewUrl); }catch{}
+    }
+    state.pendingFiles=[];
+  }
+
+  function normalizePendingFiles(files){
+    const currentCount=(state.editProduct?.media||[]).length;
+    const max=state.capabilities.maxProductMedia||MAX_MEDIA;
+    const room=Math.max(0,max-currentCount-state.pendingFiles.length);
+    const selected=Array.from(files||[]).slice(0,room);
+
+    if(!selected.length && Array.from(files||[]).length){
+      window.Green.toast(`商品写真は最大${max}枚です。`,"error");
+      return;
+    }
+
+    for(const file of selected){
+      if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
+        window.Green.toast(`${file.name} はJPEG・PNG・WebPではありません。`,"error");
+        continue;
+      }
+      if(file.size<=0 || file.size>8*1024*1024){
+        window.Green.toast(`${file.name} は8MB以下にしてください。`,"error");
+        continue;
+      }
+      state.pendingFiles.push({
+        file,
+        previewUrl:URL.createObjectURL(file),
+      });
+    }
+  }
+
   function openEditor(dbId="",tab="basic",preset=null){
+    clearPendingFiles();
     state.editProduct=preset?cloneForEdit(preset):cloneForEdit(state.products.find(x=>x.dbId===dbId)||freshProduct());
     state.editingTab=tab;
-    state.pendingFiles=[];
     drawEditor();
   }
 
@@ -655,8 +699,8 @@
       </form>
     `;
 
-    $("#shopv3-close",d).onclick=()=>d.close();
-    $("#shopv3-cancel",d).onclick=()=>d.close();
+    $("#shopv3-close",d).onclick=()=>{clearPendingFiles();d.close();};
+    $("#shopv3-cancel",d).onclick=()=>{clearPendingFiles();d.close();};
     $("#shopv3-preview-shop",d)?.addEventListener("click",()=>window.open(WEBSITE_URL,"_blank","noopener"));
 
     $$("[data-shopv3-tab]",d).forEach(b=>b.onclick=()=>{
@@ -727,30 +771,58 @@
 
   function panePhotos(p){
     const media=p.media||[];
+    const currentPhoto=productPhoto(p);
+    const hasLegacyOnly=media.length===0 && !!currentPhoto;
     return `<section class="${paneClass("photos")}">
       <div class="shopv3-note" style="margin-bottom:12px">
         <strong>一覧はメイン写真1枚だけ。</strong>
         商品を開いたときに複数写真を見せる設計です。植物は正面・斜め・葉・鉢・設置イメージ・サイズ感の3〜6枚がおすすめです。
       </div>
-      <div class="shopv3-drop">
-        <strong>商品写真を選ぶ</strong>
+
+      ${hasLegacyOnly?`
+        <div class="shopv3-legacy-photo">
+          <img src="${esc(currentPhoto)}" alt="${esc(p.name)}">
+          <div>
+            <strong>現在公開中の画像</strong>
+            <div class="shopv3-help">これは従来の固定画像です。新しい写真を1枚保存すると、その写真がメイン写真になり、以後はこの管理画面から差し替えできます。</div>
+          </div>
+        </div>
+      `:""}
+
+      <div class="shopv3-drop" style="margin-top:12px" id="shopv3-drop-zone">
+        <strong>商品写真を追加</strong>
         <div class="shopv3-help">JPEG / PNG / WebP、1枚8MBまで。最大${state.capabilities.maxProductMedia||MAX_MEDIA}枚。</div>
+        <label class="shopv3-file-button" for="shopv3-file-input">＋ 写真を選ぶ</label>
         <input id="shopv3-file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="shopv3-help" style="margin-top:8px">PCでは複数選択できます。スマホでは写真フォルダから選択できます。</div>
       </div>
+
       <div id="shopv3-pending-files">${pendingFilesHtml()}</div>
+
       ${media.length
-        ?`<div class="shopv3-media-grid">${media.map((m,i)=>mediaItemHtml(m,i)).join("")}</div>`
-        :`<div class="shopv3-empty" style="margin-top:12px">新しい写真はまだ登録されていません。<br><small>現在の旧固定画像は公開SHOPで引き続き表示されます。</small></div>`}
+        ?`<div style="margin-top:14px"><strong>登録済み写真 ${media.length}枚</strong></div>
+          <div class="shopv3-media-grid">${media.map((m,i)=>mediaItemHtml(m,i)).join("")}</div>`
+        :`<div class="shopv3-empty" style="margin-top:12px">新しい写真はまだ登録されていません。<br><small>写真を選ぶと、保存前にここへプレビュー表示します。</small></div>`}
     </section>`;
   }
 
   function pendingFilesHtml(){
     if(!state.pendingFiles.length) return "";
-    return `<div style="margin-top:10px;display:grid;gap:6px">
-      ${state.pendingFiles.map((f,i)=>`<div class="shopv3-pending">
-        追加予定 ${i+1}：${esc(f.name)}（${Math.max(1,Math.round(f.size/1024))}KB）
-        <button type="button" class="shopv3-mini" data-pending-remove="${i}" style="float:right">外す</button>
-      </div>`).join("")}
+    return `<div style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <strong>保存予定の写真 ${state.pendingFiles.length}枚</strong>
+        <span class="shopv3-help">下の「変更を保存」で登録されます。</span>
+      </div>
+      <div class="shopv3-pending-grid">
+        ${state.pendingFiles.map((item,i)=>`<article class="shopv3-pending-card">
+          <img src="${esc(item.previewUrl)}" alt="">
+          <div>
+            <div class="shopv3-pending-name">${esc(item.file.name)}</div>
+            <div class="shopv3-help">${Math.max(1,Math.round(item.file.size/1024))}KB</div>
+            <button type="button" class="shopv3-mini danger" data-pending-remove="${i}">この写真を外す</button>
+          </div>
+        </article>`).join("")}
+      </div>
     </div>`;
   }
 
@@ -878,25 +950,27 @@
 
   function bindPhotoControls(d){
     $("#shopv3-file-input",d)?.addEventListener("change",e=>{
-      const currentCount=(state.editProduct.media||[]).length;
-      const room=Math.max(0,(state.capabilities.maxProductMedia||MAX_MEDIA)-currentCount-state.pendingFiles.length);
-      const files=Array.from(e.target.files||[]).slice(0,room);
-      for(const file of files){
-        if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
-          window.Green.toast(`${file.name} はJPEG・PNG・WebPではありません。`,"error");
-          continue;
-        }
-        if(file.size>8*1024*1024){
-          window.Green.toast(`${file.name} は8MBを超えています。`,"error");
-          continue;
-        }
-        state.pendingFiles.push(file);
-      }
+      normalizePendingFiles(e.target.files);
       drawEditor();
     });
 
+    const drop=$("#shopv3-drop-zone",d);
+    if(drop){
+      drop.addEventListener("dragover",e=>{e.preventDefault();drop.style.background="#eef8f2";});
+      drop.addEventListener("dragleave",()=>{drop.style.background="";});
+      drop.addEventListener("drop",e=>{
+        e.preventDefault();
+        drop.style.background="";
+        normalizePendingFiles(e.dataTransfer?.files);
+        drawEditor();
+      });
+    }
+
     $$("[data-pending-remove]",d).forEach(b=>b.onclick=()=>{
-      state.pendingFiles.splice(Number(b.dataset.pendingRemove),1);
+      const i=Number(b.dataset.pendingRemove);
+      const item=state.pendingFiles[i];
+      try{ if(item?.previewUrl) URL.revokeObjectURL(item.previewUrl); }catch{}
+      state.pendingFiles.splice(i,1);
       drawEditor();
     });
 
@@ -1016,7 +1090,7 @@
         for(let i=0;i<total;i++){
           if(submit) submit.textContent=`写真 ${i+1}/${total} 保存中…`;
           const fd=new FormData();
-          fd.set("file",state.pendingFiles[i]);
+          fd.set("file",state.pendingFiles[i].file);
           fd.set("altText",p.name);
           fd.set("sortOrder",String(((p.media||[]).length+i+1)*10));
           fd.set("isPrimary",String((p.media||[]).length===0 && i===0));
@@ -1024,7 +1098,7 @@
         }
       }
 
-      state.pendingFiles=[];
+      clearPendingFiles();
       d.close();
       window.Green.toast("商品を保存しました。","success");
       await load();

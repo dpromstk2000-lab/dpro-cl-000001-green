@@ -1,19 +1,11 @@
 次のアクション
 
-1. ZIPをGitHub直下へ入れる
-https://github.com/dpromstk2000-lab/dpro-cl-000001-green
-
-2. Owner BUILDを開く
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
-
-3. 左メニュー「販売・SHOP」
-
-4. 最初は既存商品の「編集」を1件だけ開く
-   写真タブまで表示されることを確認
-
-5. スクショを送る
+1. ZIPをGitHub直下へ上書き
+2. Owner BUILDを再読込
+3. 販売・SHOP → パキラ6号 → 写真
+4. 「＋ 写真を選ぶ」が見えたら、テスト用写真を1枚選択
+5. 保存前のプレビューが出た画面を確認
+6. 問題なければ「変更を保存」
 
 その後:
-実際の写真1枚をアップロードして
-Supabase Storage → DB → Owner表示 → 公開SHOP互換
-まで確認する。
+Storage → DB → 管理画面 → 公開SHOPの反映を確認する。
