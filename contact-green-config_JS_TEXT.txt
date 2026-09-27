@@ -4,19 +4,12 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.9-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10-20260927",
   enabled: true,
   features: {
-    line: true,
-    lineReply: true,
-    search: true,
-    statusManagement: true,
-    autoRefresh: false,
-    attachments: true,
-    templates: false,
-    assignment: false,
-    aiSuggestions: false,
-    email: false
+    line: true, lineReply: true, search: true, statusManagement: true,
+    autoRefresh: false, attachments: true, templates: false,
+    assignment: false, aiSuggestions: false, email: false
   },
   apiBaseUrl: "https://dpro-cl-000001-green-line.dpromstk2000.workers.dev",
   layout: "standalone",
@@ -49,19 +42,11 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
     defaultName: "GREEN管理者",
     defaultRole: "管理者",
     readOnlyRoles: ["read_only"],
-    roleLabels: {
-      owner_admin: "管理者",
-      read_only: "閲覧専用"
-    }
+    roleLabels: { owner_admin: "管理者", read_only: "閲覧専用" }
   },
-  ui: {
-    autoRefreshSeconds: 30,
-    closeSidebarAfterNavigate: true,
-    showSecurityNote: true
-  }
+  ui: { autoRefreshSeconds: 30, closeSidebarAfterNavigate: true, showSecurityNote: true }
 });
 
-/* DPRO CONTACT STANDARD R3 loader */
 (() => {
   "use strict";
   if (!/\/contact-green\.html$/.test(location.pathname)) return;
@@ -82,15 +67,24 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
   }
 })();
 
-/* DPRO CONTACT scroll-stability / smart refresh loader */
 (() => {
   "use strict";
   if (!/\/contact-green\.html$/.test(location.pathname)) return;
-  const VERSION = "DPRO-CONTACT-SCROLL-STABILITY-R1-20260927";
-  if (document.querySelector('script[data-dpro-contact-scroll-stability]')) return;
-  const script = document.createElement("script");
-  script.src = `green-contact-scroll-stability-r1.js?v=${encodeURIComponent(VERSION)}`;
-  script.defer = true;
-  script.dataset.dproContactScrollStability = VERSION;
-  document.head.append(script);
+  const VERSION = "DPRO-CONTACT-SCROLL-LOCK-R2-20260927";
+
+  if (!document.querySelector('link[data-dpro-contact-scroll-lock-r2]')) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `green-contact-scroll-lock-r2.css?v=${encodeURIComponent(VERSION)}`;
+    link.dataset.dproContactScrollLockR2 = VERSION;
+    document.head.append(link);
+  }
+
+  if (!document.querySelector('script[data-dpro-contact-scroll-lock-r2]')) {
+    const script = document.createElement("script");
+    script.src = `green-contact-scroll-lock-r2.js?v=${encodeURIComponent(VERSION)}`;
+    script.defer = true;
+    script.dataset.dproContactScrollLockR2 = VERSION;
+    document.head.append(script);
+  }
 })();
