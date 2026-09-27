@@ -4,7 +4,7 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.2-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.3-20260927",
   enabled: true,
   features: {
     line: true,
@@ -65,7 +65,7 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
 (() => {
   "use strict";
   if (!/\/contact-green\.html$/.test(location.pathname)) return;
-  const VERSION = "DPRO-CONTACT-STANDARD-R3.2-20260927";
+  const VERSION = "DPRO-CONTACT-STANDARD-R3.3-20260927";
   if (!document.querySelector('link[data-dpro-contact-r3]')) {
     const link = document.createElement("link");
     link.rel = "stylesheet";

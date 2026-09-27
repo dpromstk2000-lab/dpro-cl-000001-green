@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const VERSION="DPRO-CONTACT-STANDARD-R3.2-20260927";
+  const VERSION="DPRO-CONTACT-STANDARD-R3.3-20260927";
   const MAX_FILES=4, MAX_BYTES=10*1024*1024;
   const ALLOWED=new Set([
     "image/jpeg","image/png","image/webp","application/pdf",
@@ -175,7 +175,7 @@
     const attachments=document.createElement("div");attachments.id="dcR3Attachments";attachments.className="dc-r3-attachments";
     form.insertBefore(toolbar,ta);ta.insertAdjacentElement("afterend",attachments);
     const hint=$("composerHint"); if(hint)hint.textContent="画像はLINE表示用に自動圧縮します。PDF・Office資料を含め最大4件／各10MBまで添付できます。";
-    $("dcR3File").addEventListener("change",async e=>{const picked=e.target.files;e.target.value="";await addFiles(picked);});
+    $("dcR3File").addEventListener("change",async e=>{const picked=[...e.target.files];e.target.value="";await addFiles(picked);});
     $("dcR3Expand").addEventListener("click",()=>{
       form.classList.toggle("dc-composer-expanded");
       $("dcR3Expand").textContent=form.classList.contains("dc-composer-expanded")?"↙ 元の大きさ":"↗ 返信欄を拡大";
