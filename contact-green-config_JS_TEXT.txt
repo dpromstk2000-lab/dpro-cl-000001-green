@@ -4,7 +4,7 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-PROD-R2.0-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3-20260927",
   enabled: true,
   features: {
     line: true,
@@ -12,7 +12,7 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
     search: true,
     statusManagement: true,
     autoRefresh: true,
-    attachments: false,
+    attachments: true,
     templates: false,
     assignment: false,
     aiSuggestions: false,
@@ -60,3 +60,25 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
     showSecurityNote: true
   }
 });
+
+/* DPRO CONTACT STANDARD R3 loader */
+(() => {
+  "use strict";
+  if (!/\/contact-green\.html$/.test(location.pathname)) return;
+  const VERSION = "DPRO-CONTACT-STANDARD-R3-20260927";
+  if (!document.querySelector('link[data-dpro-contact-r3]')) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = `green-contact-standard-r3.css?v=${encodeURIComponent(VERSION)}`;
+    link.dataset.dproContactR3 = VERSION;
+    document.head.append(link);
+  }
+  if (!document.querySelector('script[data-dpro-contact-r3]')) {
+    const script = document.createElement("script");
+    script.src = `green-contact-standard-r3.js?v=${encodeURIComponent(VERSION)}`;
+    script.defer = true;
+    script.dataset.dproContactR3 = VERSION;
+    document.head.append(script);
+  }
+})();
+
