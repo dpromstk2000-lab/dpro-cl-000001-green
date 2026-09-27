@@ -1,22 +1,26 @@
-DPRO GREEN CONTACT R3.10 / HARD SCROLL LOCK + NEW MESSAGE NOTICE
+DPRO GREEN CONTACT R3.10.1 / BUILD LOGIN FIX
 2026-09-27
 
-目的:
-過去の会話履歴を読んでいる間、2分・5分経っても画面位置を勝手に動かさない。
+症状:
+?dpro_build=1 でLINE・顧客対応を開いた時、以前の通常管理セッションが残っていると、
+期限切れの通常トークンがBUILD認証より先に使われ、ログイン画面へ戻されることがある。
 
-変更:
-- 過去履歴を読んでいる時はAPIだけをバックグラウンド確認し、会話DOMを再描画しない。
-- 新着があれば「新しいメッセージがあります ↓」ボタンを表示。
-- ボタンを押した時だけ最新履歴を読み込み、一番下へ移動。
-- 最新メッセージ付近にいる時は30秒ごとの自動更新を継続。
-- タブ復帰等の再描画でも閲覧位置を復元。
-- LINE送受信 / 画像 / PDF / 送信確認 / Worker / SQLは変更なし。
+原因:
+contact-green-auth.js は通常管理トークンが存在すると、それをBUILDコードより優先する設計。
+QAを長時間続けた時に古い通常トークンがsessionStorageへ残るとBUILDログインを邪魔する。
 
-確認:
-1. contact-green.html?dpro_build=1 をCtrl+F5
-2. 過去履歴へ上スクロール
-3. 3分以上そのまま待つ
-4. 位置が動かないこと
-5. 待っている間にスマホLINEから1通送る
-6. 「新しいメッセージがあります ↓」が出ること
-7. ボタンを押すと最新メッセージへ移動すること
+修正:
+- ?dpro_build=1 の時だけ green_admin_session_token をクリア
+- BUILDコードの保存値は削除しない
+- 本番URL（dpro_buildなし）には一切影響しない
+- R3.10の閲覧位置固定・新着通知は維持
+- Worker / SQL / Secret / LINE設定は変更なし
+
+適用:
+GitHubリポジトリ直下へZIP内ファイルを上書き。
+その後、BUILD URLをCtrl+F5。
+
+URL:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/contact-green.html?dpro_build=1
+
+※ 管理コードはチャットへ貼らないでください。

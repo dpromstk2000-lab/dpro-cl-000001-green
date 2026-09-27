@@ -4,7 +4,7 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10.1-20260927",
   enabled: true,
   features: {
     line: true, lineReply: true, search: true, statusManagement: true,
@@ -46,6 +46,20 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
   },
   ui: { autoRefreshSeconds: 30, closeSidebarAfterNavigate: true, showSecurityNote: true }
 });
+
+/*
+ * BUILD QA AUTH GUARD
+ * In ?dpro_build=1 mode, an expired/stale normal owner session must not override
+ * the temporary QA build credential. This only affects BUILD mode.
+ */
+(() => {
+  "use strict";
+  const buildMode = new URLSearchParams(location.search).get("dpro_build") === "1";
+  if (!buildMode) return;
+  try {
+    sessionStorage.removeItem("green_admin_session_token");
+  } catch {}
+})();
 
 (() => {
   "use strict";
