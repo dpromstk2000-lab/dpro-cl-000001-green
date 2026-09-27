@@ -1,5 +1,22 @@
-DPRO GREEN LINE CONTACT R3.6 DISPLAY CLEANUP
-- Corrected inaccurate security note (removed unsupported encryption claim).
-- Updated contact-green-config.js cache-busting query to R3.3.
-- No Worker / SQL / Secret / Variable changes.
-Upload both files to repository root.
+DPRO GREEN CONTACT R3.8 / SEND CONFIRM RESTORE
+2026-09-27
+
+現象:
+- 添付送信時は確認画面が出る
+- テキストだけのLINE返信時は確認画面が出ない
+
+原因:
+R3添付処理には送信確認がありますが、既存のテキスト返信処理には確認処理がありませんでした。
+Channel secretローテーションとは無関係です。
+
+修正:
+- テキストだけの返信にも送信前確認を復元
+- 確認画面に実際の送信本文を表示
+- 「キャンセル」なら送信しない
+- 添付送信は既存R3の確認画面をそのまま使用し、二重確認しない
+
+対象:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+ZIP内の全ファイルをリポジトリ直下へ上書きしてください。
+Worker / SQL / Cloudflare設定の変更はありません。
