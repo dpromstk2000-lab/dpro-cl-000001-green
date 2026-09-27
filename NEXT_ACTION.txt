@@ -1,8 +1,16 @@
 次のアクション
 
-1. GitHubへZIP直下ファイルを入れる
-2. Owner BUILDをCtrl+F5
-3. 販売・SHOP
-4. 「おすすめ・セット管理」を確認
-5. 初回のみ「現在のおすすめ・セットを取り込む」を押す
-6. おすすめ3件 / セット3件が出ればOK
+Worker V3-F1を先にDeployし、health PASS後にこのZIPをGitHubへ入れる。
+
+Owner:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+販売・SHOP → 注文・受付管理
+
+確認:
+1. 新規/進行中/完了の件数
+2. 通常販売/取り置き/レンタルのカード
+3. unpaid が「未決済」表示
+4. 各カードに「次にやること」
+5. レンタルテストの「次へ：内容確認」
+6. 詳細・更新で内部メモ/履歴

@@ -35,6 +35,7 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   const HERO_ADMIN_VERSION = "DPRO-CUSTOMER-HERO-2-20260808";
   const SHOP_OWNER_VERSION = "GREEN-SHOP-OWNER-V3.1.3-PENDING-PHOTO-UX-20260927";
   const SHOP_COLLECTIONS_OWNER_VERSION = "GREEN-SHOP-OWNER-COLLECTIONS-V3E2-20260927";
+  const SHOP_ORDER_WORKFLOW_VERSION = "GREEN-SHOP-OWNER-ORDERS-V3F1-20260927";
   const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";
   const OWNER_UX_FIX_VERSION = "GREEN-OWNER-UX-FIX-R2.9-20260915";
   const OWNER_JST_FIX_VERSION = "GREEN-OWNER-JST-DATETIME-FIX-R1.4-20260916";
@@ -92,6 +93,16 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
     script.dataset.greenShopOwnerCollections=SHOP_COLLECTIONS_OWNER_VERSION;
     document.head.append(script);
   }
+  function installShopOrderWorkflow() {
+    if (!window.GREEN_CONFIG?.SHOP_MODULE?.enabled) return;
+    if (!/\/owner\.html$/.test(location.pathname)) return;
+    if (document.querySelector('script[data-green-shop-owner-orders]')) return;
+    const script=document.createElement("script");
+    script.src=`green-shop-orders-owner-v3f.js?v=${encodeURIComponent(SHOP_ORDER_WORKFLOW_VERSION)}`;
+    script.defer=true;
+    script.dataset.greenShopOwnerOrders=SHOP_ORDER_WORKFLOW_VERSION;
+    document.head.append(script);
+  }
   function installContactFlowCopy() {
     if (!/\/contact-green\.html$/.test(location.pathname)) return;
     const setTextIfChanged=(element,text)=>{ if(element&&element.textContent!==text) element.textContent=text; };
@@ -110,6 +121,6 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   function installStaffManagementR31(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-staff-management-r31","green-staff-management-r31.js",STAFF_MANAGEMENT_VERSION); }
   function installInstallationUiR32(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-installation-ui-r32","green-installation-ui-r32.js",INSTALLATION_UI_VERSION); }
   function installCareOverdueR33(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-care-overdue-r33","green-care-overdue-r33.js",CARE_OVERDUE_VERSION); }
-  function boot(){ installContactMenu(); installCustomerHeroAdmin(); installTutorialRuntime(); installShopModule(); installShopCollectionsOwner(); installOwnerFlowClarity(); installOwnerUxFix(); installOwnerJstDatetimeFix(); installAnnouncementJstFix(); installLineAccess(); installBrushupR30(); installStaffManagementR31(); installInstallationUiR32(); installCareOverdueR33(); installContactFlowCopy(); }
+  function boot(){ installContactMenu(); installCustomerHeroAdmin(); installTutorialRuntime(); installShopModule(); installShopCollectionsOwner(); installShopOrderWorkflow(); installOwnerFlowClarity(); installOwnerUxFix(); installOwnerJstDatetimeFix(); installAnnouncementJstFix(); installLineAccess(); installBrushupR30(); installStaffManagementR31(); installInstallationUiR32(); installCareOverdueR33(); installContactFlowCopy(); }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
 })();

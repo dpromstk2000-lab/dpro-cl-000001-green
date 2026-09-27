@@ -1,23 +1,29 @@
-SHOP V3-E2 OWNER
+DPRO GREEN SHOP V3-F1 / OWNER ORDER WORKFLOW
 
-GitHub:
+対象GitHub:
 https://github.com/dpromstk2000-lab/dpro-cl-000001-green
 
-ZIP直下のファイルをリポジトリ直下へ上書き/追加。
-
 追加:
-green-shop-collections-owner-v3.js
+green-shop-orders-owner-v3f.js
 
 上書き:
 config.js
 
-確認:
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+販売・SHOPの注文管理を
+「注文・受付管理」へ本番化します。
 
-販売・SHOPを開くと
-「おすすめ・セット管理」
-が追加されます。
+主な仕様:
+- 通常販売 / 取り置き / レンタル / 問い合わせ別の進捗
+- 新規・進行中・完了の件数
+- 区分フィルター
+- 「次にやること」を各受付に表示
+- ワンクリックで次の進捗へ
+- 詳細画面
+- お客様情報 / 住所 / 希望日 / 商品明細
+- 決済状態を日本語表示
+- オーナー内部メモ
+- 進捗変更履歴
+- LINE希望の場合「LINE顧客対応」への導線
 
-初回は
-「現在のおすすめ・セットを取り込む」
-を1回押してください。
+BUILD ACCESSは維持。
+FINAL切替はまだ行いません。
