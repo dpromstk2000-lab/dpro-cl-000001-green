@@ -1,0 +1,8 @@
+DPRO CONTACT R3.2
+Fix for LINE image display:
+- Images selected by the operator are automatically converted to JPEG.
+- Max edge is reduced for LINE delivery.
+- Quality is adjusted until the file is under 1 MB (target <= 900 KB).
+- This satisfies LINE preview image requirements.
+No SQL or Worker change required.
+Upload these GitHub files to repository root.

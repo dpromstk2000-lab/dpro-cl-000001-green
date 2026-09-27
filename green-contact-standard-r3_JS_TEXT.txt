@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const VERSION="DPRO-CONTACT-STANDARD-R3-20260927";
+  const VERSION="DPRO-CONTACT-STANDARD-R3.2-20260927";
   const MAX_FILES=4, MAX_BYTES=10*1024*1024;
   const ALLOWED=new Set([
     "image/jpeg","image/png","image/webp","application/pdf",
@@ -14,6 +14,45 @@
 
   const $=id=>document.getElementById(id);
   const humanSize=n=>n>=1048576?`${(n/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(n/1024))} KB`;
+
+  async function normalizeLineImage(file){
+    if(!file.type.startsWith("image/")) return file;
+    const bitmap = await createImageBitmap(file);
+    const maxEdge = 1600;
+    let width = bitmap.width, height = bitmap.height;
+    const scale = Math.min(1, maxEdge / Math.max(width, height));
+    width = Math.max(1, Math.round(width * scale));
+    height = Math.max(1, Math.round(height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext("2d", {alpha:false});
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,width,height);
+    ctx.drawImage(bitmap,0,0,width,height);
+    bitmap.close?.();
+
+    let quality = 0.86, blob = null;
+    for(let i=0;i<8;i++){
+      blob = await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",quality));
+      if(blob && blob.size <= 900*1024) break;
+      quality = Math.max(0.5, quality - 0.07);
+      if(i===4 && Math.max(canvas.width,canvas.height)>1200){
+        const ratio = 1200/Math.max(canvas.width,canvas.height);
+        const next = document.createElement("canvas");
+        next.width=Math.max(1,Math.round(canvas.width*ratio));
+        next.height=Math.max(1,Math.round(canvas.height*ratio));
+        const nctx=next.getContext("2d",{alpha:false});
+        nctx.fillStyle="#ffffff";nctx.fillRect(0,0,next.width,next.height);
+        nctx.drawImage(canvas,0,0,next.width,next.height);
+        canvas.width=next.width;canvas.height=next.height;
+        ctx.drawImage(next,0,0);
+      }
+    }
+    if(!blob) throw new Error("画像をLINE送信用に変換できませんでした。");
+    if(blob.size > 1024*1024) throw new Error("画像を1MB未満に圧縮できませんでした。別の画像を選択してください。");
+    const baseName=String(file.name||"image").replace(/\.[^.]+$/,"");
+    return new File([blob],`${baseName}.jpg`,{type:"image/jpeg",lastModified:Date.now()});
+  }
+
   const esc=s=>String(s??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
   function toast(msg,error=false){
     const el=$("toast"); if(!el) return;
@@ -55,12 +94,17 @@
       box.appendChild(row);
     });
   }
-  function addFiles(list){
-    for(const file of [...list]){
+  async function addFiles(list){
+    for(const original of [...list]){
       if(files.length>=MAX_FILES){toast("添付は4件までです。",true);break;}
-      if(file.size<=0 || file.size>MAX_BYTES){toast(`${file.name} は10MB以内にしてください。`,true);continue;}
-      if(!ALLOWED.has(file.type)){toast(`${file.name} は対応していない形式です。`,true);continue;}
-      files.push(file);
+      if(original.size<=0 || original.size>MAX_BYTES){toast(`${original.name} は10MB以内にしてください。`,true);continue;}
+      if(!ALLOWED.has(original.type)){toast(`${original.name} は対応していない形式です。`,true);continue;}
+      try{
+        const file = original.type.startsWith("image/") ? await normalizeLineImage(original) : original;
+        files.push(file);
+      }catch(e){
+        toast(`${original.name}: ${e.message}`,true);
+      }
     }
     renderFiles();
   }
@@ -130,8 +174,8 @@
       <span id="dcR3Count" class="dc-r3-count">0 / 5,000文字</span>`;
     const attachments=document.createElement("div");attachments.id="dcR3Attachments";attachments.className="dc-r3-attachments";
     form.insertBefore(toolbar,ta);ta.insertAdjacentElement("afterend",attachments);
-    const hint=$("composerHint"); if(hint)hint.textContent="画像・PDF・Office資料を最大4件／各10MBまで添付できます。";
-    $("dcR3File").addEventListener("change",e=>{addFiles(e.target.files);e.target.value="";});
+    const hint=$("composerHint"); if(hint)hint.textContent="画像はLINE表示用に自動圧縮します。PDF・Office資料を含め最大4件／各10MBまで添付できます。";
+    $("dcR3File").addEventListener("change",async e=>{const picked=e.target.files;e.target.value="";await addFiles(picked);});
     $("dcR3Expand").addEventListener("click",()=>{
       form.classList.toggle("dc-composer-expanded");
       $("dcR3Expand").textContent=form.classList.contains("dc-composer-expanded")?"↙ 元の大きさ":"↗ 返信欄を拡大";
