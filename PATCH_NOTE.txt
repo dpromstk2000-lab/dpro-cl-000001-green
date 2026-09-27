@@ -1,21 +1,27 @@
-DPRO GREEN R3.10.2 / BUILD NAVIGATION FIX
+DPRO GREEN CONTACT R3.10.3 / NO-REBUILD SMART POLL
 2026-09-27
 
-確認した原因:
-owner.html?dpro_build=1 の「LINE・顧客対応」ボタンが
-contact-green.html へ遷移するときに ?dpro_build=1 を落としていました。
-そのためBUILD QAではなく本番Owner認証へ入り、
-「初回設定がまだ完了していません」画面へ戻っていました。
+今回判明した原因:
+R3.10でも「最新位置にいる時」は30秒ごとに ui.refresh() を実行していました。
+新着が0件でも会話DOMを作り直すため、その再描画で画面が少し動くことがありました。
 
-修正:
-- Owner BUILD → LINE・顧客対応 で dpro_build=1 を維持
-- LINE・顧客対応 → GREEN管理画面 でも dpro_build=1 を維持
-- 本番URLには影響なし
-- R3.10閲覧位置固定＋新着通知を維持
-- Worker / SQL / Secret変更なし
+R3.10.3:
+- 30秒ごとにAPIだけ確認
+- 新着0件なら画面DOMを一切再描画しない
+- 新着あり＋最新位置なら、その時だけ1回更新して最下部へ固定
+- 新着あり＋過去履歴閲覧中なら、画面を更新せず「新しいメッセージがあります ↓」だけ表示
+- 添付画像の遅延読み込みによる高さ変化も閲覧位置を復元
+- 過去履歴閲覧中は250msの軽量ガードで同じメッセージ位置を保持
+- 手動スクロール中はガードを止め、ユーザーが決めた新しい位置を採用
+- タブ復帰時のbase CONTACT自動再描画も、過去履歴閲覧中だけ抑止
 
-アップロード先:
-https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+変更なし:
+LINE送受信 / 画像 / PDF / 送信確認 / Worker / SQL / Secret
 
-確認URL:
-https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+確認:
+1. contact-green.html?dpro_build=1 をCtrl+F5
+2. 最新位置で3分待つ → 勝手に動かない
+3. 過去履歴へ上スクロールして3分待つ → 勝手に動かない
+4. 過去履歴閲覧中にスマホLINEから「新着通知テスト」を送る
+5. 閲覧位置はそのまま、「新しいメッセージがあります ↓」だけ出る
+6. ボタンを押すと最新へ移動

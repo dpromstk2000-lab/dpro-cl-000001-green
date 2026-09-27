@@ -4,7 +4,7 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10.2-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.10.3-20260927",
   enabled: true,
   features: {
     line: true, lineReply: true, search: true, statusManagement: true,
@@ -47,18 +47,27 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
   ui: { autoRefreshSeconds: 30, closeSidebarAfterNavigate: true, showSecurityNote: true }
 });
 
-/*
- * BUILD QA AUTH GUARD
- * In ?dpro_build=1 mode, an expired/stale normal owner session must not override
- * the temporary QA build credential. This only affects BUILD mode.
- */
+/* BUILD QA: stale normal session must not override BUILD credential. */
 (() => {
   "use strict";
   const buildMode = new URLSearchParams(location.search).get("dpro_build") === "1";
   if (!buildMode) return;
-  try {
-    sessionStorage.removeItem("green_admin_session_token");
-  } catch {}
+  try { sessionStorage.removeItem("green_admin_session_token"); } catch {}
+})();
+
+/*
+ * Base CONTACT has its own tab-return refresh.
+ * While the operator is reading older history, suppress only that refresh
+ * so the visible reading position is never rebuilt behind their back.
+ */
+(() => {
+  "use strict";
+  if (!/\/contact-green\.html$/.test(location.pathname)) return;
+  document.addEventListener("visibilitychange", (event) => {
+    if (!document.hidden && window.__DPRO_CONTACT_READING_HISTORY__ === true) {
+      event.stopImmediatePropagation();
+    }
+  }, true);
 })();
 
 (() => {
@@ -84,21 +93,21 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
 (() => {
   "use strict";
   if (!/\/contact-green\.html$/.test(location.pathname)) return;
-  const VERSION = "DPRO-CONTACT-SCROLL-LOCK-R2-20260927";
+  const VERSION = "DPRO-CONTACT-SCROLL-LOCK-R3-20260927";
 
-  if (!document.querySelector('link[data-dpro-contact-scroll-lock-r2]')) {
+  if (!document.querySelector('link[data-dpro-contact-scroll-lock-r3]')) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = `green-contact-scroll-lock-r2.css?v=${encodeURIComponent(VERSION)}`;
-    link.dataset.dproContactScrollLockR2 = VERSION;
+    link.href = `green-contact-scroll-lock-r3.css?v=${encodeURIComponent(VERSION)}`;
+    link.dataset.dproContactScrollLockR3 = VERSION;
     document.head.append(link);
   }
 
-  if (!document.querySelector('script[data-dpro-contact-scroll-lock-r2]')) {
+  if (!document.querySelector('script[data-dpro-contact-scroll-lock-r3]')) {
     const script = document.createElement("script");
-    script.src = `green-contact-scroll-lock-r2.js?v=${encodeURIComponent(VERSION)}`;
+    script.src = `green-contact-scroll-lock-r3.js?v=${encodeURIComponent(VERSION)}`;
     script.defer = true;
-    script.dataset.dproContactScrollLockR2 = VERSION;
+    script.dataset.dproContactScrollLockR3 = VERSION;
     document.head.append(script);
   }
 })();
