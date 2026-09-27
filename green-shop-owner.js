@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-V3.1-PHOTO-UX-20260927";
+  const VERSION = "GREEN-SHOP-OWNER-V3.1.1-DIALOG-SCROLL-20260927";
   const API = String(
     window.GREEN_CONFIG?.SHOP_MODULE?.apiBase ||
     "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev"
@@ -220,15 +220,18 @@
       .shopv3-orders th,.shopv3-orders td{padding:10px 11px;border-bottom:1px solid #edf1ef;text-align:left;vertical-align:middle}
       .shopv3-orders th{font-size:11px;color:#65736c;background:#f8faf9}
       .shopv3-orders select{border:1px solid #ccd9d2;border-radius:8px;padding:7px;background:#fff}
-      .shopv3-dialog{width:min(980px,calc(100vw - 24px));max-height:94vh;border:0;border-radius:20px;padding:0;box-shadow:0 28px 90px #0005;overflow:hidden}
+      .shopv3-dialog{width:min(980px,calc(100vw - 24px));height:min(94dvh,920px);max-height:calc(100dvh - 16px);border:0;border-radius:20px;padding:0;box-shadow:0 28px 90px #0005;overflow:hidden;margin:auto}
+      .shopv3-dialog[open]{display:flex;flex-direction:column}
+      .shopv3-dialog:not([open]){display:none}
       .shopv3-dialog::backdrop{background:#0a2118ba}
-      .shopv3-dialog-head{padding:16px 20px;border-bottom:1px solid #e2e9e5;background:#fbfdfc;display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .shopv3-dialog-head{padding:16px 20px;border-bottom:1px solid #e2e9e5;background:#fbfdfc;display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto}
       .shopv3-dialog-head strong{font-size:17px}
       .shopv3-close{border:0;background:#eef3f0;border-radius:10px;padding:8px 11px;cursor:pointer}
-      .shopv3-tabs{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid #edf1ef;overflow:auto;background:#fff}
+      .shopv3-tabs{display:flex;gap:4px;padding:10px 14px;border-bottom:1px solid #edf1ef;overflow-x:auto;overflow-y:hidden;background:#fff;flex:0 0 auto}
       .shopv3-tab{border:0;background:transparent;padding:9px 12px;border-radius:9px;font-weight:800;white-space:nowrap;color:#64726b;cursor:pointer}
       .shopv3-tab.is-active{background:#e8f4ed;color:#175c3b}
-      .shopv3-dialog-body{padding:18px 20px;overflow:auto;max-height:calc(94vh - 178px)}
+      .shopv3-dialog form#shopv3-form{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden}
+      .shopv3-dialog-body{padding:18px 20px 34px;overflow-y:auto;overflow-x:hidden;max-height:none;min-height:0;flex:1 1 auto;overscroll-behavior:contain;scrollbar-gutter:stable}
       .shopv3-pane{display:none}
       .shopv3-pane.is-active{display:block}
       .shopv3-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
@@ -261,7 +264,7 @@
       .shopv3-media-item input{width:100%;box-sizing:border-box}
       .shopv3-media-actions{display:flex;gap:5px;flex-wrap:wrap}
       .shopv3-pending{border:1px dashed #c9d7d0;border-radius:10px;padding:8px;background:#fbfdfc;font-size:12px}
-      .shopv3-dialog-foot{padding:13px 20px;border-top:1px solid #e2e9e5;display:flex;justify-content:space-between;gap:10px;background:#fff}
+      .shopv3-dialog-foot{padding:13px 20px calc(13px + env(safe-area-inset-bottom));border-top:1px solid #e2e9e5;display:flex;justify-content:space-between;gap:10px;background:#fff;flex:0 0 auto;position:relative;z-index:3;box-shadow:0 -8px 20px #173d2b0a}
       .shopv3-dialog-foot>div{display:flex;gap:8px;flex-wrap:wrap}
       .shopv3-preview{border:1px solid #dce6e1;border-radius:16px;padding:14px;background:#f9fcfa}
       .shopv3-preview-card{display:grid;grid-template-columns:170px 1fr;gap:16px;align-items:start}
@@ -272,6 +275,9 @@
         .shopv3-products{grid-template-columns:1fr}
       }
       @media(max-width:680px){
+        .shopv3-dialog{width:calc(100vw - 8px);height:calc(100dvh - 8px);max-height:calc(100dvh - 8px);border-radius:14px}
+        .shopv3-dialog-body{padding:14px 14px 34px}
+        .shopv3-dialog-foot{padding-left:14px;padding-right:14px}
         .shopv3-setting-grid,.shopv3-summary,.shopv3-grid,.shopv3-choice-grid{grid-template-columns:1fr}
         .shopv3-product{grid-template-columns:92px minmax(0,1fr)}
         .shopv3-product-media,.shopv3-product-media img{min-height:92px}

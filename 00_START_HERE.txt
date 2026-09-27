@@ -1,8 +1,8 @@
 00_START_HERE
 
-SHOP-V3-C.1 PHOTO UX
+SHOP-V3-C.2 DIALOG SCROLL FIX
 
-GitHubリポジトリ直下へ上書き:
+GitHub直下へ上書き:
 - green-shop-owner.js
 - config.js
 
@@ -17,6 +17,6 @@ https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
 → 写真
 
 期待:
-英語の Choose Files は出ない
-「＋ 写真を選ぶ」が表示
-現在公開中の旧画像が表示
+- 本文を一番下までスクロールできる
+- 最下部の文字が切れない
+- 「キャンセル」「変更を保存」が常に見える
