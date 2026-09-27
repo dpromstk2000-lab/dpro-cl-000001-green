@@ -4,14 +4,14 @@
  * PUBLIC config only. Never store Secrets here.
  */
 window.DPRO_CONTACT_CONFIG = Object.freeze({
-  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.3-20260927",
+  version: "DPRO-CONTACT-GREEN-LINE-STANDARD-R3.9-20260927",
   enabled: true,
   features: {
     line: true,
     lineReply: true,
     search: true,
     statusManagement: true,
-    autoRefresh: true,
+    autoRefresh: false,
     attachments: true,
     templates: false,
     assignment: false,
@@ -82,3 +82,15 @@ window.DPRO_CONTACT_CONFIG = Object.freeze({
   }
 })();
 
+/* DPRO CONTACT scroll-stability / smart refresh loader */
+(() => {
+  "use strict";
+  if (!/\/contact-green\.html$/.test(location.pathname)) return;
+  const VERSION = "DPRO-CONTACT-SCROLL-STABILITY-R1-20260927";
+  if (document.querySelector('script[data-dpro-contact-scroll-stability]')) return;
+  const script = document.createElement("script");
+  script.src = `green-contact-scroll-stability-r1.js?v=${encodeURIComponent(VERSION)}`;
+  script.defer = true;
+  script.dataset.dproContactScrollStability = VERSION;
+  document.head.append(script);
+})();
