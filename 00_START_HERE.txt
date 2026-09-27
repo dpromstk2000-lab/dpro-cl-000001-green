@@ -1,22 +1,23 @@
-SHOP V3-E2 PUBLIC
+SHOP V3-E2 OWNER
 
 GitHub:
-https://github.com/dpromstk2000-lab/dpro-green-website
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
 
 ZIP直下のファイルをリポジトリ直下へ上書き/追加。
 
 追加:
-green-shop-v3e.js
+green-shop-collections-owner-v3.js
 
 上書き:
 config.js
 
-公開SHOP:
-https://dpromstk2000-lab.github.io/dpro-green-website/shop.html
+確認:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
 
-Owner側でおすすめ/セットをDB登録すると、
-固定カードの代わりにDB内容が公開SHOPへ表示されます。
+販売・SHOPを開くと
+「おすすめ・セット管理」
+が追加されます。
 
-商品に「取り置き」「レンタル」を設定し、
-SHOP全体設定もONにすると、
-商品詳細に受付ボタンが表示されます。
+初回は
+「現在のおすすめ・セットを取り込む」
+を1回押してください。
