@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R5.1-DASHBOARD-NAV-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R5.2-LEAD-UX-LOADER-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R5.1-DASHBOARD-NAV-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R5.2-LEAD-UX-LOADER-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1666,5 +1666,32 @@
     document.addEventListener("DOMContentLoaded", boot, {once:true});
   } else {
     boot();
+  }
+})();
+
+
+;(() => {
+  "use strict";
+  const VERSION = "GREEN-OWNER-LEAD-UX-R1.1-20260928";
+  if (!/\/owner\.html$/.test(location.pathname)) return;
+
+  const install = () => {
+    if (window.__DPRO_GREEN_OWNER_LEAD_UX_R11_LOADER__) return;
+    window.__DPRO_GREEN_OWNER_LEAD_UX_R11_LOADER__ = VERSION;
+
+    const existing = document.querySelector('script[data-green-owner-lead-ux-force]');
+    if (existing) return;
+
+    const script = document.createElement("script");
+    script.src = `green-owner-lead-ux-r1.js?v=${encodeURIComponent(VERSION)}`;
+    script.defer = true;
+    script.dataset.greenOwnerLeadUxForce = VERSION;
+    document.head.append(script);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", install, { once: true });
+  } else {
+    install();
   }
 })();

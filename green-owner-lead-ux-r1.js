@@ -1,9 +1,9 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-LEAD-UX-R1.0-20260928";
-  if (window.__DPRO_GREEN_OWNER_LEAD_UX_R1__) return;
-  window.__DPRO_GREEN_OWNER_LEAD_UX_R1__ = VERSION;
+  const VERSION = "GREEN-OWNER-LEAD-UX-R1.1-20260928";
+  if (window.__DPRO_GREEN_OWNER_LEAD_UX_R11__) return;
+  window.__DPRO_GREEN_OWNER_LEAD_UX_R11__ = VERSION;
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -215,6 +215,10 @@
     installStyle();
     observer.observe(dialog, { childList: true, subtree: true });
     enhanceLeadDialog();
+
+    // Other owner modules may finish rebuilding the dialog slightly later.
+    // Retry a few times; the dataset guard keeps this idempotent.
+    [120, 300, 700, 1200].forEach((ms) => setTimeout(enhanceLeadDialog, ms));
   }
 
   if (document.readyState === "loading") {
