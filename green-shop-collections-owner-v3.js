@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.2-ACTION-CENTER-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.3-DIRECT-NAV-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -981,7 +981,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.2-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.3-DIRECT-NAV-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -991,6 +991,7 @@
   ).replace(/\/$/, "");
   const BUILD_CODE_KEY = "dpro_green_shop_build_code";
   const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
   let newCount = 0;
   let loading = false;
@@ -1075,25 +1076,48 @@
   }
 
   function openOrders() {
+    const panel = $('[data-view-panel="shop-sales"]');
     const shopNav = $("#green-shop-prod-nav");
-    if (!shopNav) return;
-    shopNav.click();
+
+    // Directly activate the SHOP view first. This is intentionally not dependent
+    // on a synthetic click because owner.js and the dynamically injected SHOP
+    // navigation are initialized by separate modules.
+    if (panel) {
+      $$("[data-view-panel]").forEach((p) => {
+        p.classList.toggle("is-active", p.dataset.viewPanel === "shop-sales");
+      });
+      $$("[data-view]").forEach((b) => {
+        b.classList.toggle("is-active", b.dataset.view === "shop-sales");
+      });
+      const title = $("#view-title");
+      if (title) title.textContent = "販売・SHOP";
+      $("#owner-sidebar")?.classList.remove("is-open");
+    }
+
+    // Keep the normal SHOP open handler in sync when it is already available.
+    try { shopNav?.click(); } catch {}
 
     let tries = 0;
     const go = () => {
       tries += 1;
-      const tab = $('[data-shop-sales-tab-r41="orders"]');
-      if (tab) {
-        tab.click();
-        setTimeout(() => {
-          const panel = $('[data-view-panel="shop-sales"]');
-          panel?.scrollIntoView({behavior:"smooth",block:"start"});
-        }, 40);
+      const ordersTab = $('[data-shop-sales-tab-r41="orders"]');
+      if (ordersTab) {
+        ordersTab.click();
+        requestAnimationFrame(() => {
+          const target = $('[data-view-panel="shop-sales"]');
+          target?.scrollIntoView({behavior:"smooth",block:"start"});
+          const heading = $(".owner-heading", target);
+          heading?.setAttribute("tabindex", "-1");
+          heading?.focus({preventScroll:true});
+        });
         return;
       }
-      if (tries < 35) setTimeout(go, 100);
+
+      // The SHOP shell may still be rendering. Re-assert the direct view while waiting.
+      if (panel) panel.classList.add("is-active");
+      if (tries < 50) setTimeout(go, 100);
     };
-    setTimeout(go, 20);
+    go();
   }
 
   function ensureBackButton() {
