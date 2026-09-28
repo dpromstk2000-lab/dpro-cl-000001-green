@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.0-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.1-TABBED-UX-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -15,6 +15,7 @@
   );
   const WEBSITE_BASE = WEBSITE_URL.replace(/\/[^/]*$/, "/");
   const BUILD_CODE_KEY = "dpro_green_shop_build_code";
+  const SHOP_TAB_KEY = "dpro_green_shop_owner_active_tab_r41";
 
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -223,8 +224,18 @@
       .shop-display-r4-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;position:sticky;bottom:8px;z-index:4}
       .shop-display-r4-footer .btn{box-shadow:0 8px 24px #173d2b22}
       .shop-display-r4-saving{opacity:.65;pointer-events:none}
+      .shop-sales-tabs-r41{display:flex;gap:8px;align-items:center;overflow-x:auto;padding:4px;margin:4px 0 14px;scrollbar-width:thin}
+      .shop-sales-tab-r41{flex:0 0 auto;min-height:44px;border:1px solid #cbdad2;border-radius:12px;background:#fff;color:#335344;padding:0 15px;font:inherit;font-weight:900;cursor:pointer;white-space:nowrap;transition:.15s ease}
+      .shop-sales-tab-r41:hover{background:#f5faf7}
+      .shop-sales-tab-r41.is-active{background:#174c35;border-color:#174c35;color:#fff;box-shadow:0 7px 18px #174c3520}
+      .shop-sales-tab-r41 small{display:block;font-size:9px;font-weight:700;opacity:.8;margin-top:1px}
+      .shop-sales-tab-help-r41{margin:-6px 0 14px;padding:10px 12px;border-radius:10px;background:#f4f8f6;color:#52675c;font-size:12px;line-height:1.65}
+      .shop-sales-tab-panel-hidden-r41{display:none!important}
+      .shop-sales-global-summary-r41{margin-bottom:10px}
       @media(max-width:1050px){.shop-display-r4-grid{grid-template-columns:1fr}}
       @media(max-width:680px){
+        .shop-sales-tabs-r41{margin-left:-2px;margin-right:-2px;padding-bottom:7px}
+        .shop-sales-tab-r41{min-height:42px;padding:0 12px;font-size:12px}
         .shop-display-r4-set-products{grid-template-columns:1fr}
         .shop-display-r4-preview{grid-template-columns:58px minmax(0,1fr)}
         .shop-display-r4-preview img{width:58px;height:58px}
@@ -492,6 +503,7 @@
 
     bind(card);
     card.dataset.shopDisplayR4 = VERSION;
+    ensureTabs();
   }
 
   function updatePreview(root, selector, p, label = "") {
@@ -756,6 +768,144 @@
     }
   }
 
+
+  function shellDirectCards() {
+    const shell = shopShell();
+    if (!shell) return [];
+    return Array.from(shell.children).filter((el) => el.matches?.("article.shopv3-card"));
+  }
+
+  function cardByHeading(text) {
+    return shellDirectCards().find((card) => {
+      const h = $("h3", card);
+      return h && String(h.textContent || "").trim().includes(text);
+    }) || null;
+  }
+
+  function tabCards() {
+    return {
+      display: $("#shop-display-r4-card"),
+      products: cardByHeading("商品管理"),
+      orders: cardByHeading("注文"),
+      settings: cardByHeading("SHOP全体設定"),
+    };
+  }
+
+  function tabDescription(key) {
+    return {
+      display: "季節・在庫・売りたい商品に合わせて、公開SHOPの見せ方を変更します。商品そのものの登録・価格変更は「商品管理」で行います。",
+      products: "商品写真・商品名・価格・在庫・販売方法・公開状態を管理します。新しい商品を追加するときもここを使います。",
+      orders: "通常販売・取り置き・レンタル・問い合わせの受付を確認し、次の対応へ進めます。日々の注文対応はここを使います。",
+      settings: "配送・店頭受取・レンタルなどSHOP全体の機能を切り替えます。通常は頻繁に変更しない設定です。",
+    }[key] || "";
+  }
+
+  function currentTab() {
+    const saved = sessionStorage.getItem(SHOP_TAB_KEY);
+    return ["display","products","orders","settings"].includes(saved) ? saved : "display";
+  }
+
+  function applyTab(key, {remember=true} = {}) {
+    const tabs = $("#shop-sales-tabs-r41");
+    const help = $("#shop-sales-tab-help-r41");
+    if (!tabs) return;
+
+    const valid = ["display","products","orders","settings"].includes(key) ? key : "display";
+    if (remember) sessionStorage.setItem(SHOP_TAB_KEY, valid);
+
+    $$("[data-shop-sales-tab-r41]", tabs).forEach((b) => {
+      const active = b.dataset.shopSalesTabR41 === valid;
+      b.classList.toggle("is-active", active);
+      b.setAttribute("aria-selected", active ? "true" : "false");
+      b.tabIndex = active ? 0 : -1;
+    });
+
+    const cards = tabCards();
+    Object.entries(cards).forEach(([name, card]) => {
+      if (!card) return;
+      card.classList.toggle("shop-sales-tab-panel-hidden-r41", name !== valid);
+      card.hidden = false;
+    });
+
+    if (help) help.textContent = tabDescription(valid);
+
+    const shell = shopShell();
+    if (shell) shell.dataset.shopSalesActiveTabR41 = valid;
+  }
+
+  function ensureTabs() {
+    const shell = shopShell();
+    if (!shell) return;
+
+    let tabs = $("#shop-sales-tabs-r41");
+    let help = $("#shop-sales-tab-help-r41");
+
+    if (!tabs || !tabs.isConnected) {
+      tabs = document.createElement("nav");
+      tabs.id = "shop-sales-tabs-r41";
+      tabs.className = "shop-sales-tabs-r41";
+      tabs.setAttribute("role", "tablist");
+      tabs.setAttribute("aria-label", "販売・SHOP メニュー");
+      tabs.innerHTML = `
+        <button type="button" class="shop-sales-tab-r41" data-shop-sales-tab-r41="display" role="tab">
+          ① 公開SHOP表示<small>季節商品の入替</small>
+        </button>
+        <button type="button" class="shop-sales-tab-r41" data-shop-sales-tab-r41="products" role="tab">
+          ② 商品管理<small>商品・写真・価格・在庫</small>
+        </button>
+        <button type="button" class="shop-sales-tab-r41" data-shop-sales-tab-r41="orders" role="tab">
+          ③ 注文・受付管理<small>日々の対応</small>
+        </button>
+        <button type="button" class="shop-sales-tab-r41" data-shop-sales-tab-r41="settings" role="tab">
+          ④ SHOP設定<small>機能ON / OFF</small>
+        </button>
+      `;
+
+      help = document.createElement("div");
+      help.id = "shop-sales-tab-help-r41";
+      help.className = "shop-sales-tab-help-r41";
+
+      const summary = $(".shopv3-summary", shell);
+      if (summary) {
+        summary.classList.add("shop-sales-global-summary-r41");
+        summary.insertAdjacentElement("afterend", tabs);
+      } else {
+        shell.prepend(tabs);
+      }
+      tabs.insertAdjacentElement("afterend", help);
+
+      $$("[data-shop-sales-tab-r41]", tabs).forEach((b) => {
+        b.addEventListener("click", () => applyTab(b.dataset.shopSalesTabR41));
+        b.addEventListener("keydown", (e) => {
+          if (!["ArrowLeft","ArrowRight"].includes(e.key)) return;
+          const buttons = $$("[data-shop-sales-tab-r41]", tabs);
+          const index = buttons.indexOf(b);
+          const delta = e.key === "ArrowRight" ? 1 : -1;
+          const next = buttons[(index + delta + buttons.length) % buttons.length];
+          next?.focus();
+          next?.click();
+        });
+      });
+    }
+
+    const settings = tabCards().settings;
+    const display = tabCards().display;
+    const products = tabCards().products;
+    const orders = tabCards().orders;
+
+    // Keep the physical DOM order aligned with the visual index.
+    if (display && tabs) {
+      let anchor = help || tabs;
+      if (display.previousElementSibling !== anchor) anchor.insertAdjacentElement("afterend", display);
+      if (products && products.previousElementSibling !== display) display.insertAdjacentElement("afterend", products);
+      if (orders && orders.previousElementSibling !== products) (products || display).insertAdjacentElement("afterend", orders);
+      if (settings) (orders || products || display).insertAdjacentElement("afterend", settings);
+    }
+
+    applyTab(currentTab(), {remember:false});
+    document.documentElement.dataset.greenShopOwnerTabsR41 = VERSION;
+  }
+
   function hideLegacyCollectionsCard() {
     const old = $("#shopv3e-collections-card");
     if (old) old.hidden = true;
@@ -771,6 +921,7 @@
       state.collectionItems = Array.isArray(r.data?.collectionItems) ? r.data.collectionItems : [];
       render();
       hideLegacyCollectionsCard();
+      ensureTabs();
     } catch (e) {
       const card = $("#shop-display-r4-card");
       if (card) {
@@ -793,6 +944,8 @@
         const card = $("#shop-display-r4-card");
         if (!card || !card.isConnected) {
           refresh();
+        } else {
+          ensureTabs();
         }
       }, 120);
     });
