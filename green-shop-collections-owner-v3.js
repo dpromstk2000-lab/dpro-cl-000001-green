@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.6-DELEGATED-NAV-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.7-ROUTE-LOCK-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.6-DELEGATED-NAV-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.7-ROUTE-LOCK-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1259,7 +1259,12 @@
         e.stopPropagation();
         e.stopImmediatePropagation();
         shopCard.classList.add("green-action-pressed-r45","green-action-opening-r45");
-        setTimeout(() => openOrders(), 40);
+
+        // SHOP is dynamically injected after owner.js. A same-page synthetic click can race
+        // with its async render, so use an explicit reload route for this one dashboard card.
+        const url = new URL(location.href);
+        url.searchParams.set("dpro_shop", "orders");
+        setTimeout(() => location.assign(url.toString()), 120);
         return;
       }
 
@@ -1372,7 +1377,8 @@
       card.type = "button";
       card.id = "green-action-shop-card-r42";
       card.className = "owner-stat green-action-shop-card-r42";
-      card.addEventListener("click", openOrders);
+      card.dataset.dproShopRoute = "orders";
+      card.setAttribute("aria-label", "新規注文・受付を確認する");
       stats.prepend(card);
     }
 
@@ -1488,6 +1494,35 @@
     watch();
     paint();
     refresh();
+
+    const route = new URLSearchParams(location.search).get("dpro_shop");
+    if (route === "orders") {
+      try { sessionStorage.setItem("dpro_green_shop_owner_active_tab_r41", "orders"); } catch {}
+
+      let routeTries = 0;
+      const openRoutedOrders = () => {
+        routeTries += 1;
+        const shopNav = $("#green-shop-prod-nav");
+        const shell = $("#green-shop-prod-root .shopv3-shell");
+
+        if (!shell && shopNav) {
+          try { shopNav.click(); } catch {}
+        }
+
+        if ($("#green-shop-prod-root .shopv3-shell")) {
+          openOrders();
+
+          // Remove only the one-shot route flag after the target has been requested.
+          const clean = new URL(location.href);
+          clean.searchParams.delete("dpro_shop");
+          history.replaceState(null, "", clean.toString());
+          return;
+        }
+
+        if (routeTries < 80) setTimeout(openRoutedOrders, 100);
+      };
+      setTimeout(openRoutedOrders, 80);
+    }
 
     timer = window.setInterval(refresh, 60000);
     window.addEventListener("focus", refresh, {passive:true});
