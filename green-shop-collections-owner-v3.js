@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.3-DIRECT-NAV-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.4-DIRECT-ORDERS-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -906,6 +906,16 @@
     document.documentElement.dataset.greenShopOwnerTabsR41 = VERSION;
   }
 
+  if (!window.__DPRO_GREEN_SHOP_TAB_EVENT_R44__) {
+    window.__DPRO_GREEN_SHOP_TAB_EVENT_R44__ = true;
+    window.addEventListener("dpro-green-shop-open-tab", (event) => {
+      const key = String(event?.detail?.tab || "");
+      if (!["display","products","orders","settings"].includes(key)) return;
+      ensureTabs();
+      applyTab(key);
+    });
+  }
+
   function hideLegacyCollectionsCard() {
     const old = $("#shopv3e-collections-card");
     if (old) old.hidden = true;
@@ -981,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.3-DIRECT-NAV-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.4-DIRECT-ORDERS-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1079,9 +1089,7 @@
     const panel = $('[data-view-panel="shop-sales"]');
     const shopNav = $("#green-shop-prod-nav");
 
-    // Directly activate the SHOP view first. This is intentionally not dependent
-    // on a synthetic click because owner.js and the dynamically injected SHOP
-    // navigation are initialized by separate modules.
+    // Activate the SHOP view immediately.
     if (panel) {
       $$("[data-view-panel]").forEach((p) => {
         p.classList.toggle("is-active", p.dataset.viewPanel === "shop-sales");
@@ -1094,28 +1102,53 @@
       $("#owner-sidebar")?.classList.remove("is-open");
     }
 
-    // Keep the normal SHOP open handler in sync when it is already available.
-    try { shopNav?.click(); } catch {}
+    // Only invoke the normal SHOP loader when the SHOP shell has not been built yet.
+    // Re-clicking after it exists causes an async re-render that can wipe the selected tab.
+    if (!$("#green-shop-prod-root .shopv3-shell")) {
+      try { shopNav?.click(); } catch {}
+    }
 
     let tries = 0;
     const go = () => {
       tries += 1;
-      const ordersTab = $('[data-shop-sales-tab-r41="orders"]');
-      if (ordersTab) {
-        ordersTab.click();
+      const shell = $("#green-shop-prod-root .shopv3-shell");
+
+      if (shell) {
+        // Ask the tab module to show only "③ 注文・受付管理".
+        window.dispatchEvent(new CustomEvent("dpro-green-shop-open-tab", {
+          detail: {tab: "orders"}
+        }));
+
+        const ordersTab = $('[data-shop-sales-tab-r41="orders"]');
+        if (ordersTab) ordersTab.click();
+
+        // Hard fallback: even if the tab UI is still being reconstructed,
+        // show the order card only. The normal tab module will take over immediately after.
+        const cards = Array.from(shell.children).filter((el) => el.matches?.("article.shopv3-card"));
+        for (const card of cards) {
+          const h = $("h3", card);
+          const text = String(h?.textContent || "");
+          const isOrders = text.includes("注文");
+          card.classList.toggle("shop-sales-tab-panel-hidden-r41", !isOrders);
+        }
+
         requestAnimationFrame(() => {
-          const target = $('[data-view-panel="shop-sales"]');
+          const target = cards.find((card) => String($("h3", card)?.textContent || "").includes("注文")) || panel;
           target?.scrollIntoView({behavior:"smooth",block:"start"});
-          const heading = $(".owner-heading", target);
-          heading?.setAttribute("tabindex", "-1");
-          heading?.focus({preventScroll:true});
         });
+
+        // Re-assert the requested tab after late async SHOP renders finish.
+        setTimeout(() => window.dispatchEvent(new CustomEvent("dpro-green-shop-open-tab", {
+          detail: {tab: "orders"}
+        })), 250);
+        setTimeout(() => window.dispatchEvent(new CustomEvent("dpro-green-shop-open-tab", {
+          detail: {tab: "orders"}
+        })), 700);
         return;
       }
 
-      // The SHOP shell may still be rendering. Re-assert the direct view while waiting.
       if (panel) panel.classList.add("is-active");
-      if (tries < 50) setTimeout(go, 100);
+      if (tries < 60) setTimeout(go, 100);
     };
     go();
   }
