@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.9-POSTLOGIN-ROUTE-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R5.0-STABLE-NAV-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.9-POSTLOGIN-ROUTE-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R5.0-STABLE-NAV-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1263,7 +1263,9 @@
         const url = new URL(location.href);
         url.searchParams.set("dpro_shop", "orders");
         url.hash = "shop-orders";
-        setTimeout(() => location.assign(url.toString()), 120);
+        requestAnimationFrame(() => {
+          window.setTimeout(() => location.assign(url.toString()), 40);
+        });
         return;
       }
 
@@ -1346,11 +1348,14 @@
       badge.setAttribute("aria-label", "未対応の新規注文・受付件数");
       nav.append(badge);
     }
-    badge.textContent = String(newCount);
-    badge.hidden = newCount <= 0;
-    nav.title = newCount > 0
+    const badgeText = String(newCount);
+    if (badge.textContent !== badgeText) badge.textContent = badgeText;
+    const shouldHide = newCount <= 0;
+    if (badge.hidden !== shouldHide) badge.hidden = shouldHide;
+    const navTitle = newCount > 0
       ? `未対応の新規注文・受付が${newCount}件あります`
       : "販売・SHOP";
+    if (nav.title !== navTitle) nav.title = navTitle;
   }
 
   function ensureOrdersTabBadge() {
@@ -1362,8 +1367,10 @@
       badge.className = "green-action-count-r42";
       tab.append(badge);
     }
-    badge.textContent = String(newCount);
-    badge.hidden = newCount <= 0;
+    const badgeText = String(newCount);
+    if (badge.textContent !== badgeText) badge.textContent = badgeText;
+    const shouldHide = newCount <= 0;
+    if (badge.hidden !== shouldHide) badge.hidden = shouldHide;
   }
 
   function ensureDashboardCard() {
@@ -1383,12 +1390,18 @@
     }
 
     card.classList.toggle("is-alert", newCount > 0);
-    card.innerHTML = `
-      <small>新規注文・受付</small>
-      <strong>${newCount}</strong>
-      <span>${newCount > 0 ? "未対応があります" : "新規受付はありません"}</span>
-    `;
-    card.title = "押すと注文・受付管理を開きます";
+    const renderKey = `${newCount}|${newCount > 0 ? "pending" : "clear"}`;
+    if (card.dataset.renderKeyR50 !== renderKey) {
+      card.innerHTML = `
+        <small>新規注文・受付</small>
+        <strong>${newCount}</strong>
+        <span>${newCount > 0 ? "未対応があります" : "新規受付はありません"}</span>
+      `;
+      card.dataset.renderKeyR50 = renderKey;
+    }
+    if (card.title !== "押すと注文・受付管理を開きます") {
+      card.title = "押すと注文・受付管理を開きます";
+    }
   }
 
   function ensureAttention() {
@@ -1423,13 +1436,17 @@
       list.prepend(item);
     }
 
-    item.innerHTML = `
-      <span>
-        <strong>SHOP注文・受付</strong>
-        <small class="owner-row-sub">未対応 ${newCount}件｜押すと確認場所へ移動</small>
-      </span>
-      <span class="owner-status-chip is-warning">要確認</span>
-    `;
+    const renderKey = String(newCount);
+    if (item.dataset.renderKeyR50 !== renderKey) {
+      item.innerHTML = `
+        <span>
+          <strong>SHOP注文・受付</strong>
+          <small class="owner-row-sub">未対応 ${newCount}件｜押すと確認場所へ移動</small>
+        </span>
+        <span class="owner-status-chip is-warning">要確認</span>
+      `;
+      item.dataset.renderKeyR50 = renderKey;
+    }
   }
 
   function paint() {
@@ -1481,9 +1498,20 @@
   function watch() {
     if (observer) return;
     let mutationTimer = 0;
-    observer = new MutationObserver(() => {
+    observer = new MutationObserver((mutations) => {
+      const relevant = mutations.some((m) => {
+        const el = m.target?.nodeType === 1 ? m.target : m.target?.parentElement;
+        if (!el) return true;
+        if (el.closest?.("#green-action-shop-card-r42")) return false;
+        if (el.closest?.("#green-action-shop-attention-r42")) return false;
+        if (el.closest?.(".green-action-count-r42")) return false;
+        if (el.closest?.(".green-global-back-r45")) return false;
+        if (el.closest?.("#green-shop-route-toast-r50")) return false;
+        return true;
+      });
+      if (!relevant) return;
       clearTimeout(mutationTimer);
-      mutationTimer = setTimeout(paint, 80);
+      mutationTimer = setTimeout(paint, 100);
     });
     observer.observe(document.body, {childList:true,subtree:true});
   }
@@ -1500,7 +1528,7 @@
       try { sessionStorage.setItem("dpro_green_shop_owner_active_tab_r41", "orders"); } catch {}
 
       const routeToast = document.createElement("div");
-      routeToast.id = "green-shop-route-toast-r49";
+      routeToast.id = "green-shop-route-toast-r50";
       routeToast.textContent = "注文・受付管理を開いています…";
       routeToast.style.cssText = "position:fixed;right:18px;bottom:18px;z-index:100000;background:#173d2b;color:#fff;padding:11px 15px;border-radius:12px;font-weight:900;box-shadow:0 12px 30px #0003";
       document.body.append(routeToast);
