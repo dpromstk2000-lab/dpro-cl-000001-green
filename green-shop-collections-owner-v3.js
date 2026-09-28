@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.5-GLOBAL-NAV-FEEDBACK-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.6-DELEGATED-NAV-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.5-GLOBAL-NAV-FEEDBACK-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.6-DELEGATED-NAV-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1055,6 +1055,7 @@
       .green-action-count-r42[hidden]{display:none!important}
       #green-shop-prod-nav{position:relative}
       #green-shop-prod-nav .green-action-count-r42{margin-left:8px}
+      .green-action-shop-card-r42{cursor:pointer!important}
       .green-action-shop-card-r42.is-alert{
         border-color:#e4b44b!important;background:#fffaf0!important;
         box-shadow:0 0 0 2px #f3d58a55 inset
@@ -1103,6 +1104,28 @@
     document.head.append(style);
   }
 
+  function openNativeView(view) {
+    const native = $(`.owner-nav [data-view="${CSS.escape(String(view))}"]`);
+    if (native) {
+      native.classList.add("green-action-pressed-r45");
+      native.click();
+      setTimeout(() => native.classList.remove("green-action-pressed-r45"), 120);
+      return true;
+    }
+
+    const panel = $(`[data-view-panel="${CSS.escape(String(view))}"]`);
+    if (!panel) return false;
+
+    $$("[data-view-panel]").forEach((p) => {
+      p.classList.toggle("is-active", p.dataset.viewPanel === view);
+    });
+    $$("[data-view]").forEach((b) => {
+      b.classList.toggle("is-active", b.dataset.view === view);
+    });
+    panel.scrollIntoView({behavior:"smooth",block:"start"});
+    return true;
+  }
+
   function clickDashboard() {
     const native = $('.owner-nav [data-view="dashboard"]');
     if (native) {
@@ -1124,6 +1147,7 @@
   }
 
   function openOrders() {
+    try { sessionStorage.setItem("dpro_green_shop_owner_active_tab_r41", "orders"); } catch {}
     const panel = $('[data-view-panel="shop-sales"]');
     const shopNav = $("#green-shop-prod-nav");
 
@@ -1222,6 +1246,51 @@
         heading.append(wrap);
       }
     });
+  }
+
+  function installDelegatedNavigation() {
+    if (document.documentElement.dataset.greenDelegatedNavR46 === "1") return;
+    document.documentElement.dataset.greenDelegatedNavR46 = "1";
+
+    document.addEventListener("click", (e) => {
+      const shopCard = e.target.closest?.("#green-action-shop-card-r42,#green-action-shop-attention-r42");
+      if (shopCard) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        shopCard.classList.add("green-action-pressed-r45","green-action-opening-r45");
+        setTimeout(() => openOrders(), 40);
+        return;
+      }
+
+      const stat = e.target.closest?.("#dashboard-stats .owner-stat");
+      if (!stat) return;
+
+      const label = String(stat.querySelector("small")?.textContent || "").trim();
+
+      // These two legacy dashboard cards were wired back to "dashboard",
+      // which makes them look unresponsive. Route them to the actual work screen.
+      if (label === "本日の巡回" || label === "巡回未完了") {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        stat.classList.add("green-action-pressed-r45","green-action-opening-r45");
+        setTimeout(() => {
+          openNativeView("visits");
+          stat.classList.remove("green-action-pressed-r45","green-action-opening-r45");
+        }, 70);
+        return;
+      }
+
+      if (label === "交換候補") {
+        // Existing target is assets; keep behavior but make the intent explicit.
+        stat.dataset.go = "assets";
+      }
+      if (label === "設置準備中") stat.dataset.go = "installations";
+      if (label === "在庫不足警告") stat.dataset.go = "stock";
+      if (label === "本日の現地確認") stat.dataset.go = "site-checks";
+      if (label === "新着問い合わせ" || label === "返信・再連絡待ち") stat.dataset.go = "inquiries";
+    }, true);
   }
 
   function installPressFeedback() {
@@ -1362,12 +1431,21 @@
     ensureNavBadge();
     ensureOrdersTabBadge();
     ensureBackButtons();
+    installDelegatedNavigation();
     installPressFeedback();
 
     const dashboard = $('[data-view-panel="dashboard"]');
     if (dashboard?.classList.contains("is-active")) {
       ensureDashboardCard();
       ensureAttention();
+
+      $$("#dashboard-stats .owner-stat").forEach((card) => {
+        const label = String(card.querySelector("small")?.textContent || "").trim();
+        if (label === "本日の巡回" || label === "巡回未完了") {
+          card.dataset.go = "visits";
+          card.title = "押すと巡回予定を開きます";
+        }
+      });
     }
 
     document.documentElement.dataset.greenOwnerActionCenterR42 = VERSION;
