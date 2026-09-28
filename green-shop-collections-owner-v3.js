@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.1-TABBED-UX-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.2-ACTION-CENTER-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -969,6 +969,314 @@
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+})();
+
+/* DPRO GREEN OWNER ACTION CENTER R4.2 / 2026-09-28
+   Standard flow:
+   Dashboard alert -> direct work screen -> one-click return to dashboard.
+   Adds SHOP new-order count without changing the core dashboard API. */
+(() => {
+  "use strict";
+
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.2-20260928";
+  if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
+  window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
+
+  const API = String(
+    window.GREEN_CONFIG?.SHOP_MODULE?.apiBase ||
+    "https://dpro-cl-000001-green-shop.dpromstk2000.workers.dev"
+  ).replace(/\/$/, "");
+  const BUILD_CODE_KEY = "dpro_green_shop_build_code";
+  const $ = (s, r = document) => r.querySelector(s);
+
+  let newCount = 0;
+  let loading = false;
+  let timer = 0;
+  let observer = null;
+
+  function token() {
+    return window.DPRO_AUTH?.getToken?.() ||
+      sessionStorage.getItem("green_admin_session_token") || "";
+  }
+
+  function buildCode({promptIfMissing=false}={}) {
+    if (!window.__DPRO_BUILD_ACCESS__) return "";
+    let code = sessionStorage.getItem(BUILD_CODE_KEY) || "";
+    if (!code && promptIfMissing) {
+      code = prompt("構築・QA用の管理コードを入力してください。") || "";
+      if (code) sessionStorage.setItem(BUILD_CODE_KEY, code);
+    }
+    return code;
+  }
+
+  async function shopRequest(path) {
+    const headers = new Headers();
+    const t = token();
+    const b = buildCode({promptIfMissing:false});
+    if (!t && !b) return null;
+    if (t) headers.set("Authorization", `Bearer ${t}`);
+    if (b) headers.set("X-DPRO-Build-Code", b);
+
+    const res = await fetch(API + path, {
+      method: "GET",
+      headers,
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    if (data?.ok === false) return null;
+    return data?.data || null;
+  }
+
+  function installStyle() {
+    if ($("#green-action-center-r42-style")) return;
+    const style = document.createElement("style");
+    style.id = "green-action-center-r42-style";
+    style.textContent = `
+      .green-action-count-r42{
+        display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;
+        margin-left:auto;border-radius:999px;background:#c43d32;color:#fff;
+        font-size:11px;font-weight:900;line-height:1;box-sizing:border-box
+      }
+      .green-action-count-r42[hidden]{display:none!important}
+      #green-shop-prod-nav{position:relative}
+      #green-shop-prod-nav .green-action-count-r42{margin-left:8px}
+      .green-action-shop-card-r42.is-alert{
+        border-color:#e4b44b!important;background:#fffaf0!important;
+        box-shadow:0 0 0 2px #f3d58a55 inset
+      }
+      .green-action-shop-card-r42 .green-action-direct-r42{
+        display:block;margin-top:4px;color:#805900;font-size:11px;font-weight:900
+      }
+      .green-action-attention-r42{
+        width:100%;border:0;text-align:left;cursor:pointer;font:inherit
+      }
+      .green-action-attention-r42:hover{filter:brightness(.98)}
+      .green-action-back-r42{
+        min-height:38px!important;display:inline-flex!important;align-items:center!important;gap:5px!important
+      }
+      .shop-sales-tab-r41 .green-action-count-r42{margin-left:6px;vertical-align:middle}
+      @media(max-width:680px){
+        .green-action-back-r42{min-height:36px!important}
+      }
+    `;
+    document.head.append(style);
+  }
+
+  function clickDashboard() {
+    const native = $('.owner-nav [data-view="dashboard"]');
+    if (native) {
+      native.click();
+      setTimeout(() => window.scrollTo({top:0,behavior:"smooth"}), 30);
+    }
+  }
+
+  function openOrders() {
+    const shopNav = $("#green-shop-prod-nav");
+    if (!shopNav) return;
+    shopNav.click();
+
+    let tries = 0;
+    const go = () => {
+      tries += 1;
+      const tab = $('[data-shop-sales-tab-r41="orders"]');
+      if (tab) {
+        tab.click();
+        setTimeout(() => {
+          const panel = $('[data-view-panel="shop-sales"]');
+          panel?.scrollIntoView({behavior:"smooth",block:"start"});
+        }, 40);
+        return;
+      }
+      if (tries < 35) setTimeout(go, 100);
+    };
+    setTimeout(go, 20);
+  }
+
+  function ensureBackButton() {
+    const panel = $('[data-view-panel="shop-sales"]');
+    const heading = $(".owner-heading", panel);
+    if (!heading || $("#green-action-back-r42", heading)) return;
+
+    const actions = heading.lastElementChild;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "green-action-back-r42";
+    button.className = "btn btn--secondary green-action-back-r42";
+    button.textContent = "← ダッシュボードへ戻る";
+    button.addEventListener("click", clickDashboard);
+
+    if (actions && actions !== heading.firstElementChild) actions.prepend(button);
+    else heading.append(button);
+  }
+
+  function ensureNavBadge() {
+    const nav = $("#green-shop-prod-nav");
+    if (!nav) return;
+    let badge = $(".green-action-count-r42", nav);
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "green-action-count-r42";
+      badge.setAttribute("aria-label", "未対応の新規注文・受付件数");
+      nav.append(badge);
+    }
+    badge.textContent = String(newCount);
+    badge.hidden = newCount <= 0;
+    nav.title = newCount > 0
+      ? `未対応の新規注文・受付が${newCount}件あります`
+      : "販売・SHOP";
+  }
+
+  function ensureOrdersTabBadge() {
+    const tab = $('[data-shop-sales-tab-r41="orders"]');
+    if (!tab) return;
+    let badge = $(".green-action-count-r42", tab);
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "green-action-count-r42";
+      tab.append(badge);
+    }
+    badge.textContent = String(newCount);
+    badge.hidden = newCount <= 0;
+  }
+
+  function ensureDashboardCard() {
+    const stats = $("#dashboard-stats");
+    if (!stats) return;
+
+    let card = $("#green-action-shop-card-r42", stats);
+    if (!card) {
+      card = document.createElement("button");
+      card.type = "button";
+      card.id = "green-action-shop-card-r42";
+      card.className = "owner-stat green-action-shop-card-r42";
+      card.addEventListener("click", openOrders);
+      stats.prepend(card);
+    }
+
+    card.classList.toggle("is-alert", newCount > 0);
+    card.innerHTML = `
+      <small>新規注文・受付</small>
+      <strong>${newCount}</strong>
+      <span>${newCount > 0 ? "未対応があります" : "新規受付はありません"}</span>
+      <span class="green-action-direct-r42">押すと注文・受付管理を開きます →</span>
+    `;
+  }
+
+  function ensureAttention() {
+    const root = $("#dashboard-attention");
+    if (!root) return;
+
+    const old = $("#green-action-shop-attention-r42", root);
+    if (newCount <= 0) {
+      old?.remove();
+      return;
+    }
+
+    // Remove the core "nothing pending" message when SHOP itself has pending work.
+    if (root.children.length === 1 && root.firstElementChild?.classList.contains("owner-empty")) {
+      root.innerHTML = "";
+    }
+
+    let item = $("#green-action-shop-attention-r42", root);
+    if (!item) {
+      const list = root.querySelector(".owner-attention-list") || (() => {
+        const div = document.createElement("div");
+        div.className = "owner-attention-list";
+        root.append(div);
+        return div;
+      })();
+
+      item = document.createElement("button");
+      item.type = "button";
+      item.id = "green-action-shop-attention-r42";
+      item.className = "owner-attention-item green-action-attention-r42";
+      item.addEventListener("click", openOrders);
+      list.prepend(item);
+    }
+
+    item.innerHTML = `
+      <span>
+        <strong>SHOP注文・受付</strong>
+        <small class="owner-row-sub">未対応 ${newCount}件｜押すと確認場所へ移動</small>
+      </span>
+      <span class="owner-status-chip is-warning">要確認</span>
+    `;
+  }
+
+  function paint() {
+    installStyle();
+    ensureNavBadge();
+    ensureOrdersTabBadge();
+    ensureBackButton();
+
+    const dashboard = $('[data-view-panel="dashboard"]');
+    if (dashboard?.classList.contains("is-active")) {
+      ensureDashboardCard();
+      ensureAttention();
+    }
+
+    document.documentElement.dataset.greenOwnerActionCenterR42 = VERSION;
+  }
+
+  async function refresh() {
+    if (loading) return;
+    loading = true;
+    try {
+      let payload = await shopRequest("/api/admin/order-workflow");
+      if (!payload) {
+        const fallback = await shopRequest("/api/admin/bootstrap");
+        payload = fallback || {};
+      }
+
+      const orders = Array.isArray(payload?.orders) ? payload.orders : [];
+      newCount = orders.filter((o) => String(o?.status || "") === "new").length;
+      paint();
+    } catch (e) {
+      console.warn(VERSION, e);
+      paint();
+    } finally {
+      loading = false;
+    }
+  }
+
+  function watch() {
+    if (observer) return;
+    let mutationTimer = 0;
+    observer = new MutationObserver(() => {
+      clearTimeout(mutationTimer);
+      mutationTimer = setTimeout(paint, 80);
+    });
+    observer.observe(document.body, {childList:true,subtree:true});
+  }
+
+  function boot() {
+    if (!/\/owner\.html$/.test(location.pathname)) return;
+    installStyle();
+    watch();
+    paint();
+    refresh();
+
+    timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh, {passive:true});
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refresh();
+    });
+
+    // Refresh shortly after status/action buttons are used in the SHOP order screen.
+    document.addEventListener("click", (e) => {
+      if (e.target.closest?.("[data-shopv3f-next],#shopv3f-save")) {
+        setTimeout(refresh, 900);
+      }
+    }, true);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, {once:true});
   } else {
     boot();
   }
