@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R5.0-STABLE-NAV-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R5.1-DASHBOARD-NAV-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R5.0-STABLE-NAV-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R5.1-DASHBOARD-NAV-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1248,6 +1248,47 @@
     });
   }
 
+  const DASHBOARD_ROUTE_MAP_R51 = Object.freeze({
+    "新着問い合わせ": "inquiries",
+    "返信・再連絡待ち": "inquiries",
+    "本日の現地確認": "site-checks",
+    "導入準備中": "installations",
+    "利用中顧客": "customers",
+    "利用中契約": "contracts",
+    "本日の巡回": "visits",
+    "巡回未完了": "visits",
+    "設置中植物": "assets",
+    "交換候補": "assets",
+    "設置準備中": "installations",
+    "在庫不足警告": "stock",
+  });
+
+  const DASHBOARD_ROUTE_LABEL_R51 = Object.freeze({
+    "inquiries": "相談受付",
+    "site-checks": "現地確認",
+    "installations": "設置・移動",
+    "customers": "顧客台帳",
+    "contracts": "利用・契約状態",
+    "visits": "巡回予定",
+    "assets": "植物・鉢台帳",
+    "stock": "簡易在庫",
+  });
+
+  function decorateDashboardRoutesR51() {
+    $$("#dashboard-stats .owner-stat").forEach((card) => {
+      if (card.id === "green-action-shop-card-r42") return;
+      const label = String(card.querySelector("small")?.textContent || "").trim();
+      const target = DASHBOARD_ROUTE_MAP_R51[label];
+      if (!target) return;
+
+      card.dataset.dproRouteR51 = target;
+      card.dataset.go = target;
+      const targetLabel = DASHBOARD_ROUTE_LABEL_R51[target] || "確認画面";
+      card.title = `押すと${targetLabel}を開きます`;
+      card.setAttribute("aria-label", `${label}。押すと${targetLabel}を開きます`);
+    });
+  }
+
   function installDelegatedNavigation() {
     if (document.documentElement.dataset.greenDelegatedNavR46 === "1") return;
     document.documentElement.dataset.greenDelegatedNavR46 = "1";
@@ -1270,32 +1311,24 @@
       }
 
       const stat = e.target.closest?.("#dashboard-stats .owner-stat");
-      if (!stat) return;
+      if (!stat || stat.id === "green-action-shop-card-r42") return;
 
       const label = String(stat.querySelector("small")?.textContent || "").trim();
+      const target = stat.dataset.dproRouteR51 || DASHBOARD_ROUTE_MAP_R51[label];
+      if (!target) return;
 
-      // These two legacy dashboard cards were wired back to "dashboard",
-      // which makes them look unresponsive. Route them to the actual work screen.
-      if (label === "本日の巡回" || label === "巡回未完了") {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        stat.classList.add("green-action-pressed-r45","green-action-opening-r45");
-        setTimeout(() => {
-          openNativeView("visits");
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+
+      stat.classList.add("green-action-pressed-r45","green-action-opening-r45");
+      requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          openNativeView(target);
           stat.classList.remove("green-action-pressed-r45","green-action-opening-r45");
-        }, 70);
-        return;
-      }
-
-      if (label === "交換候補") {
-        // Existing target is assets; keep behavior but make the intent explicit.
-        stat.dataset.go = "assets";
-      }
-      if (label === "設置準備中") stat.dataset.go = "installations";
-      if (label === "在庫不足警告") stat.dataset.go = "stock";
-      if (label === "本日の現地確認") stat.dataset.go = "site-checks";
-      if (label === "新着問い合わせ" || label === "返信・再連絡待ち") stat.dataset.go = "inquiries";
+        }, 55);
+      });
+      return;
     }, true);
   }
 
@@ -1462,13 +1495,7 @@
       ensureDashboardCard();
       ensureAttention();
 
-      $$("#dashboard-stats .owner-stat").forEach((card) => {
-        const label = String(card.querySelector("small")?.textContent || "").trim();
-        if (label === "本日の巡回" || label === "巡回未完了") {
-          card.dataset.go = "visits";
-          card.title = "押すと巡回予定を開きます";
-        }
-      });
+      decorateDashboardRoutesR51();
     }
 
     document.documentElement.dataset.greenOwnerActionCenterR42 = VERSION;
@@ -1625,7 +1652,12 @@
         setTimeout(() => {
           ensureBackButtons();
           paint();
+          decorateDashboardRoutesR51();
         }, 80);
+        setTimeout(() => {
+          paint();
+          decorateDashboardRoutesR51();
+        }, 350);
       }
     }, true);
   }
