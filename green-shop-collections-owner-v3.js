@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.4-DIRECT-ORDERS-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.5-GLOBAL-NAV-FEEDBACK-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.4-DIRECT-ORDERS-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.5-GLOBAL-NAV-FEEDBACK-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1070,8 +1070,34 @@
         min-height:38px!important;display:inline-flex!important;align-items:center!important;gap:5px!important
       }
       .shop-sales-tab-r41 .green-action-count-r42{margin-left:6px;vertical-align:middle}
+      .owner-stat,.owner-quick-grid button,.owner-row-action,
+      .green-action-attention-r42,[data-go]{
+        transition:transform .12s ease,box-shadow .12s ease,filter .12s ease!important
+      }
+      .owner-stat:active,.owner-quick-grid button:active,.owner-row-action:active,
+      .green-action-attention-r42:active,[data-go]:active{
+        transform:scale(.985)!important;filter:brightness(.97)!important
+      }
+      .green-action-pressed-r45{
+        transform:scale(.985)!important;
+        box-shadow:0 0 0 3px #d9ae4a55 inset,0 8px 20px #173d2b18!important;
+        filter:brightness(.985)!important;
+        position:relative!important
+      }
+      .green-action-opening-r45::after{
+        content:"開いています…";
+        position:absolute;right:10px;bottom:8px;
+        padding:3px 7px;border-radius:999px;background:#173d2b;color:#fff;
+        font-size:10px;font-weight:900;line-height:1.2;
+        pointer-events:none
+      }
+      .green-global-back-r45{
+        min-height:38px!important;display:inline-flex!important;align-items:center!important;
+        gap:5px!important;white-space:nowrap
+      }
       @media(max-width:680px){
-        .green-action-back-r42{min-height:36px!important}
+        .green-action-back-r42,.green-global-back-r45{min-height:36px!important}
+        .green-action-opening-r45::after{right:7px;bottom:6px;font-size:9px}
       }
     `;
     document.head.append(style);
@@ -1080,9 +1106,21 @@
   function clickDashboard() {
     const native = $('.owner-nav [data-view="dashboard"]');
     if (native) {
+      native.classList.add("green-action-pressed-r45");
       native.click();
-      setTimeout(() => window.scrollTo({top:0,behavior:"smooth"}), 30);
+      setTimeout(() => {
+        native.classList.remove("green-action-pressed-r45");
+        window.scrollTo({top:0,behavior:"smooth"});
+      }, 80);
+      return;
     }
+
+    // Fallback if the native nav is still initializing.
+    $$("[data-view-panel]").forEach((p) => {
+      p.classList.toggle("is-active", p.dataset.viewPanel === "dashboard");
+    });
+    const dashboard = $('[data-view-panel="dashboard"]');
+    dashboard?.scrollIntoView({behavior:"smooth",block:"start"});
   }
 
   function openOrders() {
@@ -1153,21 +1191,76 @@
     go();
   }
 
-  function ensureBackButton() {
-    const panel = $('[data-view-panel="shop-sales"]');
-    const heading = $(".owner-heading", panel);
-    if (!heading || $("#green-action-back-r42", heading)) return;
+  function ensureBackButtons() {
+    $$('[data-view-panel]').forEach((panel) => {
+      if (panel.dataset.viewPanel === "dashboard") return;
+      const heading = $(".owner-heading", panel);
+      if (!heading) return;
 
-    const actions = heading.lastElementChild;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.id = "green-action-back-r42";
-    button.className = "btn btn--secondary green-action-back-r42";
-    button.textContent = "← ダッシュボードへ戻る";
-    button.addEventListener("click", clickDashboard);
+      let button = $(".green-global-back-r45", heading);
+      if (button) return;
 
-    if (actions && actions !== heading.firstElementChild) actions.prepend(button);
-    else heading.append(button);
+      button = document.createElement("button");
+      button.type = "button";
+      button.className = "btn btn--secondary green-global-back-r45";
+      button.textContent = "← ダッシュボードへ戻る";
+      button.setAttribute("aria-label", "ダッシュボードへ戻る");
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        clickDashboard();
+      });
+
+      const actions = heading.lastElementChild;
+      if (actions && actions !== heading.firstElementChild &&
+          (actions.matches("div") || actions.matches(".owner-heading-actions"))) {
+        actions.prepend(button);
+      } else {
+        const wrap = document.createElement("div");
+        wrap.className = "owner-heading-actions";
+        wrap.append(button);
+        heading.append(wrap);
+      }
+    });
+  }
+
+  function installPressFeedback() {
+    if (document.documentElement.dataset.greenPressFeedbackR45 === "1") return;
+    document.documentElement.dataset.greenPressFeedbackR45 = "1";
+
+    const selector = [
+      "#dashboard-stats .owner-stat",
+      "#dashboard-attention button",
+      ".owner-quick-grid button",
+      ".owner-row-action",
+      "[data-go]"
+    ].join(",");
+
+    const press = (target) => {
+      target.classList.add("green-action-pressed-r45","green-action-opening-r45");
+      window.setTimeout(() => {
+        target.classList.remove("green-action-pressed-r45","green-action-opening-r45");
+      }, 700);
+    };
+
+    document.addEventListener("pointerdown", (e) => {
+      const target = e.target.closest?.(selector);
+      if (target) target.classList.add("green-action-pressed-r45");
+    }, true);
+
+    document.addEventListener("pointerup", (e) => {
+      const target = e.target.closest?.(selector);
+      if (target) target.classList.remove("green-action-pressed-r45");
+    }, true);
+
+    document.addEventListener("pointercancel", () => {
+      $$(".green-action-pressed-r45").forEach((x) => x.classList.remove("green-action-pressed-r45"));
+    }, true);
+
+    document.addEventListener("click", (e) => {
+      const target = e.target.closest?.(selector);
+      if (target) press(target);
+    }, true);
   }
 
   function ensureNavBadge() {
@@ -1268,7 +1361,8 @@
     installStyle();
     ensureNavBadge();
     ensureOrdersTabBadge();
-    ensureBackButton();
+    ensureBackButtons();
+    installPressFeedback();
 
     const dashboard = $('[data-view-panel="dashboard"]');
     if (dashboard?.classList.contains("is-active")) {
@@ -1328,6 +1422,12 @@
     document.addEventListener("click", (e) => {
       if (e.target.closest?.("[data-shopv3f-next],#shopv3f-save")) {
         setTimeout(refresh, 900);
+      }
+      if (e.target.closest?.("[data-view],#green-shop-prod-nav")) {
+        setTimeout(() => {
+          ensureBackButtons();
+          paint();
+        }, 80);
       }
     }, true);
   }
