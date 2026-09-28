@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.8-NATIVE-LINK-20260928";
+  const VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R4.9-POSTLOGIN-ROUTE-20260928";
   if (window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__) return;
   window.__DPRO_GREEN_SHOP_OWNER_DISPLAY_SLOTS_R4__ = VERSION;
 
@@ -991,7 +991,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.8-NATIVE-LINK-20260928";
+  const VERSION = "GREEN-OWNER-ACTION-CENTER-R4.9-POSTLOGIN-ROUTE-20260928";
   if (window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__) return;
   window.__DPRO_GREEN_OWNER_ACTION_CENTER_R42__ = VERSION;
 
@@ -1055,10 +1055,7 @@
       .green-action-count-r42[hidden]{display:none!important}
       #green-shop-prod-nav{position:relative}
       #green-shop-prod-nav .green-action-count-r42{margin-left:8px}
-      .green-action-shop-card-r42{
-        cursor:pointer!important;text-decoration:none!important;color:inherit!important;
-        box-sizing:border-box
-      }
+      .green-action-shop-card-r42{cursor:pointer!important}
       .green-action-shop-card-r42.is-alert{
         border-color:#e4b44b!important;background:#fffaf0!important;
         box-shadow:0 0 0 2px #f3d58a55 inset
@@ -1256,21 +1253,19 @@
     document.documentElement.dataset.greenDelegatedNavR46 = "1";
 
     document.addEventListener("click", (e) => {
-      const shopAttention = e.target.closest?.("#green-action-shop-attention-r42");
-      if (shopAttention) {
+      const shopRouteTarget = e.target.closest?.("#green-action-shop-card-r42,#green-action-shop-attention-r42");
+      if (shopRouteTarget) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
-        shopAttention.classList.add("green-action-pressed-r45","green-action-opening-r45");
+        shopRouteTarget.classList.add("green-action-pressed-r45","green-action-opening-r45");
+
         const url = new URL(location.href);
         url.searchParams.set("dpro_shop", "orders");
         url.hash = "shop-orders";
-        setTimeout(() => location.assign(url.toString()), 100);
+        setTimeout(() => location.assign(url.toString()), 120);
         return;
       }
-
-      // #green-action-shop-card-r42 is a native anchor in R4.8.
-      // Do not preventDefault: the browser itself guarantees the navigation.
 
       const stat = e.target.closest?.("#dashboard-stats .owner-stat");
       if (!stat) return;
@@ -1376,34 +1371,24 @@
     if (!stats) return;
 
     let card = $("#green-action-shop-card-r42", stats);
-    if (!card) {
-      card = document.createElement("a");
+    if (!card || card.tagName !== "BUTTON") {
+      card?.remove();
+      card = document.createElement("button");
+      card.type = "button";
       card.id = "green-action-shop-card-r42";
       card.className = "owner-stat green-action-shop-card-r42";
       card.dataset.dproShopRoute = "orders";
       card.setAttribute("aria-label", "新規注文・受付を確認する");
-      card.setAttribute("role", "button");
-
-      const routeUrl = new URL(location.href);
-      routeUrl.searchParams.set("dpro_shop", "orders");
-      routeUrl.hash = "shop-orders";
-      card.href = routeUrl.toString();
-
       stats.prepend(card);
     }
-
-    const routeUrl = new URL(location.href);
-    routeUrl.searchParams.set("dpro_shop", "orders");
-    routeUrl.hash = "shop-orders";
-    card.href = routeUrl.toString();
 
     card.classList.toggle("is-alert", newCount > 0);
     card.innerHTML = `
       <small>新規注文・受付</small>
       <strong>${newCount}</strong>
       <span>${newCount > 0 ? "未対応があります" : "新規受付はありません"}</span>
-      <span class="green-action-direct-r42">押すと注文・受付管理を開きます →</span>
     `;
+    card.title = "押すと注文・受付管理を開きます";
   }
 
   function ensureAttention() {
@@ -1514,63 +1499,86 @@
     if (route === "orders") {
       try { sessionStorage.setItem("dpro_green_shop_owner_active_tab_r41", "orders"); } catch {}
 
-      // Show immediate feedback after the reload so the owner knows the route is being prepared.
       const routeToast = document.createElement("div");
-      routeToast.id = "green-shop-route-toast-r48";
+      routeToast.id = "green-shop-route-toast-r49";
       routeToast.textContent = "注文・受付管理を開いています…";
       routeToast.style.cssText = "position:fixed;right:18px;bottom:18px;z-index:100000;background:#173d2b;color:#fff;padding:11px 15px;border-radius:12px;font-weight:900;box-shadow:0 12px 30px #0003";
       document.body.append(routeToast);
 
+      let loginStableSince = 0;
       let routeTries = 0;
-      const openRoutedOrders = () => {
+
+      const openAfterLogin = () => {
         routeTries += 1;
+        const app = $("#owner-app");
+        const appVisible = !!app && !app.hidden && getComputedStyle(app).display !== "none";
+        const dashboardReady = !!$("#dashboard-stats");
         const shopNav = $("#green-shop-prod-nav");
-        const shell = $("#green-shop-prod-root .shopv3-shell");
-        const ordersTab = $('[data-shop-sales-tab-r41="orders"]');
 
-        if (!shell && shopNav) {
-          try { shopNav.click(); } catch {}
-        }
-
-        if (shell && ordersTab) {
-          // Activate the SHOP panel and the exact orders tab only after both exist.
-          $$("[data-view-panel]").forEach((p) => {
-            p.classList.toggle("is-active", p.dataset.viewPanel === "shop-sales");
-          });
-          $$("[data-view]").forEach((b) => {
-            b.classList.toggle("is-active", b.dataset.view === "shop-sales");
-          });
-          const title = $("#view-title");
-          if (title) title.textContent = "販売・SHOP";
-
-          ordersTab.click();
-          window.dispatchEvent(new CustomEvent("dpro-green-shop-open-tab", {
-            detail: {tab: "orders"}
-          }));
-
-          setTimeout(() => {
-            const orderCard = Array.from(shell.children).find((card) =>
-              String($("h3", card)?.textContent || "").includes("注文")
-            );
-            (orderCard || shell).scrollIntoView({behavior:"smooth",block:"start"});
-            routeToast.remove();
-
-            // Clear the one-shot route only after the target tab actually exists and was selected.
-            const clean = new URL(location.href);
-            clean.searchParams.delete("dpro_shop");
-            clean.hash = "";
-            history.replaceState(null, "", clean.toString());
-          }, 120);
+        // Critical R4.9 change:
+        // Wait until owner.js has finished its initial post-login load.
+        // Earlier versions opened SHOP before owner.js later reset the view to dashboard.
+        if (!appVisible || !dashboardReady || !shopNav) {
+          loginStableSince = 0;
+          if (routeTries < 150) setTimeout(openAfterLogin, 100);
           return;
         }
 
-        if (routeTries < 100) {
-          setTimeout(openRoutedOrders, 100);
-        } else {
-          routeToast.textContent = "注文・受付管理を開けませんでした。再読込してください。";
+        if (!loginStableSince) {
+          loginStableSince = Date.now();
+          setTimeout(openAfterLogin, 350);
+          return;
         }
+        if (Date.now() - loginStableSince < 300) {
+          setTimeout(openAfterLogin, 100);
+          return;
+        }
+
+        // Now owner.js is stable: open SHOP through its own native navigation button.
+        try { shopNav.click(); } catch {}
+
+        let shopTries = 0;
+        const selectOrders = () => {
+          shopTries += 1;
+          const shell = $("#green-shop-prod-root .shopv3-shell");
+          const ordersTab = $('[data-shop-sales-tab-r41="orders"]');
+
+          if (shell && ordersTab) {
+            ordersTab.click();
+            window.dispatchEvent(new CustomEvent("dpro-green-shop-open-tab", {
+              detail: {tab: "orders"}
+            }));
+
+            // Re-assert once after all async SHOP modules have rendered.
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent("dpro-green-shop-open-tab", {
+                detail: {tab: "orders"}
+              }));
+
+              const orderCard = Array.from(shell.children).find((card) =>
+                String($("h3", card)?.textContent || "").includes("注文")
+              );
+              (orderCard || shell).scrollIntoView({behavior:"smooth",block:"start"});
+              routeToast.remove();
+
+              const clean = new URL(location.href);
+              clean.searchParams.delete("dpro_shop");
+              clean.hash = "";
+              history.replaceState(null, "", clean.toString());
+            }, 500);
+            return;
+          }
+
+          if (shopTries < 100) {
+            setTimeout(selectOrders, 100);
+          } else {
+            routeToast.textContent = "注文・受付管理を開けませんでした。販売・SHOPを開いて③を選択してください。";
+          }
+        };
+        setTimeout(selectOrders, 80);
       };
-      setTimeout(openRoutedOrders, 60);
+
+      setTimeout(openAfterLogin, 120);
     }
 
     timer = window.setInterval(refresh, 60000);
