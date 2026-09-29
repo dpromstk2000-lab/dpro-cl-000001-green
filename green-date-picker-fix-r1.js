@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATE-PICKER-R3.0-TOP-LAYER-20260929";
+  const VERSION = "GREEN-DATE-PICKER-R3.1-VALIDATION-FIX-20260929";
   if (window.__DPRO_GREEN_DATE_PICKER_R2__) return;
   window.__DPRO_GREEN_DATE_PICKER_R2__ = VERSION;
   document.documentElement.dataset.greenDatePicker = VERSION;
@@ -43,9 +43,24 @@
     return Math.min(45, Math.floor(minute / 15) * 15);
   }
 
+  function comparableParts(type, value) {
+    const text = String(value || "").trim();
+    if (!text) return null;
+    if (type === "date") {
+      const m = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) return null;
+      return Number(`${m[1]}${m[2]}${m[3]}`);
+    }
+    const m = text.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!m) return null;
+    return Number(`${m[1]}${m[2]}${m[3]}${m[4]}${m[5]}`);
+  }
+
   function compareNative(type, a, b) {
-    if (!a || !b) return 0;
-    return a.localeCompare(b);
+    const av = comparableParts(type, a);
+    const bv = comparableParts(type, b);
+    if (av == null || bv == null) return 0;
+    return av === bv ? 0 : (av < bv ? -1 : 1);
   }
 
   function installStyle() {
@@ -156,8 +171,25 @@
     if (!native || !display) return;
 
     const type = native.dataset.greenOriginalDateType || native.type || "date";
-    const min = native.min || "";
+    const fieldName = native.name || "";
+    const siteCheckForm = native.closest("#site-check-form");
+    let min = native.min || "";
     const max = native.max || "";
+
+    // Site-check rules are evaluated from the actual form values instead of
+    // relying on a possibly stale/minified native min attribute.
+    if (siteCheckForm && type === "datetime-local") {
+      if (fieldName === "scheduledStart") {
+        const now = new Date();
+        now.setSeconds(0, 0);
+        const rem = now.getMinutes() % 15;
+        now.setMinutes(now.getMinutes() + (rem === 0 ? 15 : 15 - rem));
+        min = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      } else if (fieldName === "scheduledEnd") {
+        const start = siteCheckForm.querySelector('[name="scheduledStart"]');
+        min = start?.value || min;
+      }
+    }
 
     const initial = parseNativeValue(type, native.value);
     initial.mm = roundQuarter(initial.mm);
@@ -294,8 +326,13 @@
       if (minute) selected.mm = Number(minute.value);
 
       const value = formatNative(type, selected);
-      if (min && compareNative(type, value, min) < 0) {
-        alert("現在以降の日時を選択してください。");
+      const minCmp = min ? compareNative(type, value, min) : 0;
+      if (siteCheckForm && fieldName === "scheduledEnd" && min && minCmp <= 0) {
+        alert("終了日時は開始日時より後を選択してください。");
+        return;
+      }
+      if (min && minCmp < 0) {
+        alert(type === "date" ? "今日以降の日付を選択してください。" : "現在以降の日時を選択してください。");
         return;
       }
       if (max && compareNative(type, value, max) > 0) {
