@@ -1,9 +1,10 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATE-PICKER-R2.0-20260928";
+  const VERSION = "GREEN-DATE-PICKER-R2.1-DIRECT-20260928";
   if (window.__DPRO_GREEN_DATE_PICKER_R2__) return;
   window.__DPRO_GREEN_DATE_PICKER_R2__ = VERSION;
+  document.documentElement.dataset.greenDatePicker = VERSION;
 
   const pad = (n) => String(n).padStart(2, "0");
 
