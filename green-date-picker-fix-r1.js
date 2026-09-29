@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATE-PICKER-R3.1-VALIDATION-FIX-20260929";
+  const VERSION = "GREEN-DATE-PICKER-R3.2-SITE-TABS-20260929";
   if (window.__DPRO_GREEN_DATE_PICKER_R2__) return;
   window.__DPRO_GREEN_DATE_PICKER_R2__ = VERSION;
   document.documentElement.dataset.greenDatePicker = VERSION;
@@ -369,4 +369,185 @@
   } else {
     bind();
   }
+})();
+
+/* DPRO GREEN / SITE CHECK DETAIL TABS R2
+   Integrated into the proven direct-loaded date picker runtime so it does not
+   depend on a second script's load timing. */
+;(() => {
+  "use strict";
+
+  const VERSION = "GREEN-SITE-CHECK-DETAIL-TABS-R2.0-INTEGRATED-20260929";
+  if (window.__DPRO_GREEN_SITE_CHECK_DETAIL_TABS_R2__) return;
+  window.__DPRO_GREEN_SITE_CHECK_DETAIL_TABS_R2__ = VERSION;
+
+  const dialog = document.getElementById("owner-dialog");
+  if (!dialog) return;
+
+  function installTabsStyle() {
+    if (document.getElementById("green-site-check-detail-tabs-r2-style")) return;
+    const style = document.createElement("style");
+    style.id = "green-site-check-detail-tabs-r2-style";
+    style.textContent = `
+      #green-site-detail-form[data-green-site-tabs-r2]{
+        display:block!important;
+      }
+      .green-site-tabs-r2{
+        display:flex;gap:8px;overflow-x:auto;padding:2px 0 11px;margin:0 0 14px;
+        border-bottom:1px solid #dbe6df;scrollbar-width:thin
+      }
+      .green-site-tab-r2{
+        flex:0 0 auto;min-height:42px;padding:0 14px;border:1px solid #cbd9d1;
+        border-radius:11px;background:#fff;color:#335447;font:inherit;font-weight:900;
+        cursor:pointer;white-space:nowrap
+      }
+      .green-site-tab-r2.is-active{
+        background:#174c35;border-color:#174c35;color:#fff
+      }
+      .green-site-tab-r2:active{transform:scale(.985)}
+      .green-site-panel-r2{
+        display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+        gap:14px 16px;align-items:start
+      }
+      .green-site-panel-r2[hidden]{display:none!important}
+      .green-site-panel-r2>.full,
+      .green-site-panel-r2>.green-site-section,
+      .green-site-panel-r2>.green-site-next{
+        grid-column:1/-1
+      }
+      .green-site-panel-r2 .green-site-section{margin:0 0 2px}
+      @media(max-width:760px){
+        .green-site-panel-r2{grid-template-columns:1fr}
+        .green-site-panel-r2>.full,
+        .green-site-panel-r2>.green-site-section,
+        .green-site-panel-r2>.green-site-next{grid-column:auto}
+        .green-site-tab-r2{min-height:40px;padding:0 11px;font-size:12px}
+      }
+    `;
+    document.head.append(style);
+  }
+
+  function cleanDuplicateNotes(form) {
+    ["scheduledStart", "scheduledEnd"].forEach((name) => {
+      const label = form.querySelector(`[name="${name}"]`)?.closest("label");
+      if (!label) return;
+      const notes = Array.from(label.querySelectorAll(".green-owner-schedule-note"));
+      if (notes.length < 2) return;
+      const keep = notes.find((n) => /履歴編集可|開始より後/.test(n.textContent || "")) || notes[0];
+      notes.forEach((n) => { if (n !== keep) n.remove(); });
+    });
+  }
+
+  function setActive(form, key) {
+    form.querySelectorAll("[data-green-site-tab-r2]").forEach((button) => {
+      const active = button.dataset.greenSiteTabR2 === key;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    form.querySelectorAll("[data-green-site-panel-r2]").forEach((panel) => {
+      panel.hidden = panel.dataset.greenSitePanelR2 !== key;
+    });
+    try { sessionStorage.setItem("green_site_detail_tab_r2", key); } catch (_) {}
+    const body = document.getElementById("dialog-body");
+    if (body) body.scrollTop = 0;
+  }
+
+  function enhanceSiteCheckDetail() {
+    const form = document.getElementById("green-site-detail-form");
+    if (!form) return;
+
+    // This id only exists on the actual existing site-check detail screen.
+    if (form.dataset.greenSiteTabsR2 === VERSION) {
+      cleanDuplicateNotes(form);
+      return;
+    }
+
+    installTabsStyle();
+
+    // If an earlier experimental tab runtime partially modified this form,
+    // return its panel contents to the form first.
+    form.querySelectorAll("[data-green-site-panel-r1]").forEach((panel) => {
+      while (panel.firstChild) form.insertBefore(panel.firstChild, panel);
+      panel.remove();
+    });
+    document.getElementById("green-site-tabs-r1")?.remove();
+
+    const original = Array.from(form.children);
+    if (!original.length) return;
+
+    const tabs = document.createElement("nav");
+    tabs.className = "green-site-tabs-r2";
+    tabs.setAttribute("role", "tablist");
+    tabs.innerHTML = `
+      <button type="button" class="green-site-tab-r2" data-green-site-tab-r2="visit" role="tab">① 訪問予定</button>
+      <button type="button" class="green-site-tab-r2" data-green-site-tab-r2="result" role="tab">② 現地確認結果</button>
+      <button type="button" class="green-site-tab-r2" data-green-site-tab-r2="photo" role="tab">③ 写真・引き継ぎ</button>
+    `;
+
+    const makePanel = (key) => {
+      const section = document.createElement("section");
+      section.className = "green-site-panel-r2";
+      section.dataset.greenSitePanelR2 = key;
+      return section;
+    };
+
+    const visit = makePanel("visit");
+    const result = makePanel("result");
+    const photo = makePanel("photo");
+
+    let mode = "visit";
+    let foundResult = false;
+    let foundPhoto = false;
+
+    original.forEach((node) => {
+      if (node === tabs) return;
+      if (node.matches?.(".green-site-section")) {
+        const title = String(node.querySelector("h3")?.textContent || "").trim();
+        if (title === "現地確認結果") {
+          mode = "result";
+          foundResult = true;
+        } else if (title === "設置・植物候補") {
+          mode = "result";
+        } else if (title === "現地写真") {
+          mode = "photo";
+          foundPhoto = true;
+        }
+      }
+      (mode === "visit" ? visit : mode === "result" ? result : photo).append(node);
+    });
+
+    // Safety: never transform if this is not the expected full detail form.
+    if (!foundResult || !foundPhoto) {
+      [visit, result, photo].forEach((panel) => {
+        while (panel.firstChild) form.append(panel.firstChild);
+      });
+      return;
+    }
+
+    form.prepend(tabs);
+    form.append(visit, result, photo);
+    form.dataset.greenSiteTabsR2 = VERSION;
+
+    tabs.querySelectorAll("[data-green-site-tab-r2]").forEach((button) => {
+      button.addEventListener("click", () => setActive(form, button.dataset.greenSiteTabR2));
+    });
+
+    cleanDuplicateNotes(form);
+
+    let initial = "visit";
+    try {
+      const saved = sessionStorage.getItem("green_site_detail_tab_r2");
+      if (["visit", "result", "photo"].includes(saved)) initial = saved;
+    } catch (_) {}
+    setActive(form, initial);
+  }
+
+  let timer = 0;
+  const observer = new MutationObserver(() => {
+    clearTimeout(timer);
+    timer = setTimeout(enhanceSiteCheckDetail, 30);
+  });
+
+  observer.observe(dialog, { childList:true, subtree:true });
+  [0, 80, 180, 350, 700, 1200].forEach((ms) => setTimeout(enhanceSiteCheckDetail, ms));
 })();
