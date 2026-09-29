@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATE-PICKER-R2.1-DIRECT-20260928";
+  const VERSION = "GREEN-DATE-PICKER-R3.0-TOP-LAYER-20260929";
   if (window.__DPRO_GREEN_DATE_PICKER_R2__) return;
   window.__DPRO_GREEN_DATE_PICKER_R2__ = VERSION;
   document.documentElement.dataset.greenDatePicker = VERSION;
@@ -68,8 +68,15 @@
       }
 
       #green-date-picker-r2-overlay{
-        position:fixed;inset:0;z-index:200000;background:#0006;
-        display:grid;place-items:center;padding:18px;
+        width:100vw;height:100vh;max-width:none;max-height:none;
+        margin:0;border:0;padding:18px;background:transparent;
+        overflow:hidden;
+      }
+      #green-date-picker-r2-overlay::backdrop{
+        background:rgba(0,0,0,.42);
+      }
+      #green-date-picker-r2-overlay[open]{
+        display:grid;place-items:center;
       }
       #green-date-picker-r2{
         width:min(420px,96vw);max-height:92vh;overflow:auto;
@@ -159,7 +166,13 @@
     let viewYear = selected.y;
     let viewMonth = selected.m;
 
-    const overlay = document.createElement("div");
+    const existing = document.getElementById("green-date-picker-r2-overlay");
+    if (existing) {
+      try { existing.close?.(); } catch (_) {}
+      existing.remove();
+    }
+
+    const overlay = document.createElement("dialog");
     overlay.id = "green-date-picker-r2-overlay";
     overlay.innerHTML = `
       <div id="green-date-picker-r2" role="dialog" aria-modal="true" aria-label="${type === "date" ? "日付を選択" : "日時を選択"}">
@@ -199,6 +212,11 @@
       </div>
     `;
     document.body.append(overlay);
+    if (typeof overlay.showModal === "function") {
+      overlay.showModal();
+    } else {
+      overlay.setAttribute("open", "");
+    }
 
     const days = overlay.querySelector(".gdp-days");
     const label = overlay.querySelector(".gdp-month-label");
@@ -261,7 +279,10 @@
       });
     });
 
-    const close = () => overlay.remove();
+    const close = () => {
+      try { overlay.close?.(); } catch (_) {}
+      overlay.remove();
+    };
     overlay.querySelector(".gdp-close").addEventListener("click", close);
     overlay.querySelector(".gdp-cancel").addEventListener("click", close);
     overlay.addEventListener("click", (e) => {
