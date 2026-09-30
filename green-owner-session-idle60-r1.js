@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-SESSION-IDLE60-R1.0-20260930";
+  const VERSION = "GREEN-OWNER-SESSION-IDLE60-R1.1-20260930";
   if (window.__DPRO_GREEN_OWNER_SESSION_IDLE60_R1__) return;
   window.__DPRO_GREEN_OWNER_SESSION_IDLE60_R1__ = VERSION;
 
@@ -18,6 +18,19 @@
   let refreshInFlight = null;
   let warningShown = false;
   let saveTimer = 0;
+  let lastTrackedFormKey = null;
+
+  // R1.1: one-time cleanup of the stale R1 draft that could survive a successful registration.
+  try {
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith("green_owner_draft_r1:") && !key.includes(":site-form:")) continue;
+      // Keep this targeted to site-form stale drafts created before R1.1.
+      if (key?.startsWith("green_owner_draft_r1:") && key.includes(":site-form:")) {
+        sessionStorage.removeItem(key);
+      }
+    }
+  } catch {}
 
   function now() { return Date.now(); }
 
@@ -68,6 +81,7 @@
   function saveFormDraft(form) {
     const key = formKey(form);
     if (!key) return;
+    lastTrackedFormKey = key;
     try {
       sessionStorage.setItem(key, JSON.stringify(serializeForm(form)));
       form.dataset.greenDraftSaved = VERSION;
@@ -84,6 +98,7 @@
   function restoreFormDraft(form) {
     const key = formKey(form);
     if (!key || form.dataset.greenDraftRestored === VERSION) return;
+    lastTrackedFormKey = key;
     let draft = null;
     try { draft = JSON.parse(sessionStorage.getItem(key) || "null"); } catch {}
     if (!draft?.savedAt || now() - draft.savedAt > DRAFT_MAX_AGE_MS) {
@@ -219,19 +234,34 @@
   document.addEventListener("keydown", markActivity, true);
   document.addEventListener("touchstart", markActivity, { capture:true, passive:true });
 
-  // Clear a draft only after a success/result screen replaces the editing form.
-  new MutationObserver(() => {
-    const kicker = document.querySelector("#dialog-kicker")?.textContent?.trim() || "";
-    if (/^(REGISTERED|SAVED)$/i.test(kicker)) {
-      // Remove all drafts whose form no longer exists in the dialog.
-      try {
-        for (let i = sessionStorage.length - 1; i >= 0; i--) {
-          const key = sessionStorage.key(i);
-          if (key?.startsWith(DRAFT_PREFIX)) sessionStorage.removeItem(key);
+  function clearLastTrackedDraft() {
+    if (!lastTrackedFormKey) return;
+    try { sessionStorage.removeItem(lastTrackedFormKey); } catch {}
+    lastTrackedFormKey = null;
+  }
+
+  // Clear only the form that was actually saved. This covers flows that close the
+  // dialog and only show a success toast (e.g. site registration).
+  new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        const candidates = node.classList.contains("toast")
+          ? [node]
+          : Array.from(node.querySelectorAll?.(".toast") || []);
+        for (const toast of candidates) {
+          if (!toast.classList.contains("toast-success")) continue;
+          const msg = toast.textContent || "";
+          if (/登録しました|更新しました|保存しました|追加しました/.test(msg)) {
+            clearLastTrackedDraft();
+          }
         }
-      } catch {}
+      }
     }
-  }).observe(document.getElementById("owner-dialog") || document.body, { childList:true, subtree:true });
+
+    const kicker = document.querySelector("#dialog-kicker")?.textContent?.trim() || "";
+    if (/^(REGISTERED|SAVED)$/i.test(kicker)) clearLastTrackedDraft();
+  }).observe(document.body, { childList:true, subtree:true });
 
   observeForms();
   setInterval(idleTick, 60 * 1000);
