@@ -1,0 +1,12 @@
+DPRO GREEN CONTACT PRIMARY UI R1
+Purpose:
+- Fix oversized detached checkbox in customer contact form
+- Keep checkbox and 主担当にする on the same visual row
+- Add helper text
+- Preserve existing form field name: isPrimary
+- No API / DB / Worker behavior changed
+- Existing owner.html baseline preserved
+
+QA:
+- JS syntax check: PASS
+- No business logic changes
