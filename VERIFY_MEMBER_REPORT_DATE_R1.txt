@@ -1,0 +1,9 @@
+DPRO GREEN MEMBER REPORT DATE R1
+対象: お客様マイページ / 作業報告
+変更:
+- 作業報告カード上段の published_at を「公開日：YYYY年M月D日」と明示
+- 作業日を含む既存タイトルはそのまま
+- ホームの「最近の作業報告」内の日付も可能な範囲で「公開日：」を明示
+- API / DB / Worker / LINE認証ロジックは変更なし
+QA:
+- JavaScript syntax check: PASS
