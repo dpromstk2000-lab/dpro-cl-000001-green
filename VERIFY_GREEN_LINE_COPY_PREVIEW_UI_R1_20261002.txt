@@ -1,0 +1,32 @@
+DPRO GREEN / LINE文面 確認・個別編集UI R1 / 2026-10-02
+
+前提:
+先に DPRO_GREEN_CORE_WORKER_LINE_COPY_PREVIEW_EDIT_R1_20261002.zip をCore Workerへdeploy済みにすること。
+
+変更ファイル:
+green-contact-primary-ui-r1.js
+
+変更内容:
+1. 作業報告の「LINE文面をコピー」を押すと即コピーせず、確認・編集ダイアログを表示。
+2. 差込済み最終文面を全文表示。
+3. 今回だけ自由に追記・修正可能。元テンプレートは変更しない。
+4. 「テンプレートに戻す」で初期生成文へ戻せる。
+5. 「この文面をコピー」で最終文面をクリップボードへコピー。
+6. Workerへ同じ最終文面を渡し、コピー履歴と顧客メッセージにも実際にコピーした文面を保存。
+7. コピー成功後も画面にコピーした全文を残し「コピー済み」を表示。
+8. 作業報告のコピー・送信履歴件数を即時+1表示。
+9. 既存の主担当UI / 交換・回収・養生QA修正 / 通知ログタブ修正を保持。
+
+GitHub:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+公開Owner:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+確認:
+作業報告 → DPRO TEST → 詳細 → LINE文面をコピー
+→ 「LINE送信用文面を確認・編集」が開く
+→ 一言追加
+→ この文面をコピー
+→ コピー済み表示
+→ コピー・送信履歴が1増える
