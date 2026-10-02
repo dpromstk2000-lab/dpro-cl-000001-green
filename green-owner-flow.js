@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";
+  const VERSION = "GREEN-OWNER-FLOW-R1.3-INQUIRY-UX-20261002";
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
   const setTextIfChanged = (element, text) => {
@@ -281,6 +281,96 @@
     });
   }
 
+  let currentInquiryId = "";
+  let inquiryHydrateToken = 0;
+
+  function syncInquiryPanel() {
+    const panel = $('[data-view-panel="inquiries"]');
+    if (!panel) return;
+
+    const statusFilter = $("#inquiry-status", panel);
+    if (statusFilter) {
+      Array.from(statusFilter.options).forEach((option) => {
+        if (option.value === "contacted" && option.textContent !== "対応中") option.textContent = "対応中";
+      });
+    }
+
+    $$(".owner-status[data-status=\"contacted\"]", panel).forEach((chip) => {
+      setTextIfChanged(chip, "対応中");
+    });
+  }
+
+  function trackInquiryOpen() {
+    const panel = $('[data-view-panel="inquiries"]');
+    if (!panel || panel.dataset.greenInquiryTrack === "1") return;
+    panel.dataset.greenInquiryTrack = "1";
+    panel.addEventListener("click", (event) => {
+      const button = event.target.closest?.("[data-inquiry]");
+      if (!button) return;
+      currentInquiryId = button.dataset.inquiry || "";
+      inquiryHydrateToken += 1;
+    }, true);
+  }
+
+  async function hydrateInquiryContext() {
+    const dialog = $("#owner-dialog");
+    const kicker = $("#dialog-kicker");
+    if (!dialog || !kicker || kicker.textContent.trim() !== "INTAKE DETAIL" || !currentInquiryId) return;
+
+    const grid = $(".owner-detail-grid", dialog);
+    if (!grid) return;
+    if (grid.dataset.greenInquiryContextId === currentInquiryId) return;
+
+    const token = inquiryHydrateToken;
+    grid.dataset.greenInquiryContextId = currentInquiryId;
+
+    try {
+      const result = await window.Green.api(`/api/admin/inquiries/${encodeURIComponent(currentInquiryId)}`);
+      if (token !== inquiryHydrateToken) return;
+      const item = result?.data?.inquiry;
+      if (!item || !grid.isConnected) return;
+
+      const addItem = (key, label, value) => {
+        if (value === null || value === undefined || value === "" || $("[data-green-inquiry-extra=\"" + key + "\"]", grid)) return;
+        const node = document.createElement("div");
+        node.className = "owner-detail-item";
+        node.dataset.greenInquiryExtra = key;
+        const small = document.createElement("small");
+        small.textContent = label;
+        const strong = document.createElement("strong");
+        strong.textContent = String(value);
+        node.append(small, strong);
+        grid.append(node);
+      };
+
+      if (item.desired_count !== null && item.desired_count !== undefined) {
+        addItem("desired-count", "希望本数", `${item.desired_count}本`);
+      }
+
+      const customerIssueNumber = item.metadata?.issueNumber || item.metadata?.issue_number || "";
+      if (customerIssueNumber && customerIssueNumber !== item.reception_number) {
+        addItem("customer-issue-number", "お客様受付番号", customerIssueNumber);
+      }
+    } catch {
+      // 追加表示の取得失敗だけで、元の相談詳細操作は止めない。
+    }
+  }
+
+  function syncInquiryDialog() {
+    const dialog = $("#owner-dialog");
+    const kicker = $("#dialog-kicker");
+    if (!dialog || !kicker || kicker.textContent.trim() !== "INTAKE DETAIL") return;
+
+    const statusSelect = $('#inquiry-update-form select[name="status"]', dialog);
+    if (statusSelect) {
+      Array.from(statusSelect.options).forEach((option) => {
+        if (option.value === "contacted" && option.textContent !== "対応中") option.textContent = "対応中";
+      });
+    }
+
+    void hydrateInquiryContext();
+  }
+
   function syncDialog() {
     const dialog = $("#owner-dialog");
     if (!dialog) return;
@@ -311,6 +401,8 @@
 
     const saveInquiry = $("#save-inquiry");
     if (saveInquiry) setTextIfChanged(saveInquiry, "相談内容を保存");
+
+    syncInquiryDialog();
 
     if (createLead && !$("#green-inquiry-handoff-note")) {
       const actions = createLead.closest(".owner-dialog-actions");
@@ -370,6 +462,10 @@
     const title = $("#view-title");
     if (title) new MutationObserver(syncTopTitle).observe(title, { childList: true, characterData: true, subtree: true });
 
+    const inquiryPanel = $('[data-view-panel="inquiries"]');
+    if (inquiryPanel) new MutationObserver(syncInquiryPanel).observe(inquiryPanel, { childList: true, subtree: true, characterData: true });
+    syncInquiryPanel();
+
     const dashboard = $('[data-view-panel="dashboard"]');
     if (dashboard) new MutationObserver(syncDashboard).observe(dashboard, { childList: true, subtree: true });
 
@@ -384,6 +480,8 @@
     if (!/\/owner\.html$/.test(location.pathname)) return;
     document.documentElement.dataset.greenOwnerFlow = VERSION;
     syncStaticText();
+    trackInquiryOpen();
+    syncInquiryPanel();
     syncTopTitle();
     syncDashboard();
     syncDialog();
