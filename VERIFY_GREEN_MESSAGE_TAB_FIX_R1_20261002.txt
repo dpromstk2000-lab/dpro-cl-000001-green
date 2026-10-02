@@ -1,0 +1,37 @@
+DPRO GREEN / LINE通知タブ修正 R1 / 2026-10-02
+
+対象:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+公開Owner:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+変更ファイル:
+green-contact-primary-ui-r1.js
+
+原因:
+owner.js には setMessageTab() が実装されていますが、
+bindEvents() に [data-message-tab] のクリックイベント登録がありませんでした。
+そのため「通知ログ」を押しても画面切替が発生していませんでした。
+
+修正:
+1. 「文面テンプレート」「通知ログ」のタブ切替を追加。
+2. 通知ログを開いたとき /api/admin/notifications を読み込む。
+3. 通知ログ内の「表示」ボタンも通知ログ再読込として機能させる。
+4. notification_type / mode / status を分かりやすい日本語表示にする。
+5. 既存の交換・回収・養生QA修正、主担当UI修正を保持。
+
+現在DB確認:
+green_notification_jobs に1件あり。
+notification_type=visit_completion
+mode=copy
+status=pending
+したがって修正後は少なくとも1件の通知ログが表示される想定です。
+
+アップロード:
+ZIPを展開し、green-contact-primary-ui-r1.js をGitHubリポジトリ直下へ上書き。
+Commit changes → 公開OwnerをCtrl+F5。
+
+確認:
+LINE配信・通知 → 通知ログ
+正常ならタブが切り替わり、DPRO TESTの「作業完了のお知らせ」が表示されます。

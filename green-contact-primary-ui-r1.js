@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CONTACT-PRIMARY-UI-R1.2-REPLACEMENT-QA-FIX-R2-20261002";
+  const VERSION = "GREEN-CONTACT-PRIMARY-UI-R1.4-MESSAGE-TAB-FIX-R1-20261002";
   window.__GREEN_CONTACT_PRIMARY_UI_R1__ = VERSION;
 
   const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -172,28 +172,40 @@
     const footer = $("#dialog-footer");
     if (!footer) return;
 
-    const approve = $("#approve-replacement");
-    const load = $("#load-replacement");
-    const complete = $("#complete-replacement");
+    const buttons = {
+      approve: $("#approve-replacement"),
+      load: $("#load-replacement"),
+      complete: $("#complete-replacement"),
+      returnRecovery: $("#return-recovery"),
+      startCare: $("#start-care-from-recovery"),
+    };
 
-    [approve, load, complete].forEach((button) => {
+    Object.values(buttons).forEach((button) => {
       if (!button) return;
       button.hidden = true;
       button.classList.remove("green-replacement-next-action");
     });
 
     let next = null;
-    if (statusText === "確認待ち" || statusText === "提案") next = approve;
-    else if (statusText === "交換予定" || statusText === "承認済み" || statusText === "代替割当中") next = load;
-    else if (statusText === "積込済み") next = complete;
+
+    if (statusText === "確認待ち" || statusText === "提案") {
+      next = buttons.approve;
+    } else if (statusText === "交換予定" || statusText === "承認済み" || statusText === "代替割当中") {
+      next = buttons.load;
+    } else if (statusText === "積込済み") {
+      next = buttons.complete;
+    } else if (statusText === "回収済み") {
+      next = buttons.returnRecovery;
+    } else if (statusText === "帰庫済み") {
+      next = buttons.startCare;
+    }
 
     if (!next) return;
 
     next.hidden = false;
     next.classList.add("green-replacement-next-action");
 
-    /* Move the existing owner.js button itself into the footer.
-       Event listeners stay attached, while avoiding nested-span flex clipping. */
+    /* Move the actual owner.js button to footer; listeners are preserved. */
     if (next.parentElement !== footer) footer.appendChild(next);
   }
 
@@ -226,4 +238,151 @@
     subtree:true,
     characterData:true
   });
+})();
+
+/* DPRO GREEN MESSAGE TAB FIX R1 / 2026-10-02 */
+(() => {
+  "use strict";
+
+  const VERSION = "GREEN-MESSAGE-TAB-FIX-R1.0-20261002";
+  if (window.__GREEN_MESSAGE_TAB_FIX_R1__ === VERSION) return;
+  window.__GREEN_MESSAGE_TAB_FIX_R1__ = VERSION;
+
+  const $ = (selector, scope = document) => scope.querySelector(selector);
+  const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+
+  const typeLabels = {
+    inquiry_received: "お問い合わせ受付",
+    replacement_notice: "植物交換予定",
+    site_check_scheduled: "現地確認予定",
+    visit_completed: "作業完了",
+    revisit_notice: "再訪問のご案内",
+    visit_completion: "作業完了のお知らせ",
+    visit_notice: "訪問予定のお知らせ"
+  };
+
+  const modeLabels = {
+    copy: "文面コピー",
+    line: "LINE送信",
+    auto: "自動送信",
+    manual: "手動"
+  };
+
+  const statusLabels = {
+    pending: "文面コピー待ち",
+    ready: "自動送信待ち",
+    sending: "送信中",
+    sent: "送信済み",
+    skipped: "対象外",
+    failed: "失敗",
+    cancelled: "取消"
+  };
+
+  const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;"
+  }[char]));
+
+  function formatDateTime(value) {
+    if (!value) return "未設定";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat("ja-JP", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date);
+  }
+
+  async function loadNotifications() {
+    const Green = window.Green;
+    const tbody = $("#notification-rows");
+    const status = $("#notification-status")?.value || "";
+    if (!Green?.api || !tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="6"><div class="owner-empty">読み込み中です…</div></td></tr>';
+
+    try {
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      const result = await Green.api(`/api/admin/notifications?${params}`);
+      const items = result?.data?.items || [];
+
+      tbody.innerHTML = items.length ? items.map((item) => `
+        <tr>
+          <td>${esc(formatDateTime(item.created_at))}</td>
+          <td>${esc(item.customer?.company_name || item.customer?.contact_name || "顧客")}</td>
+          <td>
+            <span class="owner-row-title">${esc(typeLabels[item.notification_type] || item.notification_type || "通知")}</span>
+            ${item.notification_type ? `<span class="owner-row-sub">${esc(item.notification_type)}</span>` : ""}
+          </td>
+          <td>${esc(modeLabels[item.mode] || item.mode || "—")}</td>
+          <td>${esc(statusLabels[item.status] || item.status || "—")}</td>
+          <td><span class="owner-message-preview">${esc(item.rendered_message || "文面未作成")}</span></td>
+        </tr>
+      `).join("") : '<tr><td colspan="6"><div class="owner-empty">通知ログはありません。</div></td></tr>';
+    } catch (error) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="owner-empty">通知ログを読み込めませんでした。</div></td></tr>';
+      Green.toast?.(`通知ログの読み込みに失敗しました。${error?.message ? ` ${error.message}` : ""}`, "error");
+    }
+  }
+
+  function switchTab(tab) {
+    $$("[data-message-tab]").forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.messageTab === tab);
+    });
+    $$("[data-message-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.messagePanel !== tab;
+    });
+
+    if (tab === "notifications") loadNotifications();
+  }
+
+  function replaceNotificationReloadButton() {
+    const panel = $('[data-message-panel="notifications"]');
+    if (!panel) return;
+    const current = panel.querySelector('button[data-load="messages"], button[data-green-notification-reload]');
+    if (!current || current.dataset.greenNotificationReload === VERSION) return;
+
+    const replacement = current.cloneNode(true);
+    replacement.removeAttribute("data-load");
+    replacement.dataset.greenNotificationReload = VERSION;
+    replacement.addEventListener("click", (event) => {
+      event.preventDefault();
+      loadNotifications();
+    });
+    current.replaceWith(replacement);
+  }
+
+  function bindTabs() {
+    $$("[data-message-tab]").forEach((button) => {
+      if (button.dataset.greenMessageTabBound === VERSION) return;
+      button.dataset.greenMessageTabBound = VERSION;
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        switchTab(button.dataset.messageTab);
+      });
+    });
+    replaceNotificationReloadButton();
+  }
+
+  let queued = false;
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      bindTabs();
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", schedule, { once: true });
+  } else {
+    schedule();
+  }
+
+  new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
 })();
