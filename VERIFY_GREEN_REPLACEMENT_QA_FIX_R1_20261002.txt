@@ -1,0 +1,35 @@
+DPRO GREEN / REPLACEMENT QA FIX R1 / 2026-10-02
+
+対象:
+- GitHub repo: dpromstk2000-lab/dpro-cl-000001-green
+- GitHub Pages owner: https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+変更ファイル:
+- green-contact-primary-ui-r1.js
+
+修正内容:
+1. 交換詳細フッターを折り返し可能にし、進行ボタンが画面外へ隠れないようにする。
+2. 「交換予定」では「積込済みにする」だけを次工程として表示。
+3. 「積込済み」では「現地交換を完了」を表示。
+4. 作業状態 planned / scheduled 等の内部英語を日本語表示へ補正。
+5. 「承認・代替割当」画面を開くたびに植物台帳をAPIから再取得し、
+   新規登録した在庫植物をF5なしで候補へ反映する。
+6. 既存の「主担当にする」UI修正を保持する。
+
+アップロード先:
+- リポジトリ直下
+
+操作:
+1. ZIPを展開
+2. green-contact-primary-ui-r1.js をGitHubリポジトリ直下へドラッグ&ドロップ
+3. 既存ファイルを置き換える
+4. Commit changes
+5. GitHub Pages反映後、Owner画面で Ctrl+F5
+6. 交換・回収・養生 → RPL-20261002-172232 → 詳細
+
+期待結果:
+- 状態「交換予定」
+- 進行状況「作業状態：予定」
+- 右下に「積込済みにする」が表示される
+- 「現地交換を完了」は積込完了後に表示される
+- 新規在庫植物は承認画面を開いた時点で候補へ反映される
