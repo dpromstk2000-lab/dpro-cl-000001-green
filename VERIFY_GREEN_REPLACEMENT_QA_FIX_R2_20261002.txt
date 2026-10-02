@@ -1,0 +1,32 @@
+DPRO GREEN / REPLACEMENT QA FIX R2 / 2026-10-02
+
+対象:
+GitHub repo:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+公開Owner:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+変更ファイル:
+green-contact-primary-ui-r1.js
+
+R2修正:
+- R1の候補最新化、日本語化、主担当UI保持を継続。
+- owner.js が生成した交換フローの「次工程」ボタンそのものを
+  dialog footer直下へ移動して確実に表示。
+- イベントリスナーは既存buttonをDOM移動するため保持される。
+- 交換予定/承認済み/代替割当中 → 「積込済みにする」
+- 積込済み → 「現地交換を完了」
+- 確認待ち/提案 → 「承認・代替割当」
+- 不要な工程ボタンは同時表示しない。
+
+アップロード:
+ZIP展開後、green-contact-primary-ui-r1.js だけを
+GitHubリポジトリ直下へ上書きして Commit changes。
+
+確認:
+1. Owner画面で Ctrl+F5
+2. 交換・回収・養生
+3. RPL-20261002-172232 → 詳細
+4. 状態「積込済み」
+5. 右下に「現地交換を完了」が表示されること

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CONTACT-PRIMARY-UI-R1.1-REPLACEMENT-QA-FIX-20261002";
+  const VERSION = "GREEN-CONTACT-PRIMARY-UI-R1.2-REPLACEMENT-QA-FIX-R2-20261002";
   window.__GREEN_CONTACT_PRIMARY_UI_R1__ = VERSION;
 
   const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -56,29 +56,17 @@
         color:#64776e;
       }
 
-      /* REPLACEMENT-QA-FIX-R1:
-         Make workflow action buttons visible even when the detail footer is narrow. */
+      /* Replacement workflow footer */
       #dialog-footer{
         flex-wrap:wrap !important;
         align-items:center !important;
       }
-      #replacement-actions{
-        display:flex !important;
-        flex-wrap:wrap !important;
-        gap:10px !important;
-        align-items:center !important;
-        max-width:100%;
+      #dialog-footer > .green-replacement-next-action{
+        flex:0 0 auto !important;
       }
-      #replacement-actions .btn{
-        flex:0 0 auto;
-      }
-
       @media(max-width:760px){
-        #replacement-actions{
-          width:100%;
-        }
-        #replacement-actions .btn{
-          width:100%;
+        #dialog-footer > .green-replacement-next-action{
+          width:100% !important;
         }
       }
     `;
@@ -147,6 +135,13 @@
     }
   }
 
+  function replacementDetailStatus() {
+    const title = $("#dialog-title")?.textContent?.trim() || "";
+    if (!title.startsWith("交換 RPL-")) return "";
+    return $(".owner-detail-grid .owner-detail-item:first-child strong", $("#dialog-body") || document)
+      ?.textContent?.trim() || "";
+  }
+
   function translateReplacementOperationStatus() {
     const title = $("#dialog-title")?.textContent?.trim() || "";
     if (!title.startsWith("交換 RPL-")) return;
@@ -170,37 +165,41 @@
     });
   }
 
-  function enforceReplacementStepButtons() {
-    const title = $("#dialog-title")?.textContent?.trim() || "";
-    if (!title.startsWith("交換 RPL-")) return;
+  function placeNextReplacementAction() {
+    const statusText = replacementDetailStatus();
+    if (!statusText) return;
 
-    const statusText =
-      $(".owner-detail-grid .owner-detail-item:first-child strong", $("#dialog-body") || document)
-        ?.textContent?.trim() || "";
+    const footer = $("#dialog-footer");
+    if (!footer) return;
 
     const approve = $("#approve-replacement");
     const load = $("#load-replacement");
     const complete = $("#complete-replacement");
 
-    // Keep the workflow sequential and easy to understand.
-    if (statusText === "交換予定") {
-      if (approve) approve.hidden = true;
-      if (load) load.hidden = false;
-      if (complete) complete.hidden = true;
-    } else if (statusText === "積込済み") {
-      if (approve) approve.hidden = true;
-      if (load) load.hidden = true;
-      if (complete) complete.hidden = false;
-    } else if (statusText === "確認待ち" || statusText === "提案") {
-      if (approve) approve.hidden = false;
-      if (load) load.hidden = true;
-      if (complete) complete.hidden = true;
-    }
+    [approve, load, complete].forEach((button) => {
+      if (!button) return;
+      button.hidden = true;
+      button.classList.remove("green-replacement-next-action");
+    });
+
+    let next = null;
+    if (statusText === "確認待ち" || statusText === "提案") next = approve;
+    else if (statusText === "交換予定" || statusText === "承認済み" || statusText === "代替割当中") next = load;
+    else if (statusText === "積込済み") next = complete;
+
+    if (!next) return;
+
+    next.hidden = false;
+    next.classList.add("green-replacement-next-action");
+
+    /* Move the existing owner.js button itself into the footer.
+       Event listeners stay attached, while avoiding nested-span flex clipping. */
+    if (next.parentElement !== footer) footer.appendChild(next);
   }
 
   function enhanceReplacementDetail() {
     translateReplacementOperationStatus();
-    enforceReplacementStepButtons();
+    placeNextReplacementAction();
   }
 
   let queued = false;
