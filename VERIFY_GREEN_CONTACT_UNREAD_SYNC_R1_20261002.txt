@@ -1,0 +1,34 @@
+DPRO GREEN / CONTACT 未読同期修正 R1 / 2026-10-02
+
+対象:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+
+公開URL:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/contact-green.html?dpro_build=1
+
+今回確認した不具合:
+選択中の会話に新着LINEが届き、「最新情報に更新」で本文は表示されても、
+左の未読バッジ「1」が残る。
+
+原因:
+ベース contact-green.js は、会話を直接クリックした時は既読化するが、
+選択中の会話を「最新情報に更新」で再読込した時は markRead:false のため未読が残る。
+
+R1修正:
+- 新規 overlay: green-contact-manual-refresh-read-r1.js
+- contact-green.html へ overlay 読込を追加
+- 「最新情報に更新」をユーザーが手動で押した場合だけ、
+  選択中会話に未読があれば既読化する。
+- 自動更新では未読を勝手に消さない。
+- 長い会話のスクロール位置は可能な限り保持。
+
+アップロード:
+ZIPを展開して以下2ファイルをGitHubリポジトリ直下へ上書き/追加。
+1. contact-green.html
+2. green-contact-manual-refresh-read-r1.js
+
+Commit changes後:
+Ctrl+F5
+LINE・顧客対応
+新着受信 → 左バッジ1 → 「最新情報に更新」
+本文確認後、未読バッジが消え、未読件数も0になることを確認。
