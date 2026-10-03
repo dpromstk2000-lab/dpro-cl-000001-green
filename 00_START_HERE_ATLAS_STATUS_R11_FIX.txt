@@ -1,0 +1,28 @@
+DPRO GREEN Owner 図鑑ステータス R1.1 DOM FIX
+2026-10-04
+
+今回の修正理由
+- R1.0では既存の画像付き一覧JSが名称セルを再描画した際、
+  後付けした「図鑑PILOT済／画像準備中」が消える場合がありました。
+
+R1.1修正
+- API依存をやめ、現在PILOT済みと確定したコード15件を基準に表示
+- 既存の画像付き名称セル（green-atlas-name-text）が完成してからバッジを追加
+- MutationObserverで、ページ切替・検索・タブ切替・再描画後も自動で付け直し
+- 既存DB/API/一覧ロジックは変更しない
+
+表示
+- 植物10件 + 鉢5件: 図鑑PILOT済
+- その他: 画像準備中
+
+GitHub投入先
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green/upload/main/
+
+上書き対象
+green-owner-atlas-status-r1.js
+green-owner-atlas-status-r1_JS_TEXT.txt
+
+確認URL
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
+
+反映後は Ctrl + F5 で再読み込みしてください。
