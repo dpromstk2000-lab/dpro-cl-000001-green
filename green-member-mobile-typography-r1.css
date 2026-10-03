@@ -1,0 +1,113 @@
+/* DPRO GREEN MEMBER MOBILE TYPOGRAPHY R1
+   2026-10-03
+   Scope: member.html only
+   Purpose: prevent awkward Japanese line breaks on smartphone widths.
+*/
+
+@media (max-width: 620px) {
+  .member-body .login-shell {
+    width: min(calc(100% - 28px), 980px);
+    padding: 30px 0 40px;
+    gap: 24px;
+  }
+
+  .member-body .login-copy h1 {
+    font-size: clamp(28px, 8.2vw, 32px);
+    line-height: 1.36;
+    letter-spacing: -0.025em;
+    word-break: normal;
+    overflow-wrap: normal;
+    line-break: strict;
+    text-wrap: balance;
+  }
+
+  .member-body .login-copy p {
+    font-size: 16px;
+    line-height: 1.85;
+    letter-spacing: 0.01em;
+    word-break: normal;
+    line-break: strict;
+    text-wrap: pretty;
+  }
+
+  .member-body .login-feature {
+    padding: 15px 16px;
+  }
+
+  .member-body .login-feature strong {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .member-body .login-card {
+    padding: 24px 20px;
+  }
+
+  .member-body .login-card h2 {
+    font-size: 28px;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .member-body .login-card .label-note {
+    font-size: 14px;
+    line-height: 1.8;
+    word-break: normal;
+    line-break: strict;
+  }
+
+  .member-body .dpro-customer-hero {
+    min-height: 420px;
+  }
+
+  .member-body .dpro-customer-hero__copy {
+    width: 100%;
+    padding: 24px 20px 26px;
+  }
+
+  .member-body .dpro-customer-hero__copy h1 {
+    max-width: none;
+    font-size: clamp(27px, 7.6vw, 31px);
+    line-height: 1.32;
+    letter-spacing: -0.025em;
+    word-break: normal;
+    overflow-wrap: normal;
+    line-break: strict;
+    text-wrap: balance;
+  }
+
+  .member-body .dpro-customer-hero__badge {
+    max-width: 24em;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.65;
+    word-break: normal;
+    line-break: strict;
+    text-wrap: pretty;
+  }
+
+  .member-body .dpro-customer-hero__lead {
+    max-width: 28em;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.8;
+    word-break: normal;
+    line-break: strict;
+    text-wrap: pretty;
+  }
+}
+
+@media (max-width: 380px) {
+  .member-body .login-copy h1 {
+    font-size: 28px;
+  }
+
+  .member-body .dpro-customer-hero__copy h1 {
+    font-size: 27px;
+  }
+
+  .member-body .login-card h2 {
+    font-size: 26px;
+  }
+}
