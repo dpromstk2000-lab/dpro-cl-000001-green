@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-ATLAS-STATUS-R1.1-DOM-FIX-20261004";
+  const VERSION = "GREEN-OWNER-ATLAS-STATUS-R1.2-METADATA-20261004";
   if (document.documentElement.dataset.greenOwnerAtlasStatusFix === VERSION) return;
   document.documentElement.dataset.greenOwnerAtlasStatusFix = VERSION;
 
@@ -26,6 +26,11 @@
     "CM-GP-0022"
   ]);
 
+  const READY_STATUSES = new Set(["ready_pilot", "ready_generated"]);
+  let speciesStatusByCode = new Map();
+  let modelStatusByCode = new Map();
+  let statusLoaded = false;
+
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
@@ -41,6 +46,16 @@
     document.head.append(style);
   }
 
+  function itemStatus(code, kind) {
+    const apiStatus = kind === "species"
+      ? speciesStatusByCode.get(code)
+      : modelStatusByCode.get(code);
+    if (apiStatus) return apiStatus;
+
+    const pilot = kind === "species" ? PILOT_SPECIES.has(code) : PILOT_MODELS.has(code);
+    return pilot ? "ready_pilot" : "pending_generation";
+  }
+
   function addBadge(row, kind) {
     if (!row?.cells || row.cells.length < 2) return;
 
@@ -51,9 +66,14 @@
     const host = row.cells[1].querySelector(".green-atlas-name-text");
     if (!host) return;
 
-    const pilot = kind === "species" ? PILOT_SPECIES.has(code) : PILOT_MODELS.has(code);
-    const text = pilot ? "図鑑PILOT済" : "画像準備中";
-    const cls = pilot ? "green-atlas-status-fix--ready" : "green-atlas-status-fix--pending";
+    const status = itemStatus(code, kind);
+    const ready = READY_STATUSES.has(status);
+    const text = status === "ready_pilot"
+      ? "図鑑PILOT済"
+      : ready
+        ? "図鑑画像済"
+        : "画像準備中";
+    const cls = ready ? "green-atlas-status-fix--ready" : "green-atlas-status-fix--pending";
 
     let badge = host.querySelector(".green-atlas-status-fix");
     if (!badge) {
@@ -64,14 +84,45 @@
     const className = `green-atlas-status-fix ${cls}`;
     if (badge.className !== className) badge.className = className;
     if (badge.textContent !== text) badge.textContent = text;
-    badge.title = pilot
+    badge.dataset.atlasImageStatus = status;
+    badge.title = status === "ready_pilot"
       ? "代表画像と図鑑PILOT情報を準備済み"
-      : "代表画像を順次準備中";
+      : status === "ready_generated"
+        ? "代表画像を準備済み"
+        : "代表画像を順次準備中";
   }
 
   function decorate() {
     $$("#species-rows tr").forEach((row) => addBadge(row, "species"));
     $$("#container-model-rows tr").forEach((row) => addBadge(row, "models"));
+  }
+
+  async function refreshStatuses() {
+    if (statusLoaded || !window.Green?.api) return;
+    try {
+      const [speciesResult, modelResult] = await Promise.all([
+        window.Green.api("/api/admin/plant-species"),
+        window.Green.api("/api/admin/container-models")
+      ]);
+
+      const species = speciesResult?.data?.items || [];
+      const models = modelResult?.data?.items || [];
+
+      speciesStatusByCode = new Map(
+        species
+          .map((item) => [item?.species_code, item?.metadata?.atlas_image_status])
+          .filter(([code, status]) => Boolean(code && status))
+      );
+      modelStatusByCode = new Map(
+        models
+          .map((item) => [item?.model_code, item?.metadata?.atlas_image_status])
+          .filter(([code, status]) => Boolean(code && status))
+      );
+      statusLoaded = true;
+      decorate();
+    } catch (_) {
+      // API取得に失敗した場合は既存PILOT判定へ安全にフォールバックする。
+    }
   }
 
   let timer = null;
@@ -85,6 +136,11 @@
 
     // 初期描画・遅延描画の双方を拾う。
     [0, 80, 200, 500, 1000, 1800].forEach((ms) => setTimeout(decorate, ms));
+
+    // Green APIの準備順差を吸収し、metadata statusを正本として取得する。
+    [0, 300, 1000, 2500].forEach((ms) => {
+      setTimeout(() => { void refreshStatuses(); }, ms);
+    });
 
     const target = document.querySelector('[data-view-panel="assets"]') || document.body;
     const observer = new MutationObserver(() => schedule(100));
