@@ -1,5 +1,5 @@
 /* DPRO GREEN / OWNER SHOP SALES-ONLY PRESENTATION
- * Version: GREEN-SHOP-SALES-ONLY-R1.1-HISTORY-FOLD-20261003
+ * Version: GREEN-SHOP-SALES-ONLY-R1.2-HISTORY-PERSIST-20261003
  *
  * Current Kasuya policy:
  * - Public SHOP is operated as sales-only.
@@ -10,9 +10,9 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-SALES-ONLY-R1.1-HISTORY-FOLD-20261003";
-  if (window.__DPRO_GREEN_SHOP_SALES_ONLY_R11__) return;
-  window.__DPRO_GREEN_SHOP_SALES_ONLY_R11__ = VERSION;
+  const VERSION = "GREEN-SHOP-SALES-ONLY-R1.2-HISTORY-PERSIST-20261003";
+  if (window.__DPRO_GREEN_SHOP_SALES_ONLY_R12__) return;
+  window.__DPRO_GREEN_SHOP_SALES_ONLY_R12__ = VERSION;
   document.documentElement.dataset.greenShopSalesMode = "sales-only";
 
   function installStyle() {
@@ -217,7 +217,13 @@
       "#green-shop-rental-history-r11"
     );
 
-    if (!rentalOrders.length) {
+    const existingHistoryCount = details
+      ? details.querySelectorAll(
+          ".green-shop-rental-history-r11-list > .shopv3f-order"
+        ).length
+      : 0;
+
+    if (!rentalOrders.length && !existingHistoryCount) {
       details?.remove();
       refreshStats(orderCard);
       return;
