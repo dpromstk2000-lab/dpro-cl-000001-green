@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATETIME-STANDARD-R1.0-20261003";
+  const VERSION = "GREEN-DATETIME-STANDARD-R1.1-DUPLICATE-CLEANUP-20261003";
   if (window.__DPRO_GREEN_DATETIME_STANDARD_R1__) return;
   window.__DPRO_GREEN_DATETIME_STANDARD_R1__ = VERSION;
   document.documentElement.dataset.greenDatetimeStandard = VERSION;
@@ -258,6 +258,39 @@
     });
   }
 
+  function cleanupOwnerDateDuplicates(root = document) {
+    if (!document.body?.classList.contains("owner-body")) return;
+
+    const labels = $all("#owner-dialog label", root);
+    for (const label of labels) {
+      const directChildren = Array.from(label.children || []);
+      const standardWraps = directChildren.filter((node) =>
+        node.classList?.contains("dpro-dt-wrap")
+      );
+      if (!standardWraps.length) continue;
+
+      // R1.1のDPRO標準UIを1つだけ残す。
+      const keep = standardWraps[standardWraps.length - 1];
+
+      for (const node of directChildren) {
+        if (node === keep) continue;
+
+        const isLegacyWrap =
+          node.classList?.contains("green-clean-date-wrap") ||
+          node.classList?.contains("green-clean-datetime-wrap");
+
+        const isRawDateInput =
+          node.matches?.('input[type="date"],input[type="datetime-local"]');
+
+        if (isLegacyWrap || isRawDateInput) {
+          node.hidden = true;
+          node.setAttribute("aria-hidden", "true");
+          node.dataset.dproDatetimeDuplicateHidden = VERSION;
+        }
+      }
+    }
+  }
+
   function installStyles() {
     if (document.getElementById("dpro-datetime-standard-r1-style")) return;
     const style = document.createElement("style");
@@ -273,6 +306,7 @@
       ".dpro-time-note{white-space:nowrap;color:#6a7c72;font-size:11px;font-weight:800}",
       ".dpro-time-native{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}",
       ".dpro-dt-wrap--adopted .green-clean-date-native{pointer-events:none!important;inset:auto!important;top:0!important;left:-10000px!important;width:1px!important;min-width:1px!important;height:1px!important;min-height:1px!important}",
+      ".owner-body #owner-dialog label>.green-clean-date-wrap[aria-hidden=\"true\"],.owner-body #owner-dialog label>.green-clean-datetime-wrap[aria-hidden=\"true\"],.owner-body #owner-dialog label>input[data-dpro-datetime-duplicate-hidden]{display:none!important}",
       "@media(max-width:620px){.dpro-dt-wrap{grid-template-columns:minmax(0,1fr)46px}.dpro-dt-display,.dpro-time-select{min-height:50px;font-size:16px}.dpro-dt-button{width:46px;min-width:46px;min-height:50px}.dpro-time-wrap{grid-template-columns:1fr}.dpro-time-note{margin-top:-3px}}"
     ].join("");
     document.head.append(style);
@@ -282,6 +316,7 @@
     installStyles();
     $all('input[type="date"],input[type="datetime-local"]', root).forEach(enhanceDateInput);
     $all('input[type="time"]', root).forEach(enhanceTimeInput);
+    cleanupOwnerDateDuplicates(document);
   }
 
   function start() {
@@ -298,6 +333,8 @@
     observer.observe(document.body, { childList: true, subtree: true });
     window.setTimeout(() => scan(document), 100);
     window.setTimeout(() => scan(document), 500);
+    window.setTimeout(() => cleanupOwnerDateDuplicates(document), 800);
+    window.setTimeout(() => cleanupOwnerDateDuplicates(document), 1500);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
