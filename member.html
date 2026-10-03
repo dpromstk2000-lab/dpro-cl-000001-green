@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#12382d">
   <meta name="description" content="設置植物、次回訪問、作業報告を確認できるお客様マイページです。">
   <title>お客様マイページ | DPRO グリーンレンタル</title>
-  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R3.2-MENU-GRID-20261003">
+  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R3.3-STATS-FIT-20261003">
   <link rel="stylesheet" href="customer-hero.css?v=DPRO-CUSTOMER-HERO-2.2-MOBILE-TYPE-R3-20261003">
   <script defer src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script defer src="config.js"></script>
@@ -188,6 +188,36 @@
       .member-body .portal-nav button[data-tab="requests"]{
         grid-column:2!important;
       }
+
+      /* WELCOME summary cards: keep all 3 inside the green card. */
+      .member-body .portal-hero{
+        width:100%!important;
+        max-width:100%!important;
+        overflow:hidden!important;
+      }
+      .member-body .portal-stats{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:7px!important;
+      }
+      .member-body .portal-stat{
+        min-width:0!important;
+        width:100%!important;
+        padding:12px 4px!important;
+      }
+      .member-body .portal-stat strong{
+        font-size:22px!important;
+        line-height:1.2!important;
+      }
+      .member-body .portal-stat span{
+        display:block!important;
+        font-size:11px!important;
+        line-height:1.45!important;
+        white-space:normal!important;
+        overflow-wrap:anywhere!important;
+      }
     }
 
     @media (max-width:480px){
@@ -221,7 +251,7 @@
   <script>
     (() => {
       "use strict";
-      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R3.2-MENU-GRID-20261003";
+      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R3.3-STATS-FIT-20261003";
 
       function fixHeroTitle() {
         const heading = document.querySelector(".dpro-customer-hero__copy h1");
