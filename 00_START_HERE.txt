@@ -1,17 +1,32 @@
-DPRO GREEN SHOP V3-F1.1 OWNER FIX
+DPRO GREEN / OWNER ATLAS PILOT R1 / 2026-10-03
 
-実画面QA:
-V3-F1画面は表示されたが、DBに4件ある既存注文が0件表示になった。
+目的
+- 植物品種一覧を画像付きで見分けやすくする
+- 鉢モデル一覧を画像付きで見分けやすくする
+- 鉢モデルタブに専用検索・種別・本社区分・件数・ページングを追加する
+- 既存の植物品種検索・分類・屋内外・25件ページング・対応サイズ表示を維持する
 
-修正:
-- 専用 /api/admin/order-workflow を優先利用
-- 失敗時だけ既存 /api/admin/bootstrap にフォールバック
-- 初期state=0件のままMutationObserverが先に描画する競合を抑止
-- 既存注文を削除・変更しない
+今回の代表画像
+- 植物 10種類
+- 鉢 5種類
+- すべてDPRO用の生成代表イメージ（本社写真の転載ではない）
+- 公開HPへの本採用前のPILOT。Owner画面の見やすさ確認用。
 
-GitHub:
-https://github.com/dpromstk2000-lab/dpro-cl-000001-green
+重要
+- 本番SupabaseはこのZIP投入だけでは変更しない。
+- GitHub Pagesで画像URLが公開されたことを確認後、atlas_image_url等をSupabase metadataへDPRO側で登録する。
+- ZIP内はすべてGitHubリポジトリ直下へ入れる前提。
 
-追加/上書き:
-green-shop-orders-owner-v3f.js
-config.js
+更新対象
+- green-owner-species-list-r1.js（既存ファイルを置換）
+- atlas-plant-*.png 10枚（新規）
+- atlas-pot-*.png 5枚（新規）
+- DPRO_GREEN_ATLAS_PILOT_INDEX_R1_20261003.json（新規・基準情報）
+
+QA予定
+1. 植物品種タブ：代表画像が10種類に表示される
+2. 植物品種：全74件、25件ページングが維持される
+3. 鉢モデル：全22件表示
+4. 鉢モデル：資産用の状態/現在地検索ではなく専用検索が表示される
+5. 鉢モデル：種別・本社区分で絞り込みできる
+6. 鉢モデル：代表画像が5モデルに表示される

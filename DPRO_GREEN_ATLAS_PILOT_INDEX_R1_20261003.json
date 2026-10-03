@@ -1,0 +1,85 @@
+{
+  "version": "DPRO_GREEN_OWNER_ATLAS_PILOT_R1_20261003",
+  "image_kind": "generated_reference",
+  "public_hp_status": "pilot_not_public_yet",
+  "note_ja": "代表イメージです。植物の樹形・葉ぶり、鉢の色味・質感・製品仕様には差があります。",
+  "plants": [
+    {
+      "code": "SP-PACHIRA-001",
+      "name": "パキラ",
+      "file": "atlas-plant-pachira.png"
+    },
+    {
+      "code": "SP-GP-0066",
+      "name": "モンステラ",
+      "file": "atlas-plant-monstera.png"
+    },
+    {
+      "code": "SP-GP-0067",
+      "name": "ユッカ",
+      "file": "atlas-plant-yucca.png"
+    },
+    {
+      "code": "SP-GP-0034",
+      "name": "サンセベリア",
+      "file": "atlas-plant-sansevieria.png"
+    },
+    {
+      "code": "SP-GP-0059",
+      "name": "ポトス",
+      "file": "atlas-plant-pothos.png"
+    },
+    {
+      "code": "SP-GP-0056",
+      "name": "ベンジャミナ",
+      "file": "atlas-plant-benjamina.png"
+    },
+    {
+      "code": "SP-GP-0011",
+      "name": "ウンベラータ",
+      "file": "atlas-plant-umbellata.png"
+    },
+    {
+      "code": "SP-GP-0017",
+      "name": "オーガスタ",
+      "file": "atlas-plant-augusta.png"
+    },
+    {
+      "code": "SP-GP-0008",
+      "name": "アレカヤシ",
+      "file": "atlas-plant-areca.png"
+    },
+    {
+      "code": "SP-GP-0016",
+      "name": "オリーブ",
+      "file": "atlas-plant-olive.png"
+    }
+  ],
+  "containers": [
+    {
+      "code": "CM-GP-0002",
+      "name": "特殊セメント鉢",
+      "file": "atlas-pot-special-cement.png"
+    },
+    {
+      "code": "CM-GP-0005",
+      "name": "丸型陶器鉢",
+      "file": "atlas-pot-round-ceramic.png"
+    },
+    {
+      "code": "CM-GP-0011",
+      "name": "シーグラスバスケット",
+      "file": "atlas-pot-seagrass-basket.png"
+    },
+    {
+      "code": "CM-GP-0019",
+      "name": "Kozimi(コズミ)",
+      "file": "atlas-pot-kozimi.png"
+    },
+    {
+      "code": "CM-GP-0022",
+      "name": "トラース",
+      "file": "atlas-pot-traas.png"
+    }
+  ]
+}
