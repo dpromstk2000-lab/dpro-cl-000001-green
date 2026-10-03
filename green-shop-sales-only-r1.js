@@ -1,5 +1,5 @@
 /* DPRO GREEN / OWNER SHOP SALES-ONLY PRESENTATION
- * Version: GREEN-SHOP-SALES-ONLY-R1.2-HISTORY-PERSIST-20261003
+ * Version: GREEN-SHOP-SALES-ONLY-R1.3-REGISTER-PREVIEW-20261003
  *
  * Current Kasuya policy:
  * - Public SHOP is operated as sales-only.
@@ -10,9 +10,9 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-SHOP-SALES-ONLY-R1.2-HISTORY-PERSIST-20261003";
-  if (window.__DPRO_GREEN_SHOP_SALES_ONLY_R12__) return;
-  window.__DPRO_GREEN_SHOP_SALES_ONLY_R12__ = VERSION;
+  const VERSION = "GREEN-SHOP-SALES-ONLY-R1.3-REGISTER-PREVIEW-20261003";
+  if (window.__DPRO_GREEN_SHOP_SALES_ONLY_R13__) return;
+  window.__DPRO_GREEN_SHOP_SALES_ONLY_R13__ = VERSION;
   document.documentElement.dataset.greenShopSalesMode = "sales-only";
 
   function installStyle() {
@@ -294,11 +294,119 @@
     if (stats[2]) stats[2].textContent = String(completed);
   }
 
+
+  let pendingPrimaryPreviewSrc = "";
+
+  function isNewProductDialog(dialog) {
+    if (!dialog?.open) return false;
+    const title = dialog.querySelector(".shopv3-dialog-head strong");
+    return String(title?.textContent || "").trim() === "商品を登録";
+  }
+
+  function capturePendingPrimaryPreview() {
+    const dialog = document.querySelector("#shopv3-dialog");
+
+    if (!dialog?.open) {
+      pendingPrimaryPreviewSrc = "";
+      return;
+    }
+
+    const activePane = dialog.querySelector(".shopv3-pane.is-active");
+    const photoTabIsOpen = !!activePane?.querySelector("#shopv3-file-input");
+    if (!photoTabIsOpen) return;
+
+    const checked = dialog.querySelector(
+      '#shopv3-pending-files input[name="pendingPrimary"]:checked'
+    );
+
+    const selectedCard = checked?.closest(".shopv3-pending-card");
+    const selectedImage = selectedCard?.querySelector("img");
+
+    const firstImage = dialog.querySelector(
+      "#shopv3-pending-files .shopv3-pending-card img"
+    );
+
+    pendingPrimaryPreviewSrc = String(
+      selectedImage?.src || firstImage?.src || ""
+    );
+  }
+
+  function fixNewProductSaveCopy() {
+    const dialog = document.querySelector("#shopv3-dialog");
+    if (!isNewProductDialog(dialog)) return;
+
+    const replacements = [
+      [
+        "下の「変更を保存」を押すと",
+        "下の「商品を登録」を押すと"
+      ],
+      [
+        "下の「変更を保存」で登録されます。",
+        "下の「商品を登録」で登録されます。"
+      ]
+    ];
+
+    const walker = document.createTreeWalker(
+      dialog,
+      NodeFilter.SHOW_TEXT
+    );
+
+    const nodes = [];
+
+    while (walker.nextNode()) {
+      nodes.push(walker.currentNode);
+    }
+
+    nodes.forEach((node) => {
+      let value = node.nodeValue || "";
+
+      replacements.forEach(([from, to]) => {
+        if (value.includes(from)) {
+          value = value.replace(from, to);
+        }
+      });
+
+      if (value !== node.nodeValue) {
+        node.nodeValue = value;
+      }
+    });
+  }
+
+  function applyPendingPublishPreview() {
+    if (!pendingPrimaryPreviewSrc) return;
+
+    const dialog = document.querySelector("#shopv3-dialog");
+    if (!dialog?.open) return;
+
+    const activePane = dialog.querySelector(".shopv3-pane.is-active");
+    const current = activePane?.querySelector("#shopv3-preview-img");
+
+    if (!current) return;
+
+    if (
+      current.tagName === "IMG" &&
+      current.src === pendingPrimaryPreviewSrc
+    ) {
+      return;
+    }
+
+    const image = document.createElement("img");
+    image.id = "shopv3-preview-img";
+    image.src = pendingPrimaryPreviewSrc;
+    image.alt = "保存予定のメイン写真";
+    image.dataset.pendingPreview = "1";
+
+    current.replaceWith(image);
+  }
+
   function apply() {
     installStyle();
+    capturePendingPrimaryPreview();
     hideRentalProductUi();
     applySalesCopy();
     foldRentalHistory();
+    fixNewProductSaveCopy();
+    applyPendingPublishPreview();
   }
 
   let queued = false;
