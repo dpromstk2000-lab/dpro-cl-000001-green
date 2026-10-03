@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#12382d">
   <meta name="description" content="設置植物、次回訪問、作業報告を確認できるお客様マイページです。">
   <title>お客様マイページ | DPRO グリーンレンタル</title>
-  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R3-ANDROID-LINE-20261003">
+  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R3.1-NO-HSCROLL-20261003">
   <link rel="stylesheet" href="customer-hero.css?v=DPRO-CUSTOMER-HERO-2.2-MOBILE-TYPE-R3-20261003">
   <script defer src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script defer src="config.js"></script>
@@ -23,11 +23,60 @@
     .member-title-line{display:block;}
     .dpro-customer-hero__title-line{display:inline;}
 
+    html,
+    body.member-body{
+      width:100%;
+      max-width:100%;
+      overflow-x:clip;
+    }
+    @supports not (overflow:clip){
+      html,
+      body.member-body{
+        overflow-x:hidden;
+      }
+    }
+
+    .member-body main,
+    .member-body #login-panel,
+    .member-body .login-shell,
+    .member-body .login-copy,
+    .member-body .login-card,
+    .member-body .login-feature-list,
+    .member-body .login-feature,
+    .member-body [data-dpro-customer-hero],
+    .member-body .dpro-customer-hero,
+    .member-body .dpro-customer-hero__copy,
+    .member-body #portal,
+    .member-body .portal-shell,
+    .member-body .portal-hero,
+    .member-body #tab-content{
+      min-width:0;
+      max-width:100%;
+    }
+
+    .member-body .login-card .button,
+    .member-body .login-feature,
+    .member-body .portal-hero{
+      box-sizing:border-box;
+    }
+
     @media (max-width:900px), (pointer:coarse){
       .member-body .login-shell{
         width:min(calc(100% - 28px),980px)!important;
+        max-width:calc(100% - 28px)!important;
         padding:30px 0 40px!important;
         gap:24px!important;
+        margin-left:auto!important;
+        margin-right:auto!important;
+      }
+      .member-body .login-copy,
+      .member-body .login-card,
+      .member-body .login-feature-list,
+      .member-body .login-feature,
+      .member-body [data-dpro-customer-hero],
+      .member-body .dpro-customer-hero{
+        min-width:0!important;
+        max-width:100%!important;
       }
       .member-body .login-copy h1{
         font-size:28px!important;
@@ -63,11 +112,14 @@
         line-height:1.8!important;
       }
       .member-body .login-card .button{
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
         font-size:16px!important;
         line-height:1.45!important;
         white-space:nowrap!important;
-        padding-left:16px!important;
-        padding-right:16px!important;
+        padding-left:14px!important;
+        padding-right:14px!important;
       }
       .member-body .login-feature strong{
         font-size:16px!important;
@@ -137,7 +189,7 @@
   <script>
     (() => {
       "use strict";
-      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R3-ANDROID-LINE-20261003";
+      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R3.1-NO-HSCROLL-20261003";
 
       function fixHeroTitle() {
         const heading = document.querySelector(".dpro-customer-hero__copy h1");
