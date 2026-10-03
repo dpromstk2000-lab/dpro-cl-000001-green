@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#12382d">
   <meta name="description" content="設置植物、次回訪問、作業報告を確認できるお客様マイページです。">
   <title>お客様マイページ | DPRO グリーンレンタル</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="customer-hero.css?v=DPRO-CUSTOMER-HERO-2-20260808">
+  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R2-20261003">
+  <link rel="stylesheet" href="customer-hero.css?v=DPRO-CUSTOMER-HERO-2.1-MOBILE-TYPE-R2-20261003">
   <link rel="stylesheet" href="green-member-mobile-typography-r1.css?v=GREEN-MEMBER-MOBILE-TYPE-R1.0-20261003">
   <script defer src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script defer src="config.js"></script>
-  <script defer src="customer-hero.js?v=DPRO-CUSTOMER-HERO-3-20260808"></script>
+  <script defer src="customer-hero.js?v=DPRO-CUSTOMER-HERO-3.1-MOBILE-TYPE-R2-20261003"></script>
   <script defer src="green-common.js"></script>
   <script defer src="member.js"></script>
   <script defer src="green-liff-richmenu-router-r2.js?v=GREEN-LIFF-RICHMENU-ROUTER-R2-20260927"></script>
@@ -21,6 +21,86 @@
   <script defer src="green-member-report-date-r1.js?v=GREEN-MEMBER-REPORT-DATE-R1.0-20261001"></script>
   <style>
     #dpro-guide-launcher,#dpro-guide-menu,.dpro-guide-card{display:none!important;}
+    .member-title-line{display:block;}
+    .dpro-customer-hero__title-line{display:inline;}
+
+    @media (max-width:620px){
+      .member-body .login-shell{
+        width:min(calc(100% - 28px),980px)!important;
+        padding:30px 0 40px!important;
+        gap:24px!important;
+      }
+      .member-body .login-copy h1{
+        font-size:28px!important;
+        line-height:1.38!important;
+        letter-spacing:-.02em!important;
+        word-break:normal!important;
+        overflow-wrap:normal!important;
+        text-wrap:auto!important;
+      }
+      .member-body .member-title-line{
+        display:block!important;
+        white-space:nowrap!important;
+      }
+      .member-body .login-copy p{
+        font-size:16px!important;
+        line-height:1.85!important;
+        letter-spacing:0!important;
+      }
+      .member-body .login-feature strong{
+        font-size:16px!important;
+        line-height:1.5!important;
+      }
+      .member-body .login-card{
+        padding:24px 20px!important;
+      }
+      .member-body .login-card h2{
+        font-size:27px!important;
+        line-height:1.35!important;
+        letter-spacing:-.02em!important;
+      }
+      .member-body .login-card .label-note{
+        font-size:14px!important;
+        line-height:1.8!important;
+      }
+      .member-body .dpro-customer-hero{
+        min-height:410px!important;
+      }
+      .member-body .dpro-customer-hero__copy{
+        width:100%!important;
+        padding:24px 20px 26px!important;
+      }
+      .member-body .dpro-customer-hero__copy h1{
+        max-width:none!important;
+        font-size:28px!important;
+        line-height:1.34!important;
+        letter-spacing:-.02em!important;
+        word-break:normal!important;
+        overflow-wrap:normal!important;
+        text-wrap:auto!important;
+      }
+      .member-body .dpro-customer-hero__title-line{
+        display:block!important;
+        white-space:nowrap!important;
+      }
+      .member-body .dpro-customer-hero__badge{
+        margin-top:14px!important;
+        font-size:14px!important;
+        line-height:1.65!important;
+      }
+      .member-body .dpro-customer-hero__lead{
+        margin-top:8px!important;
+        font-size:13px!important;
+        line-height:1.8!important;
+      }
+    }
+
+    @media (max-width:380px){
+      .member-body .login-copy h1,
+      .member-body .dpro-customer-hero__copy h1{
+        font-size:26px!important;
+      }
+    }
   </style>
 </head>
 <body class="member-body">
@@ -32,7 +112,7 @@
     <div id="global-error" class="alert alert-error" role="alert" hidden style="width:min(900px,calc(100% - 32px));margin:20px auto"></div>
     <section id="login-panel" class="login-shell" hidden>
       <div data-dpro-customer-hero></div>
-      <div class="login-copy"><p class="eyebrow">CUSTOMER PORTAL</p><h1>植物の状態と、<br>次の訪問がひと目で。</h1><p>設置中の植物、次回の巡回、作業報告を確認できます。植物の異常や追加相談も、写真付きで送れます。</p><div class="login-feature-list"><div class="login-feature"><span>📅</span><strong>次回訪問予定を確認</strong></div><div class="login-feature"><span>🪴</span><strong>設置中の植物を確認</strong></div><div class="login-feature"><span>📷</span><strong>作業報告・公開写真を確認</strong></div></div></div>
+      <div class="login-copy"><p class="eyebrow">CUSTOMER PORTAL</p><h1><span class="member-title-line">植物の状態と、</span><span class="member-title-line">次の訪問がひと目で。</span></h1><p>設置中の植物、次回の巡回、作業報告を確認できます。植物の異常や追加相談も、写真付きで送れます。</p><div class="login-feature-list"><div class="login-feature"><span>📅</span><strong>次回訪問予定を確認</strong></div><div class="login-feature"><span>🪴</span><strong>設置中の植物を確認</strong></div><div class="login-feature"><span>📷</span><strong>作業報告・公開写真を確認</strong></div></div></div>
       <div class="login-card"><p class="eyebrow">LOGIN</p><h2>マイページを開く</h2><p class="label-note">本番ではLINE本人確認後、確認済みのお客様情報だけを表示します。</p><button id="line-login" class="button button-primary" type="button">LINEで本人確認して開く</button><div class="divider">デモ確認</div><label>デモ顧客番号<input id="demo-customer-number" value="DEMO-GREEN-001" autocomplete="off"></label><button id="demo-login" class="button button-secondary" type="button">デモマイページを開く</button><p class="label-note">デモではサンプルのお客様情報を使って、実際の操作イメージをご確認いただけます。</p></div>
     </section>
     <section id="portal" class="portal-shell" hidden>
@@ -42,5 +122,50 @@
       <div id="tab-content" aria-live="polite"></div>
     </section>
   </main>
+
+  <script>
+    (() => {
+      "use strict";
+      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R2-20261003";
+
+      function fixHeroTitle() {
+        const heading = document.querySelector(".dpro-customer-hero__copy h1");
+        if (!heading || heading.dataset.mobileTypeR2 === VERSION) return;
+        const title = (heading.textContent || "").trim();
+        const splitAt = title.indexOf("、");
+        if (splitAt < 0 || title.length < 8) return;
+
+        const first = document.createElement("span");
+        first.className = "dpro-customer-hero__title-line";
+        first.textContent = title.slice(0, splitAt + 1);
+
+        const second = document.createElement("span");
+        second.className = "dpro-customer-hero__title-line";
+        second.textContent = title.slice(splitAt + 1);
+
+        heading.replaceChildren(first, second);
+        heading.dataset.mobileTypeR2 = VERSION;
+      }
+
+      function start() {
+        fixHeroTitle();
+        const host = document.querySelector("[data-dpro-customer-hero]");
+        if (!host) return;
+        const observer = new MutationObserver(() => fixHeroTitle());
+        observer.observe(host, {childList:true, subtree:true, characterData:true});
+        window.setTimeout(fixHeroTitle, 200);
+        window.setTimeout(fixHeroTitle, 700);
+        window.setTimeout(fixHeroTitle, 1500);
+      }
+
+      document.documentElement.dataset.greenMemberMobileType = VERSION;
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start, {once:true});
+      } else {
+        start();
+      }
+    })();
+  </script>
+
 </body>
 </html>
