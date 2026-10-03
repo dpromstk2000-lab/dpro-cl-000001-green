@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-FINAL-BRUSHUP-R1.0-20261003";
+  const VERSION = "GREEN-FINAL-BRUSHUP-R1.1-20261003";
   const ACTIVE_CARE_STATUSES = new Set(["planned", "in_care", "observing"]);
   const ACTIVE_CARE_LABELS = new Set(["養生予定", "養生中", "経過観察"]);
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -95,38 +95,64 @@
 
   async function patchReplacementDialog(dialog) {
     const kicker = $("#dialog-kicker", dialog);
-    if (!kicker || kicker.textContent.trim() !== "REPLACEMENT DETAIL") return;
-    const button = $("#complete-replacement", dialog);
-    if (!button || !currentReplacementId) return;
+    if (!kicker || kicker.textContent.trim() !== "REPLACEMENT DETAIL" || !currentReplacementId) return;
 
-    if (button.dataset.greenFutureCheckId === currentReplacementId) return;
-    button.dataset.greenFutureCheckId = currentReplacementId;
-    button.disabled = true;
-    const originalText = button.textContent;
-    button.textContent = "交換予定日を確認中…";
+    const actions = $("#replacement-actions", dialog);
+    const existingButton = $("#complete-replacement", dialog);
+    if (dialog.dataset.greenFutureCheckId === currentReplacementId) return;
+    dialog.dataset.greenFutureCheckId = currentReplacementId;
+
+    const originalText = existingButton?.textContent || "現地交換を完了";
+    if (existingButton) {
+      existingButton.disabled = true;
+      existingButton.textContent = "交換予定日を確認中…";
+    }
 
     const token = ++replacementHydrateToken;
     try {
       const result = await window.Green.api(`/api/admin/replacements/${encodeURIComponent(currentReplacementId)}`);
-      if (token !== replacementHydrateToken || !button.isConnected) return;
+      if (token !== replacementHydrateToken || !dialog.isConnected) return;
       const request = result?.data?.request;
       currentReplacementRequest = request || null;
+
+      const button = $("#complete-replacement", dialog);
+      const synthetic = $("#green-future-replacement-disabled", dialog);
       if (request && isFutureJstDay(request.scheduled_at)) {
-        button.disabled = true;
-        button.textContent = "交換予定日まで完了できません";
-        button.title = "未来日の交換予定は完了できません";
+        if (button) {
+          button.disabled = true;
+          button.textContent = "交換予定日まで完了できません";
+          button.title = "未来日の交換予定は完了できません";
+        } else if (actions && !synthetic) {
+          const blocked = document.createElement("button");
+          blocked.type = "button";
+          blocked.id = "green-future-replacement-disabled";
+          blocked.className = "btn btn--primary";
+          blocked.disabled = true;
+          blocked.textContent = "交換予定日まで完了できません";
+          blocked.title = "未来日の交換予定は完了できません";
+          actions.appendChild(blocked);
+        }
         ensureFutureGuardNote(dialog, request.scheduled_at);
       } else {
-        button.disabled = false;
-        button.textContent = originalText || "現地交換を完了";
-        button.removeAttribute("title");
+        synthetic?.remove();
         $("#green-replacement-future-guard", dialog)?.remove();
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalText;
+          button.removeAttribute("title");
+        }
       }
     } catch {
-      if (!button.isConnected) return;
       currentReplacementRequest = null;
-      button.disabled = false;
-      button.textContent = originalText || "現地交換を完了";
+      $("#green-future-replacement-disabled", dialog)?.remove();
+      $("#green-replacement-future-guard", dialog)?.remove();
+      const button = $("#complete-replacement", dialog);
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalText;
+        button.removeAttribute("title");
+      }
+      delete dialog.dataset.greenFutureCheckId;
     }
   }
 
