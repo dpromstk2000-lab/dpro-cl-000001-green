@@ -38,7 +38,8 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   const SHOP_ORDER_WORKFLOW_VERSION = "GREEN-SHOP-OWNER-ORDERS-V3F1.1-20260927";
   const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";
   const OWNER_UX_FIX_VERSION = "GREEN-OWNER-UX-FIX-R2.9-20260915";
-  const OWNER_SPECIES_LIST_VERSION = "GREEN-OWNER-ATLAS-SPECIES-MODELS-R1.1-20261003";
+  const OWNER_SPECIES_LIST_VERSION = "GREEN-OWNER-ATLAS-SPECIES-MODELS-R1.2-20261003";
+  const OWNER_ATLAS_STATUS_VERSION = "GREEN-OWNER-ATLAS-STATUS-R1.0-20261003";
   const OWNER_JST_FIX_VERSION = "GREEN-OWNER-JST-DATETIME-FIX-R1.4-20260916";
   const ANNOUNCEMENT_JST_FIX_VERSION = "GREEN-ANNOUNCEMENT-JST-FIX-R1.2-20260916";
   const LINE_ACCESS_VERSION = "GREEN-LINE-ACCESS-R1-20260916";
@@ -116,6 +117,7 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   function installOwnerFlowClarity(){ if(!/\/owner\.html$/.test(location.pathname))return; injectCss("data-green-owner-flow","green-owner-flow.css",OWNER_FLOW_VERSION); injectJs("data-green-owner-flow","green-owner-flow.js",OWNER_FLOW_VERSION); }
   function installOwnerUxFix(){ if(!/\/owner\.html$/.test(location.pathname))return; injectCss("data-green-owner-ux-fix","green-owner-ux-fix.css",OWNER_UX_FIX_VERSION); injectJs("data-green-owner-ux-fix","green-owner-ux-fix.js",OWNER_UX_FIX_VERSION); }
   function installOwnerSpeciesList(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-owner-species-list","green-owner-species-list-r1.js",OWNER_SPECIES_LIST_VERSION); }
+  function installOwnerAtlasStatus(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-owner-atlas-status","green-owner-atlas-status-r1.js",OWNER_ATLAS_STATUS_VERSION); }
   function installOwnerJstDatetimeFix(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-owner-jst-fix","green-owner-jst-fix.js",OWNER_JST_FIX_VERSION); }
   function installAnnouncementJstFix(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-announcement-jst-fix","green-announcement-jst-fix.js",ANNOUNCEMENT_JST_FIX_VERSION); }
   function installLineAccess(){ const isOwner=/\/owner\.html$/.test(location.pathname),isMember=/\/member\.html$/.test(location.pathname); if(!isOwner&&!isMember)return; const attr=isOwner?"data-green-line-access-owner":"data-green-line-access-member"; injectJs(attr,isOwner?"green-line-access-owner.js":"green-line-access-member.js",LINE_ACCESS_VERSION); }
@@ -123,6 +125,6 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   function installStaffManagementR31(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-staff-management-r31","green-staff-management-r31.js",STAFF_MANAGEMENT_VERSION); }
   function installInstallationUiR32(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-installation-ui-r32","green-installation-ui-r32.js",INSTALLATION_UI_VERSION); }
   function installCareOverdueR33(){ if(!/\/owner\.html$/.test(location.pathname))return; injectJs("data-green-care-overdue-r33","green-care-overdue-r33.js",CARE_OVERDUE_VERSION); }
-  function boot(){ installContactMenu(); installCustomerHeroAdmin(); installTutorialRuntime(); installShopModule(); installShopCollectionsOwner(); installShopOrderWorkflow(); installOwnerFlowClarity(); installOwnerUxFix(); installOwnerSpeciesList(); installOwnerJstDatetimeFix(); installAnnouncementJstFix(); installLineAccess(); installBrushupR30(); installStaffManagementR31(); installInstallationUiR32(); installCareOverdueR33(); installContactFlowCopy(); }
+  function boot(){ installContactMenu(); installCustomerHeroAdmin(); installTutorialRuntime(); installShopModule(); installShopCollectionsOwner(); installShopOrderWorkflow(); installOwnerFlowClarity(); installOwnerUxFix(); installOwnerSpeciesList(); installOwnerAtlasStatus(); installOwnerJstDatetimeFix(); installAnnouncementJstFix(); installLineAccess(); installBrushupR30(); installStaffManagementR31(); installInstallationUiR32(); installCareOverdueR33(); installContactFlowCopy(); }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
 })();

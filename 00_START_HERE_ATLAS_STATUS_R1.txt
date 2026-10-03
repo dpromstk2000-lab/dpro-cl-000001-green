@@ -1,0 +1,20 @@
+DPRO GREEN Owner 図鑑整備ステータス R1
+2026-10-03
+
+目的:
+植物品種・鉢モデル一覧で図鑑整備の進捗を一目で確認できるようにします。
+
+表示:
+- PILOT画像+詳細が揃った15件: 図鑑PILOT済
+- 残り81件: 画像準備中
+
+本番Supabase現状:
+- 植物 74 = ready_pilot 10 / pending_generation 64
+- 鉢 22 = ready_pilot 5 / pending_generation 17
+- public_on = 0
+
+投入先:
+https://github.com/dpromstk2000-lab/dpro-cl-000001-green/upload/main/
+
+確認URL:
+https://dpromstk2000-lab.github.io/dpro-cl-000001-green/owner.html?dpro_build=1
