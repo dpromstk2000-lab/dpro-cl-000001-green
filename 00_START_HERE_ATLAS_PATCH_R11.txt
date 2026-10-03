@@ -1,0 +1,12 @@
+DPRO GREEN ATLAS CACHE PATCH R1.1
+2026-10-03
+
+目的:
+Owner画面が新しい図鑑UI R1.1を必ず読み込むよう、config.js の読み込み版数だけ更新します。
+
+変更対象:
+config.js
+OWNER_SPECIES_LIST_VERSION
+R1.0 -> GREEN-OWNER-ATLAS-SPECIES-MODELS-R1.1-20261003
+
+既存機能・API_BASE・SHOP・LINE設定は変更しません。
