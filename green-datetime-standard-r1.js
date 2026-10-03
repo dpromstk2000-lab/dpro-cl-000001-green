@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATETIME-STANDARD-R1.1-DUPLICATE-CLEANUP-20261003";
+  const VERSION = "GREEN-DATETIME-STANDARD-R1.2-OWNER-DATE-EXCLUDE-20261003";
   if (window.__DPRO_GREEN_DATETIME_STANDARD_R1__) return;
   window.__DPRO_GREEN_DATETIME_STANDARD_R1__ = VERSION;
   document.documentElement.dataset.greenDatetimeStandard = VERSION;
@@ -110,6 +110,9 @@
   }
 
   function enhanceDateInput(input) {
+    // Owner already has the established DPRO date/datetime UI.
+    // Never add a second date/datetime wrapper in Owner.
+    if (document.body?.classList.contains("owner-body")) return;
     if (!input || input.dataset.dproDtStandard === VERSION) return;
     if (input.classList.contains("green-candidate-native")) return;
     if (input.closest(".dpro-dt-wrap")) return;
@@ -316,7 +319,6 @@
     installStyles();
     $all('input[type="date"],input[type="datetime-local"]', root).forEach(enhanceDateInput);
     $all('input[type="time"]', root).forEach(enhanceTimeInput);
-    cleanupOwnerDateDuplicates(document);
   }
 
   function start() {
@@ -333,8 +335,6 @@
     observer.observe(document.body, { childList: true, subtree: true });
     window.setTimeout(() => scan(document), 100);
     window.setTimeout(() => scan(document), 500);
-    window.setTimeout(() => cleanupOwnerDateDuplicates(document), 800);
-    window.setTimeout(() => cleanupOwnerDateDuplicates(document), 1500);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
