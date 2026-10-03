@@ -6,12 +6,11 @@
   <meta name="theme-color" content="#12382d">
   <meta name="description" content="設置植物、次回訪問、作業報告を確認できるお客様マイページです。">
   <title>お客様マイページ | DPRO グリーンレンタル</title>
-  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R2-20261003">
-  <link rel="stylesheet" href="customer-hero.css?v=DPRO-CUSTOMER-HERO-2.1-MOBILE-TYPE-R2-20261003">
-  <link rel="stylesheet" href="green-member-mobile-typography-r1.css?v=GREEN-MEMBER-MOBILE-TYPE-R1.0-20261003">
+  <link rel="stylesheet" href="styles.css?v=GREEN-MEMBER-MOBILE-TYPE-R3-ANDROID-LINE-20261003">
+  <link rel="stylesheet" href="customer-hero.css?v=DPRO-CUSTOMER-HERO-2.2-MOBILE-TYPE-R3-20261003">
   <script defer src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script defer src="config.js"></script>
-  <script defer src="customer-hero.js?v=DPRO-CUSTOMER-HERO-3.1-MOBILE-TYPE-R2-20261003"></script>
+  <script defer src="customer-hero.js?v=DPRO-CUSTOMER-HERO-3.2-MOBILE-TYPE-R3-20261003"></script>
   <script defer src="green-common.js"></script>
   <script defer src="member.js"></script>
   <script defer src="green-liff-richmenu-router-r2.js?v=GREEN-LIFF-RICHMENU-ROUTER-R2-20260927"></script>
@@ -24,7 +23,7 @@
     .member-title-line{display:block;}
     .dpro-customer-hero__title-line{display:inline;}
 
-    @media (max-width:620px){
+    @media (max-width:900px), (pointer:coarse){
       .member-body .login-shell{
         width:min(calc(100% - 28px),980px)!important;
         padding:30px 0 40px!important;
@@ -63,6 +62,18 @@
         font-size:14px!important;
         line-height:1.8!important;
       }
+      .member-body .login-card .button{
+        font-size:16px!important;
+        line-height:1.45!important;
+        white-space:nowrap!important;
+        padding-left:16px!important;
+        padding-right:16px!important;
+      }
+      .member-body .login-feature strong{
+        font-size:16px!important;
+        line-height:1.5!important;
+        white-space:nowrap!important;
+      }
       .member-body .dpro-customer-hero{
         min-height:410px!important;
       }
@@ -95,7 +106,7 @@
       }
     }
 
-    @media (max-width:380px){
+    @media (max-width:480px){
       .member-body .login-copy h1,
       .member-body .dpro-customer-hero__copy h1{
         font-size:26px!important;
@@ -126,7 +137,7 @@
   <script>
     (() => {
       "use strict";
-      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R2-20261003";
+      const VERSION = "GREEN-MEMBER-MOBILE-TYPE-R3-ANDROID-LINE-20261003";
 
       function fixHeroTitle() {
         const heading = document.querySelector(".dpro-customer-hero__copy h1");
