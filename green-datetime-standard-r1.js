@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-DATETIME-STANDARD-R1.2-OWNER-DATE-EXCLUDE-20261003";
+  const VERSION = "GREEN-DATETIME-STANDARD-R1.3-CUSTOM-PICKER-20261003";
   if (window.__DPRO_GREEN_DATETIME_STANDARD_R1__) return;
   window.__DPRO_GREEN_DATETIME_STANDARD_R1__ = VERSION;
   document.documentElement.dataset.greenDatetimeStandard = VERSION;
@@ -99,14 +99,192 @@
     return true;
   }
 
-  function openNativePicker(input) {
-    try {
-      input.focus({ preventScroll: true });
-      if (typeof input.showPicker === "function") input.showPicker();
-      else input.click();
-    } catch (_) {
-      try { input.click(); } catch (_) {}
+  function localDateValue(date) {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
+  function parseDateValue(value) {
+    const m = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return null;
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0, 0);
+  }
+
+  function todayLocalValue() {
+    return localDateValue(new Date());
+  }
+
+  function ensureFutureMin(input) {
+    if (!input || input.min) return;
+    const key = `${input.id || ""} ${input.name || ""}`.toLowerCase();
+    if (/(preferreddate|revisitcandidateon|nextactionon)/.test(key)) {
+      input.min = todayLocalValue();
     }
+  }
+
+  function openDproPicker(input) {
+    if (!input) return;
+    ensureFutureMin(input);
+
+    const type = input.type || "date";
+    const interval = inferIntervalMinutes(input);
+    const minDate = parseDateValue(input.min);
+    const maxDate = parseDateValue(input.max);
+
+    let selected = parseDateValue(input.value) || new Date();
+    selected.setHours(12, 0, 0, 0);
+    if (minDate && selected < minDate) selected = new Date(minDate);
+    if (maxDate && selected > maxDate) selected = new Date(maxDate);
+
+    let viewYear = selected.getFullYear();
+    let viewMonth = selected.getMonth();
+
+    let hourValue = 9;
+    let minuteValue = 0;
+    if (type === "datetime-local" && input.value) {
+      const m = String(input.value).match(/T(\d{2}):(\d{2})/);
+      if (m) {
+        hourValue = Number(m[1]);
+        minuteValue = Number(m[2]);
+      }
+    }
+
+    const existing = document.getElementById("dpro-datetime-standard-picker");
+    if (existing) {
+      try { existing.close?.(); } catch (_) {}
+      existing.remove();
+    }
+
+    const dialog = document.createElement("dialog");
+    dialog.id = "dpro-datetime-standard-picker";
+    dialog.innerHTML = `
+      <div class="dpro-picker-shell" role="dialog" aria-modal="true">
+        <div class="dpro-picker-head">
+          <strong>${type === "date" ? "日付を選択" : "日時を選択"}</strong>
+          <button type="button" class="dpro-picker-close" aria-label="閉じる">×</button>
+        </div>
+        <div class="dpro-picker-month-row">
+          <button type="button" class="dpro-picker-nav" data-dir="-1" aria-label="前の月">‹</button>
+          <strong class="dpro-picker-month-label"></strong>
+          <button type="button" class="dpro-picker-nav" data-dir="1" aria-label="次の月">›</button>
+        </div>
+        <div class="dpro-picker-week">
+          <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+        </div>
+        <div class="dpro-picker-days"></div>
+        ${type === "datetime-local" ? `
+          <div class="dpro-picker-time">
+            <label>時<select class="dpro-picker-hour"></select></label>
+            <label>分<select class="dpro-picker-minute"></select></label>
+          </div>
+          <div class="dpro-picker-note">${interval}分刻みで選択します。</div>
+        ` : `<div class="dpro-picker-note">日付を選択します。</div>`}
+        <div class="dpro-picker-actions">
+          <button type="button" class="dpro-picker-cancel">取消</button>
+          <button type="button" class="dpro-picker-ok">決定</button>
+        </div>
+      </div>
+    `;
+    document.body.append(dialog);
+
+    const days = dialog.querySelector(".dpro-picker-days");
+    const label = dialog.querySelector(".dpro-picker-month-label");
+    const hour = dialog.querySelector(".dpro-picker-hour");
+    const minute = dialog.querySelector(".dpro-picker-minute");
+
+    if (hour) {
+      hour.innerHTML = Array.from({length:24}, (_, i) =>
+        `<option value="${i}">${pad(i)}</option>`
+      ).join("");
+      hour.value = String(hourValue);
+    }
+
+    if (minute) {
+      const minutes = [];
+      for (let m = 0; m < 60; m += interval) minutes.push(m);
+      if (!minutes.includes(minuteValue)) minutes.push(minuteValue);
+      minutes.sort((a,b)=>a-b);
+      minute.innerHTML = minutes.map((m) =>
+        `<option value="${m}">${pad(m)}</option>`
+      ).join("");
+      minute.value = String(minuteValue);
+    }
+
+    function renderCalendar() {
+      label.textContent = `${viewYear}年 ${viewMonth + 1}月`;
+      days.innerHTML = "";
+      const first = new Date(viewYear, viewMonth, 1, 12, 0, 0, 0);
+      const startDay = first.getDay();
+      const lastDay = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+      for (let i = 0; i < startDay; i++) {
+        const empty = document.createElement("span");
+        empty.className = "dpro-picker-empty";
+        days.append(empty);
+      }
+
+      for (let day = 1; day <= lastDay; day++) {
+        const date = new Date(viewYear, viewMonth, day, 12, 0, 0, 0);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "dpro-picker-day";
+        button.textContent = String(day);
+
+        const value = localDateValue(date);
+        if (value === localDateValue(selected)) button.classList.add("is-selected");
+        if (value === todayLocalValue()) button.classList.add("is-today");
+
+        button.disabled = Boolean(
+          (minDate && date < minDate) ||
+          (maxDate && date > maxDate)
+        );
+
+        button.addEventListener("click", () => {
+          selected = date;
+          renderCalendar();
+        });
+        days.append(button);
+      }
+    }
+
+    dialog.querySelectorAll(".dpro-picker-nav").forEach((button) => {
+      button.addEventListener("click", () => {
+        viewMonth += Number(button.dataset.dir || 0);
+        if (viewMonth < 0) { viewMonth = 11; viewYear -= 1; }
+        if (viewMonth > 11) { viewMonth = 0; viewYear += 1; }
+        renderCalendar();
+      });
+    });
+
+    const close = () => {
+      try { dialog.close?.(); } catch (_) {}
+      dialog.remove();
+    };
+
+    dialog.querySelector(".dpro-picker-close").addEventListener("click", close);
+    dialog.querySelector(".dpro-picker-cancel").addEventListener("click", close);
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      close();
+    });
+
+    dialog.querySelector(".dpro-picker-ok").addEventListener("click", () => {
+      const datePart = localDateValue(selected);
+      if (type === "datetime-local") {
+        const hh = Number(hour?.value || 0);
+        const mm = Number(minute?.value || 0);
+        input.value = `${datePart}T${pad(hh)}:${pad(mm)}`;
+      } else {
+        input.value = datePart;
+      }
+      input.dispatchEvent(new Event("input", { bubbles:true }));
+      input.dispatchEvent(new Event("change", { bubbles:true }));
+      syncDateDisplay(input);
+      close();
+    });
+
+    renderCalendar();
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
   }
 
   function enhanceDateInput(input) {
@@ -118,6 +296,7 @@
     if (input.closest(".dpro-dt-wrap")) return;
 
     ensureStep(input);
+    ensureFutureMin(input);
 
     // Adopt an existing GREEN clean-date wrapper instead of nesting another wrapper.
     const oldWrap = input.closest(".green-clean-date-wrap");
@@ -140,7 +319,7 @@
         oldPicker.addEventListener("click", (event) => {
           if (oldPicker.tagName === "BUTTON") event.preventDefault();
           event.stopPropagation();
-          openNativePicker(input);
+          openDproPicker(input);
         }, true);
       }
       input.addEventListener("input", () => { normalizeDateTimeToStep(input); syncDateDisplay(input); });
@@ -186,7 +365,7 @@
       }
       commitDateDisplay(input, display);
     });
-    button.addEventListener("click", () => openNativePicker(input));
+    button.addEventListener("click", () => openDproPicker(input));
     input.addEventListener("input", () => { normalizeDateTimeToStep(input); syncDateDisplay(input); });
     input.addEventListener("change", () => { normalizeDateTimeToStep(input); syncDateDisplay(input); });
     input.addEventListener("invalid", (event) => {
@@ -308,6 +487,28 @@
       ".dpro-time-wrap{display:grid;grid-template-columns:minmax(0,1fr)auto;gap:8px;align-items:center;width:100%;min-width:0}",
       ".dpro-time-note{white-space:nowrap;color:#6a7c72;font-size:11px;font-weight:800}",
       ".dpro-time-native{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}",
+      "#dpro-datetime-standard-picker{border:0;padding:0;background:transparent;max-width:none;max-height:none}",
+      "#dpro-datetime-standard-picker::backdrop{background:rgba(20,38,31,.42)}",
+      "#dpro-datetime-standard-picker .dpro-picker-shell{width:min(520px,calc(100vw - 28px));box-sizing:border-box;background:#fff;border:1px solid #d5e0d9;border-radius:22px;padding:18px;box-shadow:0 24px 70px rgba(18,56,45,.22);color:#173d2f}",
+      "#dpro-datetime-standard-picker .dpro-picker-head,#dpro-datetime-standard-picker .dpro-picker-month-row{display:flex;align-items:center;justify-content:space-between;gap:12px}",
+      "#dpro-datetime-standard-picker .dpro-picker-head strong{font-size:20px}",
+      "#dpro-datetime-standard-picker .dpro-picker-close,#dpro-datetime-standard-picker .dpro-picker-nav{width:48px;height:48px;border:1px solid #d0ddd5;border-radius:12px;background:#fff;font:inherit;font-weight:900;cursor:pointer}",
+      "#dpro-datetime-standard-picker .dpro-picker-month-row{margin:14px 0 10px}",
+      "#dpro-datetime-standard-picker .dpro-picker-month-label{font-size:20px}",
+      "#dpro-datetime-standard-picker .dpro-picker-week,#dpro-datetime-standard-picker .dpro-picker-days{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}",
+      "#dpro-datetime-standard-picker .dpro-picker-week{margin-bottom:7px;color:#6a7c72;font-size:12px;font-weight:900;text-align:center}",
+      "#dpro-datetime-standard-picker .dpro-picker-day{min-height:46px;border:1px solid #d5e0d9;border-radius:11px;background:#fff;color:#173d2f;font:inherit;font-weight:900;cursor:pointer}",
+      "#dpro-datetime-standard-picker .dpro-picker-day.is-selected{background:#174c35;color:#fff;border-color:#174c35}",
+      "#dpro-datetime-standard-picker .dpro-picker-day.is-today:not(.is-selected){box-shadow:0 0 0 2px #d4b255 inset}",
+      "#dpro-datetime-standard-picker .dpro-picker-day:disabled{opacity:.25;cursor:not-allowed;background:#f5f7f5}",
+      "#dpro-datetime-standard-picker .dpro-picker-empty{min-height:46px}",
+      "#dpro-datetime-standard-picker .dpro-picker-time{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}",
+      "#dpro-datetime-standard-picker .dpro-picker-time label{font-weight:900}",
+      "#dpro-datetime-standard-picker .dpro-picker-time select{width:100%;min-height:50px;margin-top:6px;border:1px solid #cbd7ce;border-radius:12px;background:#fff;padding:0 12px;font:inherit;font-weight:800}",
+      "#dpro-datetime-standard-picker .dpro-picker-note{margin:12px 0 0;padding:10px 12px;border-radius:11px;background:#f2f7f4;color:#65776d;font-size:12px}",
+      "#dpro-datetime-standard-picker .dpro-picker-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid #e0e8e3}",
+      "#dpro-datetime-standard-picker .dpro-picker-actions button{min-height:46px;padding:0 18px;border:1px solid #cbd7ce;border-radius:12px;background:#fff;font:inherit;font-weight:900;cursor:pointer}",
+      "#dpro-datetime-standard-picker .dpro-picker-actions .dpro-picker-ok{background:#174c35;color:#fff;border-color:#174c35}",
       ".dpro-dt-wrap--adopted .green-clean-date-native{pointer-events:none!important;inset:auto!important;top:0!important;left:-10000px!important;width:1px!important;min-width:1px!important;height:1px!important;min-height:1px!important}",
       ".owner-body #owner-dialog label>.green-clean-date-wrap[aria-hidden=\"true\"],.owner-body #owner-dialog label>.green-clean-datetime-wrap[aria-hidden=\"true\"],.owner-body #owner-dialog label>input[data-dpro-datetime-duplicate-hidden]{display:none!important}",
       "@media(max-width:620px){.dpro-dt-wrap{grid-template-columns:minmax(0,1fr)46px}.dpro-dt-display,.dpro-time-select{min-height:50px;font-size:16px}.dpro-dt-button{width:46px;min-width:46px;min-height:50px}.dpro-time-wrap{grid-template-columns:1fr}.dpro-time-note{margin-top:-3px}}"
