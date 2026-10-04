@@ -1,0 +1,153 @@
+name: DPRO GREEN Customer Contact R1.1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GREEN production
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard R1 audited baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:green-customer-contact-r1.js)" = "80f2bd6dafbe281a588a716f17867b88cffdf0e3"
+          test "$(git rev-parse HEAD:green-customer-contact-r1.css)" = "297b6fb15044c2babe3b6a74fc05ce4518e75ada"
+          test "$(git rev-parse HEAD:owner.html)" = "42c92b5e6b9434e4e7754149bee5bd4862ffc482"
+          echo "CUSTOMER CONTACT R1 AUDITED BASELINE PASS"
+
+      - name: Apply R1.1 hardening
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  if new in text:
+                      return text
+                  raise SystemExit(f"{label}: anchor not found")
+              return text.replace(old, new, 1)
+
+          p = Path("green-customer-contact-r1.js")
+          s = p.read_text(encoding="utf-8")
+
+          s = replace_once(
+              s,
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.0-20261004";',
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.1-20261004";',
+              "version"
+          )
+
+          helper_anchor = '''  function fmt(value) {
+          '''
+          helper = '''  function safeUrl(value) {
+              const raw = text(value);
+              if (!raw) return "";
+              try {
+                const url = new URL(raw, location.href);
+                return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+              } catch {
+                return "";
+              }
+            }
+
+            function lineAttachmentHtml(attachment) {
+              if (!attachment) return "";
+              const url = safeUrl(attachment.url);
+              const name = text(attachment.name, "添付資料");
+              const kind = text(attachment.kind || (String(attachment.mime || "").startsWith("image/") ? "image" : "document"));
+
+              if (!url) return `<span class="gcc-attachment gcc-attachment-missing">📎 ${esc(name)}</span>`;
+
+              if (kind === "image") {
+                return `<a class="gcc-attachment gcc-attachment-image" href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="${esc(name)}" loading="lazy" decoding="async"></a>`;
+              }
+
+              return `<a class="gcc-attachment gcc-attachment-file" href="${esc(url)}" target="_blank" rel="noopener">📎 ${esc(name)}を開く</a>`;
+            }
+
+          '''
+          if "function lineAttachmentHtml(" not in s:
+              if helper_anchor not in s:
+                  raise SystemExit("attachment helper anchor not found")
+              s = s.replace(helper_anchor, helper + helper_anchor, 1)
+
+          old_bubble = '''          <div class="gcc-bubble ${msg.direction === "outbound" ? "is-out" : "is-in"}">
+                      <p>${esc(msg.body || msg.text || "").replace(/\\n/g, "<br>")}</p>
+                      <small>${esc(fmt(msg.occurredAt || msg.occurred_at || msg.createdAt || msg.created_at))}</small>
+                    </div>'''
+          new_bubble = '''          <div class="gcc-bubble ${msg.direction === "outbound" ? "is-out" : "is-in"}">
+                      ${msg.body || msg.text ? `<p>${esc(msg.body || msg.text || "").replace(/\\n/g, "<br>")}</p>` : ""}
+                      ${lineAttachmentHtml(msg.attachment)}
+                      <small>${esc(fmt(msg.occurredAt || msg.occurred_at || msg.createdAt || msg.created_at))}</small>
+                    </div>'''
+          s = replace_once(s, old_bubble, new_bubble, "line attachment rendering")
+
+          s = replace_once(
+              s,
+              'json:{ inquiryId:item.id, status:item.raw?.status || item.inquiry?.status || "new" }',
+              'json:{ inquiryId:item.id, status:item.inquiry?.status || item.raw?.status || "new" }',
+              "line lead status precedence"
+          )
+
+          p.write_text(s, encoding="utf-8")
+
+          p = Path("green-customer-contact-r1.css")
+          s = p.read_text(encoding="utf-8")
+          css = '''
+          .gcc-attachment{display:block;margin-top:8px}.gcc-attachment-image img{display:block;width:min(320px,100%);max-height:240px;object-fit:cover;border-radius:10px;border:1px solid #cfddd5;background:#fff}.gcc-attachment-file{color:#155941;font-weight:800;text-decoration:underline}.gcc-attachment-missing{font-size:12px;color:#6e7e76}
+          '''
+          if ".gcc-attachment-image img" not in s:
+              s += css
+          p.write_text(s, encoding="utf-8")
+
+          p = Path("owner.html")
+          s = p.read_text(encoding="utf-8")
+          s = s.replace(
+              "green-customer-contact-r1.css?v=GREEN-CUSTOMER-CONTACT-R1.0-20261004",
+              "green-customer-contact-r1.css?v=GREEN-CUSTOMER-CONTACT-R1.1-20261004"
+          )
+          s = s.replace(
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.0-20261004",
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.1-20261004"
+          )
+          p.write_text(s, encoding="utf-8")
+          PY
+
+      - name: Static validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check green-customer-contact-r1.js
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.1-20261004' green-customer-contact-r1.js
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.1-20261004' owner.html
+          grep -q 'item.inquiry?.status || item.raw?.status || "new"' green-customer-contact-r1.js
+          grep -q 'function lineAttachmentHtml' green-customer-contact-r1.js
+          grep -q 'msg.attachment' green-customer-contact-r1.js
+          grep -q 'gcc-attachment-image' green-customer-contact-r1.css
+          grep -q 'const EMAIL_READY = false' green-customer-contact-r1.js
+          git diff --check
+          echo "GREEN CUSTOMER CONTACT R1.1 STATIC QA PASS"
+
+      - name: Commit R1.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "DPRO GREEN CUSTOMER CONTACT R1.1"
+          git config user.email "actions@users.noreply.github.com"
+          git add owner.html green-customer-contact-r1.js green-customer-contact-r1.css
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Harden unified GREEN customer contact R1.1"
+          git push origin HEAD:main
