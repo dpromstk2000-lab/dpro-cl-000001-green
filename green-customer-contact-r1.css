@@ -21,3 +21,5 @@
 @media(max-width:640px){.gcc-facts{grid-template-columns:1fr}.gcc-photo-grid{grid-template-columns:1fr 1fr}.gcc-actions .btn,.gcc-actions a.btn{width:100%;box-sizing:border-box;text-align:center}.gcc-bubble{max-width:92%}}
 
 .gcc-attachment{display:block;margin-top:8px}.gcc-attachment-image img{display:block;width:min(320px,100%);max-height:240px;object-fit:cover;border-radius:10px;border:1px solid #cfddd5;background:#fff}.gcc-attachment-file{color:#155941;font-weight:800;text-decoration:underline}.gcc-attachment-missing{font-size:12px;color:#6e7e76}
+
+.gcc-channel-warning{display:grid;gap:4px;margin:0 0 14px;padding:11px 13px;border:1px solid #e0a5a0;border-radius:11px;background:#fff3f1;color:#7f302a}.gcc-channel-warning[hidden]{display:none}.gcc-channel-warning strong{font-size:13px}.gcc-channel-warning span,.gcc-channel-warning small{font-size:12px;line-height:1.55}

@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.2-20261004";
+  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.3-RESILIENT-FETCH-20261004";
   if (window.__GREEN_CUSTOMER_CONTACT_R1__ === VERSION) return;
   window.__GREEN_CUSTOMER_CONTACT_R1__ = VERSION;
 
@@ -16,6 +16,7 @@
     selected: null,
     lineThreads: [],
     lineInquiryByUser: new Map(),
+    channelErrors: [],
     channel: "all",
     query: ""
   };
@@ -79,21 +80,43 @@
     catch { return ""; }
   }
 
+  function lineAccessToken() {
+    const normal = token();
+    if (normal) return normal;
+
+    const buildMode = new URLSearchParams(location.search).get("dpro_build") === "1";
+    if (!buildMode) return "";
+
+    try {
+      const build = sessionStorage.getItem("dpro_green_line_build_code")
+        || sessionStorage.getItem("dpro_green_shop_build_code")
+        || "";
+      return build ? `build:${build}` : "";
+    } catch {
+      return "";
+    }
+  }
+
   async function lineApi(path, options = {}) {
-    const accessToken = token();
-    if (!accessToken) throw new Error("管理セッションを確認できません。再ログインしてください。");
+    const accessToken = lineAccessToken();
+    if (!accessToken) throw new Error("LINE用の管理セッションを確認できません。再ログインしてください。");
 
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${accessToken}`);
     headers.set("Accept", "application/json");
     if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
-    const response = await fetch(`${LINE_API}${path}`, {
-      ...options,
-      headers,
-      credentials: "include",
-      cache: "no-store"
-    });
+    let response;
+    try {
+      response = await fetch(`${LINE_API}${path}`, {
+        ...options,
+        headers,
+        cache: "no-store"
+      });
+    } catch (error) {
+      throw new Error(`LINE接続に失敗しました。${error?.message || "通信エラー"}`);
+    }
+
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data?.ok === false) {
       throw new Error(data?.message || data?.error || `LINE API HTTP ${response.status}`);
@@ -157,6 +180,8 @@
         <span>受信・内容確認・営業案件化は利用できます。ドメイン確定後に、この画面からのメール返信を有効化します。</span>
       </div>
 
+      <div class="gcc-channel-warning" id="gcc-channel-warning" hidden></div>
+
       <div class="gcc-toolbar">
         <div class="gcc-tabs" role="tablist" aria-label="受付チャネル">
           <button type="button" data-gcc-channel="all" class="is-active">すべて <b id="gcc-count-all">0</b></button>
@@ -199,6 +224,24 @@
     }));
   }
 
+  function renderChannelWarning() {
+    const box = $("#gcc-channel-warning");
+    if (!box) return;
+
+    if (!state.channelErrors.length) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+
+    box.hidden = false;
+    box.innerHTML = `
+      <strong>一部チャネルを取得できませんでした</strong>
+      <span>${state.channelErrors.map((x) => esc(x)).join(" / ")}</span>
+      <small>取得できたチャネルはそのまま表示しています。「再表示」で再試行できます。</small>
+    `;
+  }
+
   async function enrichLineInquiries(inquiries) {
     const rows = inquiries.filter((x) => x.source === "line").slice(0, 50);
     const details = await Promise.all(rows.map(async (row) => {
@@ -220,25 +263,48 @@
     if (list) list.innerHTML = '<div class="gcc-empty">顧客対応を確認しています…</div>';
 
     try {
-      const [core, threads] = await Promise.all([
+      const [coreResult, lineResult] = await Promise.allSettled([
         coreApi("/api/admin/inquiries?limit=200"),
         lineApi("/api/contact/threads")
       ]);
 
+      const coreOk = coreResult.status === "fulfilled";
+      const lineOk = lineResult.status === "fulfilled";
+
+      state.channelErrors = [];
+      if (!coreOk) {
+        state.channelErrors.push(`WEB・電話: ${coreResult.reason?.message || "取得失敗"}`);
+      }
+      if (!lineOk) {
+        state.channelErrors.push(`LINE: ${lineResult.reason?.message || "取得失敗"}`);
+      }
+
+      if (!coreOk && !lineOk) {
+        throw new Error(state.channelErrors.join(" / "));
+      }
+
+      const core = coreOk ? coreResult.value : null;
+      const threads = lineOk ? lineResult.value : null;
+
       const inquiries = Array.isArray(core?.data?.items) ? core.data.items : [];
       state.lineThreads = Array.isArray(threads?.threads) ? threads.threads : [];
-      await enrichLineInquiries(inquiries);
+
+      if (coreOk) {
+        await enrichLineInquiries(inquiries);
+      } else {
+        state.lineInquiryByUser.clear();
+      }
 
       const coreItems = inquiries
-        .filter((row) => row.source !== "line")
+        .filter((row) => lineOk ? row.source !== "line" : true)
         .map((row) => ({
           key: `inquiry:${row.id}`,
           kind: "inquiry",
-          channel: row.source === "website" ? "website" : row.source === "phone" ? "phone" : row.source || "website",
+          channel: row.source === "website" ? "website" : row.source === "phone" ? "phone" : row.source === "line" ? "line" : row.source || "website",
           id: row.id,
           title: row.company_name || row.contact_name || "お問い合わせ",
           sub: row.contact_name || row.phone || row.email || "",
-          preview: row.inquiry_category || "相談受付",
+          preview: row.inquiry_category || (row.source === "line" ? "LINE受付（返信接続を再試行してください）" : "相談受付"),
           status: row.status || "new",
           at: row.updated_at || row.created_at,
           unread: row.status === "new" ? 1 : 0,
@@ -265,6 +331,7 @@
       });
 
       state.items = [...coreItems, ...lineItems].sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
+      renderChannelWarning();
       updateCounts();
       applyFilter();
 
