@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.4-BUILD-AUTH-FALLBACK-20261004";
+  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.5-SEND-GUARD-20261004";
   if (window.__GREEN_CUSTOMER_CONTACT_R1__ === VERSION) return;
   window.__GREEN_CUSTOMER_CONTACT_R1__ = VERSION;
 
@@ -554,7 +554,7 @@
       </form>
 
       <div class="gcc-actions">
-        ${item.inquiryId ? '<button class="btn btn--secondary" type="button" id="gcc-line-lead">営業案件へ進める</button>' : '<span class="gcc-domain-note">営業案件化する受付情報を確認中です。必要な場合は「営業対応」から登録できます。</span>'}
+        ${item.inquiryId ? '<button class="btn btn--secondary" type="button" id="gcc-line-lead">営業案件へ進める</button>' : '<span class="gcc-domain-note">営業案件化する受付情報がまだ紐付いていません。必要な場合は「営業案件」から登録できます。</span>'}
       </div>
     `;
 
@@ -566,14 +566,38 @@
       const textarea = $("#gcc-line-text");
       const value = textarea?.value.trim();
       if (!value) return;
+
+      const closedNotice = item.status === "closed"
+        ? "この会話は対応完了です。返信すると「対応中」に戻します。\n\n"
+        : "";
+
+      const ok = window.confirm(
+        closedNotice +
+        "この内容をLINEへ送信します。\n\n" +
+        value +
+        "\n\n送信してよろしいですか？"
+      );
+      if (!ok) return;
+
       const button = event.submitter;
       if (button) { button.disabled = true; button.textContent = "送信中…"; }
+
       try {
+        if (item.status === "closed") {
+          await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/status`, {
+            method:"POST",
+            body:JSON.stringify({ status:"open" })
+          });
+          item.status = "open";
+        }
+
         await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/reply`, {
           method:"POST", body:JSON.stringify({ text:value })
         });
+
         if (textarea) textarea.value = "";
         window.Green?.toast?.("LINEへ返信しました。", "success");
+
         await loadUnified(true);
         const same = state.items.find((x) => x.key === item.key);
         if (same) await selectItem(same, false);
