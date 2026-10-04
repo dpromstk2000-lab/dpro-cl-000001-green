@@ -1,0 +1,577 @@
+name: DPRO GREEN Customer Contact R1.6
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  composer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GREEN production
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard audited baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:green-customer-contact-r1.js)" = "ad9d33c97d5b1d001be7b93588d526fb26049133"
+          test "$(git rev-parse HEAD:green-customer-contact-r1.css)" = "6a325a1ec9c393dc74c6dc2255b955265c1e4397"
+          test "$(git rev-parse HEAD:owner.html)" = "43c4425b271c116c8b4f862616857c61db84eeec"
+          echo "CUSTOMER CONTACT R1.6 AUDITED BASELINE PASS"
+
+      - name: Apply DPRO composer R1.6
+        shell: bash
+        run: |
+          python - <<'PY'
+
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  if new in text:
+                      return text
+                  raise SystemExit(f"{label}: anchor not found")
+              return text.replace(old, new, 1)
+
+          p = Path("green-customer-contact-r1.js")
+          s = p.read_text(encoding="utf-8")
+
+          s = replace_once(
+              s,
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.5-SEND-GUARD-20261004";',
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.6-DPRO-COMPOSER-20261004";',
+              "version"
+          )
+
+          s = replace_once(
+              s,
+              'if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");',
+              'if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");',
+              "formdata content-type guard"
+          )
+
+          helper_anchor = '  async function enrichLineInquiries(inquiries) {'
+          helpers = r'''
+            const REPLY_MAX_FILES = 4;
+            const REPLY_MAX_BYTES = 10 * 1024 * 1024;
+            const REPLY_ALLOWED_TYPES = new Set([
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "application/pdf",
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+              "text/plain",
+              "text/csv"
+            ]);
+
+            function formatBytes(value) {
+              const n = Number(value || 0);
+              if (!n) return "0 KB";
+              if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+              return `${Math.max(1, Math.round(n / 1024))} KB`;
+            }
+
+            async function normalizeLineImage(file) {
+              if (!file?.type?.startsWith("image/")) return file;
+
+              const bitmap = await createImageBitmap(file);
+              const maxEdge = 1600;
+              let width = bitmap.width;
+              let height = bitmap.height;
+              const scale = Math.min(1, maxEdge / Math.max(width, height));
+              width = Math.max(1, Math.round(width * scale));
+              height = Math.max(1, Math.round(height * scale));
+
+              let canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              let ctx = canvas.getContext("2d", { alpha:false });
+              ctx.fillStyle = "#fff";
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(bitmap, 0, 0, width, height);
+              bitmap.close?.();
+
+              let quality = 0.86;
+              let blob = null;
+
+              for (let i = 0; i < 8; i += 1) {
+                blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+                if (blob && blob.size <= 900 * 1024) break;
+
+                quality = Math.max(0.5, quality - 0.07);
+
+                if (i === 4 && Math.max(canvas.width, canvas.height) > 1200) {
+                  const ratio = 1200 / Math.max(canvas.width, canvas.height);
+                  const next = document.createElement("canvas");
+                  next.width = Math.max(1, Math.round(canvas.width * ratio));
+                  next.height = Math.max(1, Math.round(canvas.height * ratio));
+
+                  const nextCtx = next.getContext("2d", { alpha:false });
+                  nextCtx.fillStyle = "#fff";
+                  nextCtx.fillRect(0, 0, next.width, next.height);
+                  nextCtx.drawImage(canvas, 0, 0, next.width, next.height);
+                  canvas = next;
+                  ctx = nextCtx;
+                }
+              }
+
+              if (!blob) throw new Error("画像をLINE送信用に変換できませんでした。");
+              if (blob.size > 1024 * 1024) {
+                throw new Error("画像を1MB未満に圧縮できませんでした。別の画像を選択してください。");
+              }
+
+              const baseName = String(file.name || "image").replace(/\.[^.]+$/, "");
+              return new File([blob], `${baseName}.jpg`, {
+                type:"image/jpeg",
+                lastModified:Date.now()
+              });
+            }
+
+            function installReplyComposer({
+              form,
+              textarea,
+              input,
+              filesBox,
+              expandButton,
+              countBox,
+              lineImages = false
+            }) {
+              let files = [];
+              let objectUrls = [];
+
+              const revokeUrls = () => {
+                objectUrls.forEach((url) => {
+                  try { URL.revokeObjectURL(url); } catch {}
+                });
+                objectUrls = [];
+              };
+
+              const updateCount = () => {
+                if (countBox) countBox.textContent = `${textarea?.value?.length || 0} / 5,000文字`;
+              };
+
+              const autoGrow = () => {
+                if (!textarea || form?.classList.contains("is-expanded")) {
+                  updateCount();
+                  return;
+                }
+                textarea.style.height = "auto";
+                textarea.style.height = `${Math.min(320, Math.max(150, textarea.scrollHeight))}px`;
+                updateCount();
+              };
+
+              const renderFiles = () => {
+                if (!filesBox) return;
+                revokeUrls();
+                filesBox.innerHTML = "";
+
+                files.forEach((file, index) => {
+                  const row = document.createElement("div");
+                  row.className = "gcc-selected-attachment";
+
+                  let visual = `<span class="gcc-selected-attachment__thumb">${file.type.startsWith("image/") ? "画像" : "資料"}</span>`;
+                  if (file.type.startsWith("image/")) {
+                    const url = URL.createObjectURL(file);
+                    objectUrls.push(url);
+                    visual = `<img class="gcc-selected-attachment__thumb" src="${esc(url)}" alt="">`;
+                  }
+
+                  row.innerHTML = `
+                    ${visual}
+                    <div class="gcc-selected-attachment__meta">
+                      <strong>${esc(file.name)}</strong>
+                      <small>${esc(file.type || "file")} ・ ${esc(formatBytes(file.size))}</small>
+                    </div>
+                    <button type="button" class="gcc-selected-attachment__remove">削除</button>
+                  `;
+
+                  $(".gcc-selected-attachment__remove", row)?.addEventListener("click", () => {
+                    files.splice(index, 1);
+                    renderFiles();
+                  });
+
+                  filesBox.appendChild(row);
+                });
+              };
+
+              const addFiles = async (picked) => {
+                for (const original of [...picked]) {
+                  if (files.length >= REPLY_MAX_FILES) {
+                    window.Green?.toast?.(`添付は${REPLY_MAX_FILES}件までです。`, "error");
+                    break;
+                  }
+                  if (!original.size || original.size > REPLY_MAX_BYTES) {
+                    window.Green?.toast?.(`${original.name} は10MB以内にしてください。`, "error");
+                    continue;
+                  }
+                  if (!REPLY_ALLOWED_TYPES.has(original.type)) {
+                    window.Green?.toast?.(`${original.name} は対応していない形式です。`, "error");
+                    continue;
+                  }
+
+                  try {
+                    const next = lineImages && original.type.startsWith("image/")
+                      ? await normalizeLineImage(original)
+                      : original;
+                    files.push(next);
+                  } catch (error) {
+                    window.Green?.toast?.(`${original.name}: ${error.message}`, "error");
+                  }
+                }
+                renderFiles();
+              };
+
+              input?.addEventListener("change", async (event) => {
+                const picked = [...(event.target.files || [])];
+                event.target.value = "";
+                await addFiles(picked);
+              });
+
+              expandButton?.addEventListener("click", () => {
+                form?.classList.toggle("is-expanded");
+                const expanded = form?.classList.contains("is-expanded");
+                expandButton.textContent = expanded ? "↙ 元の大きさ" : "↗ 返信欄を拡大";
+                if (!expanded) autoGrow();
+                textarea?.focus();
+              });
+
+              textarea?.addEventListener("input", autoGrow);
+              autoGrow();
+              renderFiles();
+
+              return {
+                files: () => [...files],
+                clear: () => {
+                  files = [];
+                  renderFiles();
+                  if (textarea) {
+                    textarea.value = "";
+                    autoGrow();
+                  }
+                },
+                destroy: revokeUrls
+              };
+            }
+
+            async function uploadLineAttachment(threadId, file) {
+              const form = new FormData();
+              form.append("file", file, file.name);
+              const data = await lineApi(`/api/contact/threads/${encodeURIComponent(threadId)}/attachments`, {
+                method:"POST",
+                body:form
+              });
+              if (!data?.attachment) throw new Error("添付アップロード結果を確認できませんでした。");
+              return data.attachment;
+            }
+
+          '''
+          if "function installReplyComposer(" not in s:
+              if helper_anchor not in s:
+                  raise SystemExit("reply composer helper anchor not found")
+              s = s.replace(helper_anchor, helpers + helper_anchor, 1)
+
+          old_web_actions = r'''      <div class="gcc-actions">
+                  ${phone ? `<a class="btn btn--secondary" href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">電話する</a>` : ""}
+                  <button class="btn btn--secondary" type="button" id="gcc-email" ${EMAIL_READY && email ? "" : "disabled"}>
+                    ${EMAIL_READY ? "メール返信" : "メール返信（ドメイン設定待ち）"}
+                  </button>
+                  <button class="btn btn--primary" type="button" id="gcc-lead">営業案件へ進める</button>
+                </div>
+                ${!EMAIL_READY ? '<p class="gcc-domain-note">独自ドメインとメール送受信設定が完了すると、ここからWEB問い合わせへ返信できるようになります。</p>' : ""}
+              `;
+
+              $("#gcc-lead")?.addEventListener("click", () => createLead(item));'''
+
+          new_web_actions = r'''      ${email ? `
+                  <form class="gcc-reply gcc-web-reply" id="gcc-web-reply">
+                    <div class="gcc-reply-toolbar">
+                      <label class="gcc-reply-tool">＋ 添付
+                        <input id="gcc-web-file" type="file" multiple hidden accept="image/jpeg,image/png,image/webp,application/pdf,.docx,.xlsx,.pptx,.txt,.csv">
+                      </label>
+                      <button class="gcc-reply-tool" id="gcc-web-expand" type="button">↗ 返信欄を拡大</button>
+                      <span class="gcc-reply-count" id="gcc-web-count">0 / 5,000文字</span>
+                    </div>
+                    <label>WEBメールへ返信
+                      <textarea id="gcc-web-text" maxlength="5000" placeholder="返信内容を入力してください"></textarea>
+                    </label>
+                    <div class="gcc-selected-attachments" id="gcc-web-files"></div>
+                    <div class="gcc-reply-foot">
+                      <span>画像・PDF・Office資料など最大4件／各10MBまで準備できます。</span>
+                      <button class="btn btn--primary" type="submit" ${EMAIL_READY ? "" : "disabled"}>
+                        ${EMAIL_READY ? "メール送信" : "メール送信（ドメイン設定待ち）"}
+                      </button>
+                    </div>
+                  </form>
+                ` : '<p class="gcc-domain-note">メールアドレスが未設定のため、WEBメール返信は利用できません。</p>'}
+
+                <div class="gcc-actions">
+                  ${phone ? `<a class="btn btn--secondary" href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">電話する</a>` : ""}
+                  <button class="btn btn--primary" type="button" id="gcc-lead">営業案件へ進める</button>
+                </div>
+                ${!EMAIL_READY && email ? '<p class="gcc-domain-note">返信文の入力・拡大・添付準備は利用できます。独自ドメインとメール送受信設定が完了後、この画面から送信できるようになります。</p>' : ""}
+              `;
+
+              if (email) {
+                installReplyComposer({
+                  form:$("#gcc-web-reply"),
+                  textarea:$("#gcc-web-text"),
+                  input:$("#gcc-web-file"),
+                  filesBox:$("#gcc-web-files"),
+                  expandButton:$("#gcc-web-expand"),
+                  countBox:$("#gcc-web-count"),
+                  lineImages:false
+                });
+
+                $("#gcc-web-reply")?.addEventListener("submit", (event) => {
+                  event.preventDefault();
+                  if (!EMAIL_READY) {
+                    window.Green?.toast?.("WEBメール送信は独自ドメイン設定後に有効になります。", "error");
+                  }
+                });
+              }
+
+              $("#gcc-lead")?.addEventListener("click", () => createLead(item));'''
+
+          s = replace_once(s, old_web_actions, new_web_actions, "web DPRO composer")
+
+          old_line_form = r'''      <form class="gcc-reply" id="gcc-line-reply">
+                  <label>LINEへ返信
+                    <textarea id="gcc-line-text" maxlength="5000" placeholder="返信内容を入力してください"></textarea>
+                  </label>
+                  <button class="btn btn--primary" type="submit">LINEへ返信</button>
+                </form>'''
+
+          new_line_form = r'''      <form class="gcc-reply" id="gcc-line-reply">
+                  <div class="gcc-reply-toolbar">
+                    <label class="gcc-reply-tool">＋ 添付
+                      <input id="gcc-line-file" type="file" multiple hidden accept="image/jpeg,image/png,image/webp,application/pdf,.docx,.xlsx,.pptx,.txt,.csv">
+                    </label>
+                    <button class="gcc-reply-tool" id="gcc-line-expand" type="button">↗ 返信欄を拡大</button>
+                    <span class="gcc-reply-count" id="gcc-line-count">0 / 5,000文字</span>
+                  </div>
+                  <label>LINEへ返信
+                    <textarea id="gcc-line-text" maxlength="5000" placeholder="返信内容を入力してください"></textarea>
+                  </label>
+                  <div class="gcc-selected-attachments" id="gcc-line-files"></div>
+                  <div class="gcc-reply-foot">
+                    <span>画像はLINE送信用に自動圧縮。PDF・Office資料など最大4件／各10MBまで添付できます。</span>
+                    <button class="btn btn--primary" type="submit">LINEへ返信</button>
+                  </div>
+                </form>'''
+
+          s = replace_once(s, old_line_form, new_line_form, "line DPRO composer")
+
+          old_line_box = '''    const box = $("#gcc-conversation");
+              if (box) box.scrollTop = box.scrollHeight;
+
+              $("#gcc-line-reply")?.addEventListener("submit", async (event) => {'''
+
+          new_line_box = '''    const box = $("#gcc-conversation");
+              if (box) box.scrollTop = box.scrollHeight;
+
+              const lineComposer = installReplyComposer({
+                form:$("#gcc-line-reply"),
+                textarea:$("#gcc-line-text"),
+                input:$("#gcc-line-file"),
+                filesBox:$("#gcc-line-files"),
+                expandButton:$("#gcc-line-expand"),
+                countBox:$("#gcc-line-count"),
+                lineImages:true
+              });
+
+              $("#gcc-line-reply")?.addEventListener("submit", async (event) => {'''
+
+          s = replace_once(s, old_line_box, new_line_box, "line composer init")
+
+          old_submit_start = r'''      const textarea = $("#gcc-line-text");
+                const value = textarea?.value.trim();
+                if (!value) return;
+
+                const closedNotice = item.status === "closed"
+                  ? "この会話は対応完了です。返信すると「対応中」に戻します。\n\n"
+                  : "";
+
+                const ok = window.confirm(
+                  closedNotice +
+                  "この内容をLINEへ送信します。\n\n" +
+                  value +
+                  "\n\n送信してよろしいですか？"
+                );
+                if (!ok) return;
+
+                const button = event.submitter;
+                if (button) { button.disabled = true; button.textContent = "送信中…"; }
+
+                try {
+                  if (item.status === "closed") {
+                    await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/status`, {
+                      method:"POST",
+                      body:JSON.stringify({ status:"open" })
+                    });
+                    item.status = "open";
+                  }
+
+                  await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/reply`, {
+                    method:"POST", body:JSON.stringify({ text:value })
+                  });
+
+                  if (textarea) textarea.value = "";
+                  window.Green?.toast?.("LINEへ返信しました。", "success");'''
+
+          new_submit_start = r'''      const textarea = $("#gcc-line-text");
+                const value = textarea?.value.trim() || "";
+                const selectedFiles = lineComposer.files();
+                if (!value && !selectedFiles.length) return;
+
+                const closedNotice = item.status === "closed"
+                  ? "この会話は対応完了です。返信すると「対応中」に戻します。\n\n"
+                  : "";
+
+                const attachmentNotice = selectedFiles.length
+                  ? `\n添付：${selectedFiles.length}件`
+                  : "";
+
+                const ok = window.confirm(
+                  closedNotice +
+                  "この内容をLINEへ送信します。\n\n" +
+                  (value || "（本文なし）") +
+                  attachmentNotice +
+                  "\n\n送信してよろしいですか？"
+                );
+                if (!ok) return;
+
+                const button = event.submitter;
+                if (button) {
+                  button.disabled = true;
+                  button.textContent = selectedFiles.length ? "添付を送信中…" : "送信中…";
+                }
+
+                try {
+                  if (item.status === "closed") {
+                    await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/status`, {
+                      method:"POST",
+                      body:JSON.stringify({ status:"open" })
+                    });
+                    item.status = "open";
+                  }
+
+                  const attachments = [];
+                  for (const file of selectedFiles) {
+                    attachments.push(await uploadLineAttachment(item.id, file));
+                  }
+
+                  await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/reply`, {
+                    method:"POST",
+                    body:JSON.stringify({ text:value, attachments })
+                  });
+
+                  lineComposer.clear();
+                  window.Green?.toast?.(
+                    selectedFiles.length ? "本文・添付をLINEへ送信しました。" : "LINEへ返信しました。",
+                    "success"
+                  );'''
+
+          s = replace_once(s, old_submit_start, new_submit_start, "line attachment send")
+
+          p.write_text(s, encoding="utf-8")
+
+          p = Path("green-customer-contact-r1.css")
+          css = p.read_text(encoding="utf-8")
+          append = r'''
+          /* DPRO reply composer standard / R1.6 */
+          .gcc-reply{position:relative}
+          .gcc-reply-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+          .gcc-reply-tool{min-height:38px;border:1px solid #cfe1da;border-radius:10px;background:#f8fbf9;color:#1e6a52;padding:0 12px;font-weight:900;font-size:11px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+          .gcc-reply-tool:hover{background:#eef7f2}
+          .gcc-reply-count{margin-left:auto;color:#6c7b75;font-size:10px}
+          .gcc-reply textarea{min-height:150px;max-height:320px}
+          .gcc-reply-foot{display:flex;align-items:center;gap:12px;margin-top:9px}
+          .gcc-reply-foot>span{color:#6d7c75;font-size:10px;line-height:1.5}
+          .gcc-reply-foot .btn{margin-left:auto;white-space:nowrap}
+          .gcc-selected-attachments{display:grid;gap:7px;margin-top:9px}
+          .gcc-selected-attachment{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid #d8e6df;border-radius:11px;background:#f8fbf9}
+          .gcc-selected-attachment__thumb{width:46px;height:46px;border-radius:9px;object-fit:cover;background:#e7f3ec;display:grid;place-items:center;color:#1e6a52;font-size:10px;font-weight:900}
+          .gcc-selected-attachment__meta{min-width:0}
+          .gcc-selected-attachment__meta strong,.gcc-selected-attachment__meta small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+          .gcc-selected-attachment__meta strong{font-size:11px}
+          .gcc-selected-attachment__meta small{margin-top:3px;color:#6c7b75;font-size:9px}
+          .gcc-selected-attachment__remove{border:0;background:#fff0f0;color:#8d3030;border-radius:8px;padding:7px 9px;font-weight:900;cursor:pointer}
+          .gcc-reply.is-expanded{position:fixed;z-index:260;left:50%;top:6vh;transform:translateX(-50%);width:min(920px,calc(100vw - 36px));max-height:88vh;overflow:auto;padding:18px;border:1px solid #cfe1da;border-radius:16px;background:#fff;box-shadow:0 0 0 9999px rgba(8,35,26,.42),0 24px 70px rgba(0,0,0,.28)}
+          .gcc-reply.is-expanded textarea{min-height:48vh;max-height:none}
+          .gcc-web-reply{margin-top:16px;padding:14px;border:1px solid #dce7e0;border-radius:13px;background:#fbfdfc}
+          @media(max-width:640px){
+            .gcc-reply.is-expanded{left:8px;right:8px;top:8px;bottom:8px;transform:none;width:auto;max-height:none;border-radius:14px}
+            .gcc-reply.is-expanded textarea{min-height:42vh}
+            .gcc-reply-foot{align-items:stretch;flex-direction:column}
+            .gcc-reply-foot .btn{width:100%;margin-left:0}
+            .gcc-reply-count{margin-left:0;width:100%}
+          }
+          '''
+          if "DPRO reply composer standard / R1.6" not in css:
+              css += append
+          p.write_text(css, encoding="utf-8")
+
+          p = Path("owner.html")
+          owner = p.read_text(encoding="utf-8")
+          owner = owner.replace(
+              "green-customer-contact-r1.css?v=GREEN-CUSTOMER-CONTACT-R1.3-RESILIENT-FETCH-20261004",
+              "green-customer-contact-r1.css?v=GREEN-CUSTOMER-CONTACT-R1.6-DPRO-COMPOSER-20261004"
+          )
+          owner = owner.replace(
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.5-SEND-GUARD-20261004",
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.6-DPRO-COMPOSER-20261004"
+          )
+          p.write_text(owner, encoding="utf-8")
+          PY
+
+      - name: Static validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check green-customer-contact-r1.js
+
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.6-DPRO-COMPOSER-20261004' green-customer-contact-r1.js
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.6-DPRO-COMPOSER-20261004' owner.html
+          grep -q 'DPRO reply composer standard / R1.6' green-customer-contact-r1.css
+          grep -q '↗ 返信欄を拡大' green-customer-contact-r1.js
+          grep -q '↙ 元の大きさ' green-customer-contact-r1.js
+          grep -q '＋ 添付' green-customer-contact-r1.js
+          grep -q '最大4件／各10MB' green-customer-contact-r1.js
+          grep -q 'function installReplyComposer' green-customer-contact-r1.js
+          grep -q 'function normalizeLineImage' green-customer-contact-r1.js
+          grep -q 'function uploadLineAttachment' green-customer-contact-r1.js
+          grep -q '/attachments' green-customer-contact-r1.js
+          grep -q 'body:JSON.stringify({ text:value, attachments })' green-customer-contact-r1.js
+          grep -q 'id="gcc-web-reply"' green-customer-contact-r1.js
+          grep -q 'id="gcc-web-file"' green-customer-contact-r1.js
+          grep -q 'id="gcc-web-expand"' green-customer-contact-r1.js
+          grep -q 'メール送信（ドメイン設定待ち）' green-customer-contact-r1.js
+          grep -q 'const EMAIL_READY = false' green-customer-contact-r1.js
+          grep -q 'Promise.allSettled' green-customer-contact-r1.js
+          grep -q 'const LINE_BUILD_KEY = "dpro_green_line_build_code"' green-customer-contact-r1.js
+          grep -q 'この内容をLINEへ送信します。' green-customer-contact-r1.js
+          grep -q '返信すると「対応中」に戻します。' green-customer-contact-r1.js
+          grep -q 'function lineAttachmentHtml' green-customer-contact-r1.js
+          git diff --check
+          echo "GREEN CUSTOMER CONTACT R1.6 STATIC QA PASS"
+
+      - name: Commit R1.6
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "DPRO GREEN CUSTOMER CONTACT R1.6"
+          git config user.email "actions@users.noreply.github.com"
+          git add green-customer-contact-r1.js green-customer-contact-r1.css owner.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Align GREEN reply composer with DPRO standard R1.6"
+          git push origin HEAD:main
