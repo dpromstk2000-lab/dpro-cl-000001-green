@@ -1,0 +1,250 @@
+name: DPRO GREEN Customer Contact R1.4
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  auth:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GREEN production
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard audited baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:green-customer-contact-r1.js)" = "b5b666e816d7eac4b71427a2f309b81dea7d9100"
+          test "$(git rev-parse HEAD:owner.html)" = "b867c8fd120017c4fc2a78d06df5b039628dbbd9"
+          echo "CUSTOMER CONTACT R1.4 AUDITED BASELINE PASS"
+
+      - name: Apply build auth fallback R1.4
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  if new in text:
+                      return text
+                  raise SystemExit(f"{label}: anchor not found")
+              return text.replace(old, new, 1)
+
+          p = Path("green-customer-contact-r1.js")
+          s = p.read_text(encoding="utf-8")
+
+          s = replace_once(
+              s,
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.3-RESILIENT-FETCH-20261004";',
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.4-BUILD-AUTH-FALLBACK-20261004";',
+              "version"
+          )
+
+          old = '''  function lineAccessToken() {
+              const normal = token();
+              if (normal) return normal;
+
+              const buildMode = new URLSearchParams(location.search).get("dpro_build") === "1";
+              if (!buildMode) return "";
+
+              try {
+                const build = sessionStorage.getItem("dpro_green_line_build_code")
+                  || sessionStorage.getItem("dpro_green_shop_build_code")
+                  || "";
+                return build ? `build:${build}` : "";
+              } catch {
+                return "";
+              }
+            }
+
+            async function lineApi(path, options = {}) {
+              const accessToken = lineAccessToken();
+              if (!accessToken) throw new Error("LINE用の管理セッションを確認できません。再ログインしてください。");
+
+              const headers = new Headers(options.headers || {});
+              headers.set("Authorization", `Bearer ${accessToken}`);
+              headers.set("Accept", "application/json");
+              if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+
+              let response;
+              try {
+                response = await fetch(`${LINE_API}${path}`, {
+                  ...options,
+                  headers,
+                  cache: "no-store"
+                });
+              } catch (error) {
+                throw new Error(`LINE接続に失敗しました。${error?.message || "通信エラー"}`);
+              }
+
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok || data?.ok === false) {
+                throw new Error(data?.message || data?.error || `LINE API HTTP ${response.status}`);
+              }
+              return data;
+            }'''
+
+          new = '''  const LINE_BUILD_KEY = "dpro_green_line_build_code";
+
+            function isBuildMode() {
+              return new URLSearchParams(location.search).get("dpro_build") === "1";
+            }
+
+            function readStoredLineBuildCode() {
+              try {
+                return sessionStorage.getItem(LINE_BUILD_KEY)
+                  || sessionStorage.getItem("dpro_green_shop_build_code")
+                  || "";
+              } catch {
+                return "";
+              }
+            }
+
+            function writeStoredLineBuildCode(value) {
+              try {
+                if (value) sessionStorage.setItem(LINE_BUILD_KEY, value);
+                else sessionStorage.removeItem(LINE_BUILD_KEY);
+              } catch {}
+            }
+
+            function lineAccessCandidates() {
+              const result = [];
+              const buildMode = isBuildMode();
+              const build = buildMode ? readStoredLineBuildCode() : "";
+              const normal = token();
+
+              // QA/build mode must prefer the dedicated LINE build credential.
+              if (build) result.push({ token: `build:${build}`, kind: "build" });
+              if (normal) result.push({ token: normal, kind: "owner" });
+
+              // De-duplicate identical values while preserving priority.
+              return result.filter((item, index, all) =>
+                all.findIndex((x) => x.token === item.token) === index
+              );
+            }
+
+            async function fetchLineWithToken(path, options, accessToken) {
+              const headers = new Headers(options.headers || {});
+              headers.set("Authorization", `Bearer ${accessToken}`);
+              headers.set("Accept", "application/json");
+              if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+
+              let response;
+              try {
+                response = await fetch(`${LINE_API}${path}`, {
+                  ...options,
+                  headers,
+                  cache: "no-store"
+                });
+              } catch (error) {
+                throw new Error(`LINE接続に失敗しました。${error?.message || "通信エラー"}`);
+              }
+
+              const data = await response.json().catch(() => ({}));
+              return { response, data };
+            }
+
+            async function lineApi(path, options = {}) {
+              const candidates = lineAccessCandidates();
+              let lastError = null;
+
+              for (const candidate of candidates) {
+                const { response, data } = await fetchLineWithToken(path, options, candidate.token);
+                if (response.ok && data?.ok !== false) return data;
+
+                const message = data?.message || data?.error || `LINE API HTTP ${response.status}`;
+                lastError = new Error(message);
+
+                // Only try another credential on authentication/authorization rejection.
+                if (![401, 403].includes(response.status)) throw lastError;
+              }
+
+              if (isBuildMode()) {
+                let current = readStoredLineBuildCode();
+
+                // If a stored build credential was rejected, allow one explicit replacement.
+                if (current && candidates.some((x) => x.kind === "build")) {
+                  writeStoredLineBuildCode("");
+                  current = "";
+                }
+
+                if (!current) {
+                  const entered = prompt("構築・QA用のLINE管理コードを入力してください。\\nこのタブのセッション中だけ保持します。") || "";
+                  if (entered) {
+                    writeStoredLineBuildCode(entered);
+                    const { response, data } = await fetchLineWithToken(path, options, `build:${entered}`);
+                    if (response.ok && data?.ok !== false) return data;
+                    writeStoredLineBuildCode("");
+                    throw new Error(data?.message || data?.error || `LINE API HTTP ${response.status}`);
+                  }
+                }
+              }
+
+              throw lastError || new Error("LINE用の管理セッションを確認できません。再ログインしてください。");
+            }'''
+
+          s = replace_once(s, old, new, "LINE auth fallback")
+          p.write_text(s, encoding="utf-8")
+
+          p = Path("owner.html")
+          s = p.read_text(encoding="utf-8")
+          s = s.replace(
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.3-RESILIENT-FETCH-20261004",
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.4-BUILD-AUTH-FALLBACK-20261004"
+          )
+          p.write_text(s, encoding="utf-8")
+          PY
+
+      - name: Static validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check green-customer-contact-r1.js
+
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.4-BUILD-AUTH-FALLBACK-20261004' green-customer-contact-r1.js
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.4-BUILD-AUTH-FALLBACK-20261004' owner.html
+
+          grep -q 'const LINE_BUILD_KEY = "dpro_green_line_build_code"' green-customer-contact-r1.js
+          grep -q 'function lineAccessCandidates' green-customer-contact-r1.js
+          grep -q 'result.push({ token: `build:${build}`, kind: "build" })' green-customer-contact-r1.js
+          grep -q 'result.push({ token: normal, kind: "owner" })' green-customer-contact-r1.js
+          grep -q 'function fetchLineWithToken' green-customer-contact-r1.js
+          grep -q '\[401, 403\]' green-customer-contact-r1.js
+          grep -q '構築・QA用のLINE管理コードを入力してください' green-customer-contact-r1.js
+
+          # Production behavior must not prompt unless dpro_build=1.
+          grep -q 'if (isBuildMode())' green-customer-contact-r1.js
+
+          # Existing R1.1-R1.3 safeguards/features stay intact.
+          grep -q 'Promise.allSettled' green-customer-contact-r1.js
+          grep -q 'function renderChannelWarning' green-customer-contact-r1.js
+          grep -q 'const EMAIL_READY = false' green-customer-contact-r1.js
+          grep -q 'function lineAttachmentHtml' green-customer-contact-r1.js
+          grep -q 'item.inquiry?.status || item.raw?.status || "new"' green-customer-contact-r1.js
+          grep -q 'params.get("view") === "customer-contact"' green-customer-contact-r1.js
+
+          # Cross-origin LINE transport must remain non-credentialed.
+          ! grep -A35 'async function fetchLineWithToken' green-customer-contact-r1.js | grep -q 'credentials: "include"'
+
+          git diff --check
+          echo "GREEN CUSTOMER CONTACT R1.4 STATIC QA PASS"
+
+      - name: Commit R1.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "DPRO GREEN CUSTOMER CONTACT R1.4"
+          git config user.email "actions@users.noreply.github.com"
+          git add green-customer-contact-r1.js owner.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Align GREEN customer contact build auth R1.4"
+          git push origin HEAD:main
