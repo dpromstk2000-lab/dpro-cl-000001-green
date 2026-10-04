@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.5-SEND-GUARD-20261004";
+  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.6-DPRO-COMPOSER-20261004";
   if (window.__GREEN_CUSTOMER_CONTACT_R1__ === VERSION) return;
   window.__GREEN_CUSTOMER_CONTACT_R1__ = VERSION;
 
@@ -123,7 +123,7 @@
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${accessToken}`);
     headers.set("Accept", "application/json");
-    if (options.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
     let response;
     try {
@@ -295,6 +295,221 @@
       <span>${state.channelErrors.map((x) => esc(x)).join(" / ")}</span>
       <small>取得できたチャネルはそのまま表示しています。「再表示」で再試行できます。</small>
     `;
+  }
+
+
+  const REPLY_MAX_FILES = 4;
+  const REPLY_MAX_BYTES = 10 * 1024 * 1024;
+  const REPLY_ALLOWED_TYPES = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "text/csv"
+  ]);
+
+  function formatBytes(value) {
+    const n = Number(value || 0);
+    if (!n) return "0 KB";
+    if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(n / 1024))} KB`;
+  }
+
+  async function normalizeLineImage(file) {
+    if (!file?.type?.startsWith("image/")) return file;
+
+    const bitmap = await createImageBitmap(file);
+    const maxEdge = 1600;
+    let width = bitmap.width;
+    let height = bitmap.height;
+    const scale = Math.min(1, maxEdge / Math.max(width, height));
+    width = Math.max(1, Math.round(width * scale));
+    height = Math.max(1, Math.round(height * scale));
+
+    let canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let ctx = canvas.getContext("2d", { alpha:false });
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+
+    let quality = 0.86;
+    let blob = null;
+
+    for (let i = 0; i < 8; i += 1) {
+      blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+      if (blob && blob.size <= 900 * 1024) break;
+
+      quality = Math.max(0.5, quality - 0.07);
+
+      if (i === 4 && Math.max(canvas.width, canvas.height) > 1200) {
+        const ratio = 1200 / Math.max(canvas.width, canvas.height);
+        const next = document.createElement("canvas");
+        next.width = Math.max(1, Math.round(canvas.width * ratio));
+        next.height = Math.max(1, Math.round(canvas.height * ratio));
+
+        const nextCtx = next.getContext("2d", { alpha:false });
+        nextCtx.fillStyle = "#fff";
+        nextCtx.fillRect(0, 0, next.width, next.height);
+        nextCtx.drawImage(canvas, 0, 0, next.width, next.height);
+        canvas = next;
+        ctx = nextCtx;
+      }
+    }
+
+    if (!blob) throw new Error("画像をLINE送信用に変換できませんでした。");
+    if (blob.size > 1024 * 1024) {
+      throw new Error("画像を1MB未満に圧縮できませんでした。別の画像を選択してください。");
+    }
+
+    const baseName = String(file.name || "image").replace(/\.[^.]+$/, "");
+    return new File([blob], `${baseName}.jpg`, {
+      type:"image/jpeg",
+      lastModified:Date.now()
+    });
+  }
+
+  function installReplyComposer({
+    form,
+    textarea,
+    input,
+    filesBox,
+    expandButton,
+    countBox,
+    lineImages = false
+  }) {
+    let files = [];
+    let objectUrls = [];
+
+    const revokeUrls = () => {
+      objectUrls.forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch {}
+      });
+      objectUrls = [];
+    };
+
+    const updateCount = () => {
+      if (countBox) countBox.textContent = `${textarea?.value?.length || 0} / 5,000文字`;
+    };
+
+    const autoGrow = () => {
+      if (!textarea || form?.classList.contains("is-expanded")) {
+        updateCount();
+        return;
+      }
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(320, Math.max(150, textarea.scrollHeight))}px`;
+      updateCount();
+    };
+
+    const renderFiles = () => {
+      if (!filesBox) return;
+      revokeUrls();
+      filesBox.innerHTML = "";
+
+      files.forEach((file, index) => {
+        const row = document.createElement("div");
+        row.className = "gcc-selected-attachment";
+
+        let visual = `<span class="gcc-selected-attachment__thumb">${file.type.startsWith("image/") ? "画像" : "資料"}</span>`;
+        if (file.type.startsWith("image/")) {
+          const url = URL.createObjectURL(file);
+          objectUrls.push(url);
+          visual = `<img class="gcc-selected-attachment__thumb" src="${esc(url)}" alt="">`;
+        }
+
+        row.innerHTML = `
+          ${visual}
+          <div class="gcc-selected-attachment__meta">
+            <strong>${esc(file.name)}</strong>
+            <small>${esc(file.type || "file")} ・ ${esc(formatBytes(file.size))}</small>
+          </div>
+          <button type="button" class="gcc-selected-attachment__remove">削除</button>
+        `;
+
+        $(".gcc-selected-attachment__remove", row)?.addEventListener("click", () => {
+          files.splice(index, 1);
+          renderFiles();
+        });
+
+        filesBox.appendChild(row);
+      });
+    };
+
+    const addFiles = async (picked) => {
+      for (const original of [...picked]) {
+        if (files.length >= REPLY_MAX_FILES) {
+          window.Green?.toast?.(`添付は${REPLY_MAX_FILES}件までです。`, "error");
+          break;
+        }
+        if (!original.size || original.size > REPLY_MAX_BYTES) {
+          window.Green?.toast?.(`${original.name} は10MB以内にしてください。`, "error");
+          continue;
+        }
+        if (!REPLY_ALLOWED_TYPES.has(original.type)) {
+          window.Green?.toast?.(`${original.name} は対応していない形式です。`, "error");
+          continue;
+        }
+
+        try {
+          const next = lineImages && original.type.startsWith("image/")
+            ? await normalizeLineImage(original)
+            : original;
+          files.push(next);
+        } catch (error) {
+          window.Green?.toast?.(`${original.name}: ${error.message}`, "error");
+        }
+      }
+      renderFiles();
+    };
+
+    input?.addEventListener("change", async (event) => {
+      const picked = [...(event.target.files || [])];
+      event.target.value = "";
+      await addFiles(picked);
+    });
+
+    expandButton?.addEventListener("click", () => {
+      form?.classList.toggle("is-expanded");
+      const expanded = form?.classList.contains("is-expanded");
+      expandButton.textContent = expanded ? "↙ 元の大きさ" : "↗ 返信欄を拡大";
+      if (!expanded) autoGrow();
+      textarea?.focus();
+    });
+
+    textarea?.addEventListener("input", autoGrow);
+    autoGrow();
+    renderFiles();
+
+    return {
+      files: () => [...files],
+      clear: () => {
+        files = [];
+        renderFiles();
+        if (textarea) {
+          textarea.value = "";
+          autoGrow();
+        }
+      },
+      destroy: revokeUrls
+    };
+  }
+
+  async function uploadLineAttachment(threadId, file) {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    const data = await lineApi(`/api/contact/threads/${encodeURIComponent(threadId)}/attachments`, {
+      method:"POST",
+      body:form
+    });
+    if (!data?.attachment) throw new Error("添付アップロード結果を確認できませんでした。");
+    return data.attachment;
   }
 
   async function enrichLineInquiries(inquiries) {
@@ -498,15 +713,53 @@
 
       ${photos.length ? `<section class="gcc-photo-grid">${photos.map((p) => p.signed_url ? `<a href="${esc(p.signed_url)}" target="_blank" rel="noopener"><img src="${esc(p.signed_url)}" alt="問い合わせ写真"></a>` : "").join("")}</section>` : ""}
 
+      ${email ? `
+        <form class="gcc-reply gcc-web-reply" id="gcc-web-reply">
+          <div class="gcc-reply-toolbar">
+            <label class="gcc-reply-tool">＋ 添付
+              <input id="gcc-web-file" type="file" multiple hidden accept="image/jpeg,image/png,image/webp,application/pdf,.docx,.xlsx,.pptx,.txt,.csv">
+            </label>
+            <button class="gcc-reply-tool" id="gcc-web-expand" type="button">↗ 返信欄を拡大</button>
+            <span class="gcc-reply-count" id="gcc-web-count">0 / 5,000文字</span>
+          </div>
+          <label>WEBメールへ返信
+            <textarea id="gcc-web-text" maxlength="5000" placeholder="返信内容を入力してください"></textarea>
+          </label>
+          <div class="gcc-selected-attachments" id="gcc-web-files"></div>
+          <div class="gcc-reply-foot">
+            <span>画像・PDF・Office資料など最大4件／各10MBまで準備できます。</span>
+            <button class="btn btn--primary" type="submit" ${EMAIL_READY ? "" : "disabled"}>
+              ${EMAIL_READY ? "メール送信" : "メール送信（ドメイン設定待ち）"}
+            </button>
+          </div>
+        </form>
+      ` : '<p class="gcc-domain-note">メールアドレスが未設定のため、WEBメール返信は利用できません。</p>'}
+
       <div class="gcc-actions">
         ${phone ? `<a class="btn btn--secondary" href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">電話する</a>` : ""}
-        <button class="btn btn--secondary" type="button" id="gcc-email" ${EMAIL_READY && email ? "" : "disabled"}>
-          ${EMAIL_READY ? "メール返信" : "メール返信（ドメイン設定待ち）"}
-        </button>
         <button class="btn btn--primary" type="button" id="gcc-lead">営業案件へ進める</button>
       </div>
-      ${!EMAIL_READY ? '<p class="gcc-domain-note">独自ドメインとメール送受信設定が完了すると、ここからWEB問い合わせへ返信できるようになります。</p>' : ""}
+      ${!EMAIL_READY && email ? '<p class="gcc-domain-note">返信文の入力・拡大・添付準備は利用できます。独自ドメインとメール送受信設定が完了後、この画面から送信できるようになります。</p>' : ""}
     `;
+
+    if (email) {
+      installReplyComposer({
+        form:$("#gcc-web-reply"),
+        textarea:$("#gcc-web-text"),
+        input:$("#gcc-web-file"),
+        filesBox:$("#gcc-web-files"),
+        expandButton:$("#gcc-web-expand"),
+        countBox:$("#gcc-web-count"),
+        lineImages:false
+      });
+
+      $("#gcc-web-reply")?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!EMAIL_READY) {
+          window.Green?.toast?.("WEBメール送信は独自ドメイン設定後に有効になります。", "error");
+        }
+      });
+    }
 
     $("#gcc-lead")?.addEventListener("click", () => createLead(item));
   }
@@ -547,10 +800,21 @@
       </div>
 
       <form class="gcc-reply" id="gcc-line-reply">
+        <div class="gcc-reply-toolbar">
+          <label class="gcc-reply-tool">＋ 添付
+            <input id="gcc-line-file" type="file" multiple hidden accept="image/jpeg,image/png,image/webp,application/pdf,.docx,.xlsx,.pptx,.txt,.csv">
+          </label>
+          <button class="gcc-reply-tool" id="gcc-line-expand" type="button">↗ 返信欄を拡大</button>
+          <span class="gcc-reply-count" id="gcc-line-count">0 / 5,000文字</span>
+        </div>
         <label>LINEへ返信
           <textarea id="gcc-line-text" maxlength="5000" placeholder="返信内容を入力してください"></textarea>
         </label>
-        <button class="btn btn--primary" type="submit">LINEへ返信</button>
+        <div class="gcc-selected-attachments" id="gcc-line-files"></div>
+        <div class="gcc-reply-foot">
+          <span>画像はLINE送信用に自動圧縮。PDF・Office資料など最大4件／各10MBまで添付できます。</span>
+          <button class="btn btn--primary" type="submit">LINEへ返信</button>
+        </div>
       </form>
 
       <div class="gcc-actions">
@@ -561,26 +825,45 @@
     const box = $("#gcc-conversation");
     if (box) box.scrollTop = box.scrollHeight;
 
+    const lineComposer = installReplyComposer({
+      form:$("#gcc-line-reply"),
+      textarea:$("#gcc-line-text"),
+      input:$("#gcc-line-file"),
+      filesBox:$("#gcc-line-files"),
+      expandButton:$("#gcc-line-expand"),
+      countBox:$("#gcc-line-count"),
+      lineImages:true
+    });
+
     $("#gcc-line-reply")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const textarea = $("#gcc-line-text");
-      const value = textarea?.value.trim();
-      if (!value) return;
+      const value = textarea?.value.trim() || "";
+      const selectedFiles = lineComposer.files();
+      if (!value && !selectedFiles.length) return;
 
       const closedNotice = item.status === "closed"
         ? "この会話は対応完了です。返信すると「対応中」に戻します。\n\n"
         : "";
 
+      const attachmentNotice = selectedFiles.length
+        ? `\n添付：${selectedFiles.length}件`
+        : "";
+
       const ok = window.confirm(
         closedNotice +
         "この内容をLINEへ送信します。\n\n" +
-        value +
+        (value || "（本文なし）") +
+        attachmentNotice +
         "\n\n送信してよろしいですか？"
       );
       if (!ok) return;
 
       const button = event.submitter;
-      if (button) { button.disabled = true; button.textContent = "送信中…"; }
+      if (button) {
+        button.disabled = true;
+        button.textContent = selectedFiles.length ? "添付を送信中…" : "送信中…";
+      }
 
       try {
         if (item.status === "closed") {
@@ -591,12 +874,21 @@
           item.status = "open";
         }
 
+        const attachments = [];
+        for (const file of selectedFiles) {
+          attachments.push(await uploadLineAttachment(item.id, file));
+        }
+
         await lineApi(`/api/contact/threads/${encodeURIComponent(item.id)}/reply`, {
-          method:"POST", body:JSON.stringify({ text:value })
+          method:"POST",
+          body:JSON.stringify({ text:value, attachments })
         });
 
-        if (textarea) textarea.value = "";
-        window.Green?.toast?.("LINEへ返信しました。", "success");
+        lineComposer.clear();
+        window.Green?.toast?.(
+          selectedFiles.length ? "本文・添付をLINEへ送信しました。" : "LINEへ返信しました。",
+          "success"
+        );
 
         await loadUnified(true);
         const same = state.items.find((x) => x.key === item.key);
