@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.3-RESILIENT-FETCH-20261004";
+  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.4-BUILD-AUTH-FALLBACK-20261004";
   if (window.__GREEN_CUSTOMER_CONTACT_R1__ === VERSION) return;
   window.__GREEN_CUSTOMER_CONTACT_R1__ = VERSION;
 
@@ -80,27 +80,46 @@
     catch { return ""; }
   }
 
-  function lineAccessToken() {
-    const normal = token();
-    if (normal) return normal;
+  const LINE_BUILD_KEY = "dpro_green_line_build_code";
 
-    const buildMode = new URLSearchParams(location.search).get("dpro_build") === "1";
-    if (!buildMode) return "";
+  function isBuildMode() {
+    return new URLSearchParams(location.search).get("dpro_build") === "1";
+  }
 
+  function readStoredLineBuildCode() {
     try {
-      const build = sessionStorage.getItem("dpro_green_line_build_code")
+      return sessionStorage.getItem(LINE_BUILD_KEY)
         || sessionStorage.getItem("dpro_green_shop_build_code")
         || "";
-      return build ? `build:${build}` : "";
     } catch {
       return "";
     }
   }
 
-  async function lineApi(path, options = {}) {
-    const accessToken = lineAccessToken();
-    if (!accessToken) throw new Error("LINE用の管理セッションを確認できません。再ログインしてください。");
+  function writeStoredLineBuildCode(value) {
+    try {
+      if (value) sessionStorage.setItem(LINE_BUILD_KEY, value);
+      else sessionStorage.removeItem(LINE_BUILD_KEY);
+    } catch {}
+  }
 
+  function lineAccessCandidates() {
+    const result = [];
+    const buildMode = isBuildMode();
+    const build = buildMode ? readStoredLineBuildCode() : "";
+    const normal = token();
+
+    // QA/build mode must prefer the dedicated LINE build credential.
+    if (build) result.push({ token: `build:${build}`, kind: "build" });
+    if (normal) result.push({ token: normal, kind: "owner" });
+
+    // De-duplicate identical values while preserving priority.
+    return result.filter((item, index, all) =>
+      all.findIndex((x) => x.token === item.token) === index
+    );
+  }
+
+  async function fetchLineWithToken(path, options, accessToken) {
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${accessToken}`);
     headers.set("Accept", "application/json");
@@ -118,10 +137,46 @@
     }
 
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || data?.ok === false) {
-      throw new Error(data?.message || data?.error || `LINE API HTTP ${response.status}`);
+    return { response, data };
+  }
+
+  async function lineApi(path, options = {}) {
+    const candidates = lineAccessCandidates();
+    let lastError = null;
+
+    for (const candidate of candidates) {
+      const { response, data } = await fetchLineWithToken(path, options, candidate.token);
+      if (response.ok && data?.ok !== false) return data;
+
+      const message = data?.message || data?.error || `LINE API HTTP ${response.status}`;
+      lastError = new Error(message);
+
+      // Only try another credential on authentication/authorization rejection.
+      if (![401, 403].includes(response.status)) throw lastError;
     }
-    return data;
+
+    if (isBuildMode()) {
+      let current = readStoredLineBuildCode();
+
+      // If a stored build credential was rejected, allow one explicit replacement.
+      if (current && candidates.some((x) => x.kind === "build")) {
+        writeStoredLineBuildCode("");
+        current = "";
+      }
+
+      if (!current) {
+        const entered = prompt("構築・QA用のLINE管理コードを入力してください。\nこのタブのセッション中だけ保持します。") || "";
+        if (entered) {
+          writeStoredLineBuildCode(entered);
+          const { response, data } = await fetchLineWithToken(path, options, `build:${entered}`);
+          if (response.ok && data?.ok !== false) return data;
+          writeStoredLineBuildCode("");
+          throw new Error(data?.message || data?.error || `LINE API HTTP ${response.status}`);
+        }
+      }
+    }
+
+    throw lastError || new Error("LINE用の管理セッションを確認できません。再ログインしてください。");
   }
 
   function panel() {
