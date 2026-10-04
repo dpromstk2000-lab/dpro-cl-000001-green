@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.0-20261004";
+  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.1-20261004";
   if (window.__GREEN_CUSTOMER_CONTACT_R1__ === VERSION) return;
   window.__GREEN_CUSTOMER_CONTACT_R1__ = VERSION;
 
@@ -32,6 +32,32 @@
   function text(value, fallback = "") {
     const v = String(value ?? "").trim();
     return v || fallback;
+  }
+
+  function safeUrl(value) {
+    const raw = text(value);
+    if (!raw) return "";
+    try {
+      const url = new URL(raw, location.href);
+      return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function lineAttachmentHtml(attachment) {
+    if (!attachment) return "";
+    const url = safeUrl(attachment.url);
+    const name = text(attachment.name, "添付資料");
+    const kind = text(attachment.kind || (String(attachment.mime || "").startsWith("image/") ? "image" : "document"));
+
+    if (!url) return `<span class="gcc-attachment gcc-attachment-missing">📎 ${esc(name)}</span>`;
+
+    if (kind === "image") {
+      return `<a class="gcc-attachment gcc-attachment-image" href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="${esc(name)}" loading="lazy" decoding="async"></a>`;
+    }
+
+    return `<a class="gcc-attachment gcc-attachment-file" href="${esc(url)}" target="_blank" rel="noopener">📎 ${esc(name)}を開く</a>`;
   }
 
   function fmt(value) {
@@ -391,7 +417,8 @@
       <div class="gcc-conversation" id="gcc-conversation">
         ${messages.length ? messages.map((msg) => `
           <div class="gcc-bubble ${msg.direction === "outbound" ? "is-out" : "is-in"}">
-            <p>${esc(msg.body || msg.text || "").replace(/\n/g, "<br>")}</p>
+            ${msg.body || msg.text ? `<p>${esc(msg.body || msg.text || "").replace(/\n/g, "<br>")}</p>` : ""}
+            ${lineAttachmentHtml(msg.attachment)}
             <small>${esc(fmt(msg.occurredAt || msg.occurred_at || msg.createdAt || msg.created_at))}</small>
           </div>
         `).join("") : '<div class="gcc-empty">表示できるメッセージはありません。</div>'}
@@ -455,7 +482,7 @@
     try {
       const result = await coreApi("/api/admin/leads", {
         method:"POST",
-        json:{ inquiryId:item.id, status:item.raw?.status || item.inquiry?.status || "new" }
+        json:{ inquiryId:item.id, status:item.inquiry?.status || item.raw?.status || "new" }
       });
       window.Green?.toast?.(result?.data?.reused ? "既存の営業案件があります。" : "営業案件を作成しました。", "success");
       const leadNav = $('[data-view="leads"]');
