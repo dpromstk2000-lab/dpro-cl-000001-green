@@ -8,6 +8,7 @@
   <title>DPRO グリーンレンタル管理</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="owner.css?v=GREEN-EVG-R2-20260923">
+  <link rel="stylesheet" href="green-customer-contact-r1.css?v=GREEN-CUSTOMER-CONTACT-R1.0-20261004">
 <script>window.DPRO_AUTH_CONFIG={project:"GENERAL",system:"GREEN",facility:"cl_000001_green",loginUrl:"./owner-login.html",protectedApiOrigins:["https://dpro-cl-000001-green-core.dpromstk2000.workers.dev"]};</script><script src="dpro-auth-guard.js?v=DPRO-AUTH-7-GREEN-KASUYA-R1-20260926"></script></head>
 <body class="owner-body">
   <a class="skip-link" href="#owner-main">本文へ移動</a>
@@ -35,7 +36,7 @@
       <div class="owner-side-brand"><span aria-hidden="true">🌿</span><div><strong>DPRO GREEN</strong><small id="side-facility">管理画面</small></div></div>
       <nav class="owner-nav" aria-label="管理メニュー">
         <button data-view="dashboard" class="is-active"><span>▦</span>ダッシュボード</button>
-        <button data-view="inquiries"><span>✉</span>問い合わせ</button>
+        <button data-view="inquiries"><span>✉</span>顧客対応</button>
         <button data-view="leads"><span>↗</span>営業対応</button>
         <button data-view="site-checks"><span>⌂</span>現地確認</button>
         <button data-view="customers"><span>人</span>顧客</button>
@@ -46,7 +47,7 @@
         <button data-view="visits"><span>巡</span>巡回予定</button>
         <button data-view="reports"><span>報</span>作業報告</button>
         <button data-view="replacements"><span>換</span>交換・回収・養生</button>
-        <button data-view="messages"><span>送</span>LINE・メッセージ</button>
+        <button data-view="messages"><span>送</span>通知・送信履歴</button>
         <button data-view="stock"><span>庫</span>簡易在庫</button>
         <button data-view="facility-settings"><span>店</span>店舗・事業所設定</button>
         <button data-view="business-calendar"><span>休</span>営業日・休日</button>
@@ -79,7 +80,7 @@
         </section>
 
         <section class="owner-view" data-view-panel="inquiries">
-          <div class="owner-heading"><div><p class="eyebrow">INQUIRIES</p><h2>問い合わせ管理</h2><p>ホームページ、LINE、電話の相談を一つの一覧で確認します。</p></div><button class="btn btn--primary" data-action="phone-inquiry">＋ 電話受付</button></div>
+          <div class="owner-heading"><div><p class="eyebrow">INQUIRIES</p><h2>顧客対応</h2><p>WEB・LINE・電話の連絡を一つの窓口で確認し、そのまま対応します。</p></div><button class="btn btn--primary" data-action="phone-inquiry">＋ 電話受付</button></div>
           <div class="owner-toolbar"><label class="owner-search">検索<input id="inquiry-search" placeholder="受付番号・法人名・氏名・電話番号"></label><label>状態<select id="inquiry-status"><option value="">すべて</option></select></label><button class="btn btn--secondary" data-load="inquiries">検索</button></div>
           <div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>受付番号</th><th>顧客</th><th>相談区分</th><th>受付元</th><th>状態</th><th>受付日時</th><th></th></tr></thead><tbody id="inquiry-rows"></tbody></table></div>
         </section>
@@ -175,7 +176,7 @@
         </section>
 
         <section class="owner-view" data-view-panel="messages">
-          <div class="owner-heading"><div><p class="eyebrow">LINE & MESSAGE</p><h2>LINE・メッセージ</h2><p>作業完了文面の確認、コピー履歴、通知待ちを管理します。</p></div></div>
+          <div class="owner-heading"><div><p class="eyebrow">LINE & MESSAGE</p><h2>通知・送信履歴</h2><p>作業完了文面、通知ログ、送信履歴を管理します。お客様からの連絡は「顧客対応」で確認します。</p></div></div>
           <div class="owner-tabs" role="tablist" aria-label="メッセージ管理切替"><button class="is-active" data-message-tab="templates">文面テンプレート</button><button data-message-tab="notifications">通知ログ</button></div>
           <div data-message-panel="templates"><div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>テンプレート</th><th>区分</th><th>チャネル</th><th>状態</th><th></th></tr></thead><tbody id="message-template-rows"></tbody></table></div></div>
           <div data-message-panel="notifications" hidden><div class="owner-toolbar"><label>状態<select id="notification-status"><option value="">すべて</option><option value="pending">文面コピー待ち</option><option value="ready">自動送信待ち</option><option value="sending">送信中</option><option value="sent">送信済み</option><option value="skipped">対象外</option><option value="failed">失敗</option><option value="cancelled">取消</option></select></label><button class="btn btn--secondary" data-load="messages">表示</button></div><div class="owner-table-wrap"><table class="owner-table"><thead><tr><th>作成日時</th><th>顧客</th><th>通知区分</th><th>方式</th><th>状態</th><th>文面</th></tr></thead><tbody id="notification-rows"></tbody></table></div></div>
@@ -408,6 +409,7 @@
   <script src="green-contact-primary-ui-r1.js?v=GREEN-CONTACT-PRIMARY-UI-R1.0-20261001"></script>
   <script src="green-shop-sales-only-r1.js?v=GREEN-SHOP-SALES-ONLY-R1.3-REGISTER-PREVIEW-20261003"></script>
   <script src="green-datetime-standard-r1.js?v=GREEN-DATETIME-STANDARD-R1.3-CUSTOM-PICKER-20261003"></script>
+  <script src="green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.0-20261004"></script>
 </body>
 </html>
 

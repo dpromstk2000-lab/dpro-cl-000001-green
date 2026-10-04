@@ -238,7 +238,7 @@
     state.currentView = view;
     $$("[data-view-panel]").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.viewPanel === view));
     $$("[data-view]").forEach((button) => button.classList.toggle("is-active", button.dataset.view === view));
-    const titles = { dashboard: "ダッシュボード", inquiries: "問い合わせ", leads: "営業対応", "site-checks": "現地確認", customers: "顧客", sites: "拠点・設置場所", contracts: "利用・契約状態", assets: "植物・鉢台帳", installations: "設置・移動", visits: "巡回予定", reports: "作業報告", replacements: "交換・回収・養生", messages: "LINE・メッセージ", stock: "簡易在庫", "facility-settings": "店舗・事業所設定", "business-calendar": "営業日・休日", announcements: "公開お知らせ", features: "機能設定" };
+    const titles = { dashboard: "ダッシュボード", inquiries: "顧客対応", leads: "営業対応", "site-checks": "現地確認", customers: "顧客", sites: "拠点・設置場所", contracts: "利用・契約状態", assets: "植物・鉢台帳", installations: "設置・移動", visits: "巡回予定", reports: "作業報告", replacements: "交換・回収・養生", messages: "通知・送信履歴", stock: "簡易在庫", "facility-settings": "店舗・事業所設定", "business-calendar": "営業日・休日", announcements: "公開お知らせ", features: "機能設定" };
     $("#view-title").textContent = titles[view] || "管理画面";
     closeSidebar();
     try {
