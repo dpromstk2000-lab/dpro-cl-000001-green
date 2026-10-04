@@ -22,7 +22,7 @@
         <p class="form-error" id="staff-login-error" hidden></p>
         <button class="btn btn--primary" type="submit">ログイン</button>
       </form>
-      <p class="staff-login-note">デモログインコード：1234</p>
+      <p class="staff-login-note">ログインコードは管理者から案内されたものを入力してください。</p>
     </div>
   </section>
 
