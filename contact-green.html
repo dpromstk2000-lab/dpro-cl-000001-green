@@ -5,7 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#0b5f49">
-  <title>LINE・顧客対応 | DPRO GREEN RENTAL</title>
+  <title>顧客対応 | DPRO GREEN RENTAL</title>
+  <script>
+  (() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("legacy") === "1") return;
+    const target = new URL("owner.html", location.href);
+    if (params.get("dpro_build") === "1") target.searchParams.set("dpro_build", "1");
+    target.searchParams.set("view", "customer-contact");
+    target.hash = "customer-contact";
+    location.replace(target.toString());
+  })();
+  </script>
 
   <link rel="stylesheet" href="contact-green.css?v=DPRO-CONTACT-BASE-R4-20260927">
   <link rel="stylesheet" href="green-contact-standard-r3.css?v=DPRO-CONTACT-STANDARD-R3.4-20260927">

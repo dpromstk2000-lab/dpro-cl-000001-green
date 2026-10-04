@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.1-20261004";
+  const VERSION = "GREEN-CUSTOMER-CONTACT-R1.2-20261004";
   if (window.__GREEN_CUSTOMER_CONTACT_R1__ === VERSION) return;
   window.__GREEN_CUSTOMER_CONTACT_R1__ = VERSION;
 
@@ -511,6 +511,10 @@
   function init() {
     renameNavigation();
     ensureUi();
+    const params = new URLSearchParams(location.search);
+    if (params.get("view") === "customer-contact" || location.hash === "#customer-contact") {
+      setTimeout(activateCustomerContact, 0);
+    }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once:true });

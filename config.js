@@ -36,7 +36,7 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   const SHOP_OWNER_VERSION = "GREEN-SHOP-OWNER-V3.1.3-PENDING-PHOTO-UX-20260927";
   const SHOP_COLLECTIONS_OWNER_VERSION = "GREEN-SHOP-OWNER-DISPLAY-SLOTS-R5.7-DATE-PICKER-VALIDATION-20260929";
   const SHOP_ORDER_WORKFLOW_VERSION = "GREEN-SHOP-OWNER-ORDERS-V3F1.1-20260927";
-  const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";
+  const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.4-CUSTOMER-CONTACT-20261004";
   const OWNER_UX_FIX_VERSION = "GREEN-OWNER-UX-FIX-R2.9-20260915";
   const OWNER_SPECIES_LIST_VERSION = "GREEN-OWNER-ATLAS-SPECIES-MODELS-R1.2-20261003";
   const OWNER_ATLAS_STATUS_VERSION = "GREEN-OWNER-ATLAS-STATUS-R1.0-20261003";
@@ -49,23 +49,9 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   const CARE_OVERDUE_VERSION = "GREEN-CARE-OVERDUE-R33-20260917";
 
   function installContactMenu() {
-    if (!window.GREEN_CONFIG?.CONTACT_ENABLED) return;
-    if (!/\/owner\.html$/.test(location.pathname)) return;
-    const nav = document.querySelector(".owner-nav");
-    if (!nav || document.getElementById("green-contact-menu")) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.id = "green-contact-menu";
-    button.innerHTML = "<span>話</span>LINE・顧客対応";
-    button.setAttribute("aria-label", "LINEで継続中のお客様対応を開く");
-    button.title = "LINEで継続中の会話を確認・返信";
-    button.addEventListener("click", () => {
-      const target = new URL(window.GREEN_CONFIG.CONTACT_URL || "contact-green.html", location.href);
-      if (new URLSearchParams(location.search).get("dpro_build") === "1") target.searchParams.set("dpro_build", "1");
-      location.href = target.toString();
-    });
-    const messageButton = nav.querySelector('[data-view="messages"]');
-    if (messageButton) nav.insertBefore(button, messageButton); else nav.append(button);
+    /* R1.2: LINE is handled inside the unified 顧客対応 view.
+       contact-green.html remains only as an internal maintenance fallback. */
+    document.getElementById("green-contact-menu")?.remove();
   }
 
   function installCustomerHeroAdmin() {

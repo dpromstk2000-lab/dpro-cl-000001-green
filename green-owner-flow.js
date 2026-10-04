@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = "GREEN-OWNER-FLOW-R1.3-INQUIRY-UX-20261002";
+  const VERSION = "GREEN-OWNER-FLOW-R1.4-CUSTOMER-CONTACT-20261004";
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
   const setTextIfChanged = (element, text) => {
@@ -10,15 +10,15 @@
 
   const VIEW_TEXT = Object.freeze({
     inquiries: {
-      nav: "相談受付",
-      title: "相談受付",
-      description: "HP・LINE・電話から届いた新しい相談を確認します。継続して追う相談は「営業案件」へ引き継ぎます。",
-      help: "新しい相談の入口",
+      nav: "顧客対応",
+      title: "顧客対応",
+      description: "WEB・LINE・電話から届いた連絡を一つの窓口で確認し、そのまま対応します。継続して追う案件は「営業案件」へ進めます。",
+      help: "WEB・LINE・電話の統合窓口",
     },
     leads: {
       nav: "営業案件",
       title: "営業案件",
-      description: "相談受付から引き継いだ案件を、次回対応・現地確認・導入準備・成約まで追跡します。",
+      description: "顧客対応から引き継いだ案件を、次回対応・現地確認・導入準備・成約まで追跡します。",
       help: "成約までの進捗管理",
     },
     "site-checks": {
@@ -33,32 +33,34 @@
       help: "成約後のお客様情報",
     },
     messages: {
-      nav: "LINE配信・通知",
-      title: "LINE配信・通知",
-      description: "作業完了などの定型文、通知待ち、送信ログを管理します。個別のLINE会話は「LINE・顧客対応」で確認します。",
+      nav: "通知・送信履歴",
+      title: "通知・送信履歴",
+      description: "作業完了などの定型文、通知待ち、送信ログを管理します。お客様からの個別連絡は「顧客対応」で確認します。",
       help: "定型文・通知ログ",
     },
   });
 
   const TOP_TITLE_MAP = Object.freeze({
-    "問い合わせ": "相談受付",
+    "問い合わせ": "顧客対応",
+    "相談受付": "顧客対応",
     "営業対応": "営業案件",
     "顧客": "顧客台帳",
-    "LINE・メッセージ": "LINE配信・通知",
+    "LINE・メッセージ": "通知・送信履歴",
+    "LINE配信・通知": "通知・送信履歴",
   });
 
   const FLOW_STEPS = Object.freeze([
-    { view: "inquiries", label: "相談受付", note: "新しい相談" },
+    { view: "inquiries", label: "顧客対応", note: "WEB・LINE・電話" },
     { view: "leads", label: "営業案件", note: "成約まで追う" },
     { view: "site-checks", label: "現地確認", note: "設置条件を確認" },
     { view: "customers", label: "顧客台帳", note: "成約後を管理" },
   ]);
 
   const GROUPS = Object.freeze([
-    { label: "新規相談・営業", keys: ["inquiries", "leads", "site-checks"] },
+    { label: "顧客対応・営業", keys: ["inquiries", "leads", "site-checks"] },
     { label: "顧客・契約", keys: ["customers", "contracts", "sites"] },
     { label: "レンタル・現場", keys: ["assets", "installations", "visits", "reports", "replacements"] },
-    { label: "コミュニケーション", keys: ["contact", "messages"] },
+    { label: "コミュニケーション", keys: ["messages"] },
     { label: "販売・在庫", keys: ["stock", "shop"] },
     { label: "店舗設定", keys: ["facility-settings", "business-calendar", "announcements", "features"] },
   ]);
@@ -81,7 +83,7 @@
     for (const [view, meta] of Object.entries(VIEW_TEXT)) {
       setButtonLabel(navNode(view), meta.nav, meta.help || "");
     }
-    setButtonLabel($("#green-contact-menu"), "LINE・顧客対応", "LINEで継続中の会話を確認・返信");
+    $("#green-contact-menu")?.remove();
     setButtonLabel($("#green-shop-nav"), "販売・SHOP", "商品登録・オンライン注文・販売管理");
   }
 
@@ -186,28 +188,22 @@
       <div class="owner-role-guide__grid">
         <button type="button" data-role-go="inquiries">
           <span class="owner-role-guide__number">1</span>
-          <strong>相談受付</strong>
-          <small>HP・LINE・電話から届いた最初の相談</small>
+          <strong>顧客対応</strong>
+          <small>WEB・LINE・電話の連絡を確認・返信</small>
         </button>
         <button type="button" data-role-go="leads">
           <span class="owner-role-guide__number">2</span>
           <strong>営業案件</strong>
           <small>ヒアリング・現地確認・成約までの進捗</small>
         </button>
-        <button type="button" data-role-go="contact">
+        <button type="button" data-role-go="customers">
           <span class="owner-role-guide__number">3</span>
-          <strong>LINE・顧客対応</strong>
-          <small>LINEで継続中の会話を確認・返信</small>
+          <strong>顧客台帳</strong>
+          <small>成約後・利用中のお客様情報</small>
         </button>
       </div>`;
     $$("[data-role-go]", box).forEach((button) => {
-      button.addEventListener("click", () => {
-        if (button.dataset.roleGo === "contact") {
-          location.href = window.GREEN_CONFIG?.CONTACT_URL || "contact-green.html";
-          return;
-        }
-        clickView(button.dataset.roleGo);
-      });
+      button.addEventListener("click", () => clickView(button.dataset.roleGo));
     });
     return box;
   }
@@ -245,7 +241,7 @@
 
     const loginLead = $(".owner-login-card > p:not(.eyebrow):not(.owner-login-note)");
     if (loginLead) {
-      loginLead.textContent = "相談受付、営業案件、顧客台帳、現地確認、レンタル業務を仕事の流れに沿ってまとめて管理します。";
+      loginLead.textContent = "顧客対応、営業案件、顧客台帳、現地確認、レンタル業務を仕事の流れに沿ってまとめて管理します。";
     }
 
     $$('[data-action="phone-inquiry"]').forEach((button) => {
@@ -275,8 +271,9 @@
     if (!dashboard) return;
     $$("small,strong,button", dashboard).forEach((el) => {
       const text = el.textContent.trim();
-      if (text === "新着問い合わせ") el.textContent = "新着相談";
-      if (text === "問い合わせ") el.textContent = "相談受付";
+      if (text === "新着問い合わせ") el.textContent = "新着顧客対応";
+      if (text === "新着相談") el.textContent = "新着顧客対応";
+      if (text === "問い合わせ") el.textContent = "顧客対応";
       if (text === "電話問い合わせを登録") el.textContent = "電話相談を登録";
     });
   }
@@ -379,9 +376,10 @@
 
     if (title) {
       let text = title.textContent.trim();
-      if (text === "問い合わせ詳細") text = "相談受付詳細";
+      if (text === "問い合わせ詳細") text = "顧客対応詳細";
+      else if (text === "相談受付詳細") text = "顧客対応詳細";
       else if (text === "電話問い合わせを登録") text = "電話相談を登録";
-      else if (text.startsWith("問い合わせ ")) text = text.replace(/^問い合わせ /, "相談受付 ");
+      else if (text.startsWith("問い合わせ ")) text = text.replace(/^問い合わせ /, "顧客対応 ");
       setTextIfChanged(title, text);
     }
 
@@ -425,7 +423,8 @@
     nodes.forEach((node) => {
       const current = node.nodeValue || "";
       const next = current
-        .replaceAll("問い合わせを更新しました", "相談受付を更新しました")
+        .replaceAll("問い合わせを更新しました", "顧客対応を更新しました")
+        .replaceAll("相談受付を更新しました", "顧客対応を更新しました")
         .replaceAll("問い合わせ", "相談");
       if (next !== current) node.nodeValue = next;
     });
@@ -439,10 +438,11 @@
       nodes.forEach((node) => {
         let text = node.nodeValue || "";
         text = text
-          .replaceAll("問い合わせ", "相談受付")
+          .replaceAll("問い合わせ", "顧客対応")
+          .replaceAll("相談受付", "顧客対応")
           .replaceAll("営業対応", "営業案件")
           .replaceAll("「顧客」", "「顧客台帳」")
-          .replaceAll("顧客対応", "LINE・顧客対応");
+          .replaceAll("LINE・顧客対応", "顧客対応");
         if (text !== node.nodeValue) node.nodeValue = text;
       });
     });
