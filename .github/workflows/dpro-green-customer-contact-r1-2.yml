@@ -1,0 +1,392 @@
+name: DPRO GREEN Customer Contact R1.2
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GREEN production
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard audited baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD:config.js)" = "2c8d0d2fff6c41ffb138f87b26486d136ee2c21d"
+          test "$(git rev-parse HEAD:green-owner-flow.js)" = "0d058be17910ce32d3a13a2f63f22bc19515214b"
+          test "$(git rev-parse HEAD:owner.html)" = "43d3353516bd465e6fa88e46c17fdb9b0ec4aa2f"
+          test "$(git rev-parse HEAD:green-customer-contact-r1.js)" = "ec034abf8e6b5f3e9eaeb80545501eef7cba5fc1"
+          test "$(git rev-parse HEAD:contact-green.html)" = "eef2c9b84786e856856a0edcf21049e7308a90c5"
+          echo "CUSTOMER CONTACT R1.2 AUDITED BASELINE PASS"
+
+      - name: Apply customer contact R1.2
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  if new in text:
+                      return text
+                  raise SystemExit(f"{label}: anchor not found")
+              return text.replace(old, new, 1)
+
+          # config.js
+          p = Path("config.js")
+          s = p.read_text(encoding="utf-8")
+          s = replace_once(
+              s,
+              'const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.2-20260901";',
+              'const OWNER_FLOW_VERSION = "GREEN-OWNER-FLOW-R1.4-CUSTOMER-CONTACT-20261004";',
+              "owner flow version"
+          )
+
+          old_contact_menu = '''  function installContactMenu() {
+              if (!window.GREEN_CONFIG?.CONTACT_ENABLED) return;
+              if (!/\\/owner\\.html$/.test(location.pathname)) return;
+              const nav = document.querySelector(".owner-nav");
+              if (!nav || document.getElementById("green-contact-menu")) return;
+              const button = document.createElement("button");
+              button.type = "button";
+              button.id = "green-contact-menu";
+              button.innerHTML = "<span>話</span>LINE・顧客対応";
+              button.setAttribute("aria-label", "LINEで継続中のお客様対応を開く");
+              button.title = "LINEで継続中の会話を確認・返信";
+              button.addEventListener("click", () => {
+                const target = new URL(window.GREEN_CONFIG.CONTACT_URL || "contact-green.html", location.href);
+                if (new URLSearchParams(location.search).get("dpro_build") === "1") target.searchParams.set("dpro_build", "1");
+                location.href = target.toString();
+              });
+              const messageButton = nav.querySelector('[data-view="messages"]');
+              if (messageButton) nav.insertBefore(button, messageButton); else nav.append(button);
+            }'''
+
+          new_contact_menu = '''  function installContactMenu() {
+              /* R1.2: LINE is handled inside the unified 顧客対応 view.
+                 contact-green.html remains only as an internal maintenance fallback. */
+              document.getElementById("green-contact-menu")?.remove();
+            }'''
+
+          s = replace_once(s, old_contact_menu, new_contact_menu, "legacy contact nav installer")
+          p.write_text(s, encoding="utf-8")
+
+          # green-owner-flow.js
+          p = Path("green-owner-flow.js")
+          s = p.read_text(encoding="utf-8")
+
+          repls = [
+          (
+          'const VERSION = "GREEN-OWNER-FLOW-R1.3-INQUIRY-UX-20261002";',
+          'const VERSION = "GREEN-OWNER-FLOW-R1.4-CUSTOMER-CONTACT-20261004";',
+          "flow version"
+          ),
+          (
+          '''    inquiries: {
+                nav: "相談受付",
+                title: "相談受付",
+                description: "HP・LINE・電話から届いた新しい相談を確認します。継続して追う相談は「営業案件」へ引き継ぎます。",
+                help: "新しい相談の入口",
+              },''',
+          '''    inquiries: {
+                nav: "顧客対応",
+                title: "顧客対応",
+                description: "WEB・LINE・電話から届いた連絡を一つの窓口で確認し、そのまま対応します。継続して追う案件は「営業案件」へ進めます。",
+                help: "WEB・LINE・電話の統合窓口",
+              },''',
+          "flow inquiry view"
+          ),
+          (
+          'description: "相談受付から引き継いだ案件を、次回対応・現地確認・導入準備・成約まで追跡します。",',
+          'description: "顧客対応から引き継いだ案件を、次回対応・現地確認・導入準備・成約まで追跡します。",',
+          "lead description"
+          ),
+          (
+          '''    messages: {
+                nav: "LINE配信・通知",
+                title: "LINE配信・通知",
+                description: "作業完了などの定型文、通知待ち、送信ログを管理します。個別のLINE会話は「LINE・顧客対応」で確認します。",
+                help: "定型文・通知ログ",
+              },''',
+          '''    messages: {
+                nav: "通知・送信履歴",
+                title: "通知・送信履歴",
+                description: "作業完了などの定型文、通知待ち、送信ログを管理します。お客様からの個別連絡は「顧客対応」で確認します。",
+                help: "定型文・通知ログ",
+              },''',
+          "messages view"
+          ),
+          (
+          '''  const TOP_TITLE_MAP = Object.freeze({
+              "問い合わせ": "相談受付",
+              "営業対応": "営業案件",
+              "顧客": "顧客台帳",
+              "LINE・メッセージ": "LINE配信・通知",
+            });''',
+          '''  const TOP_TITLE_MAP = Object.freeze({
+              "問い合わせ": "顧客対応",
+              "相談受付": "顧客対応",
+              "営業対応": "営業案件",
+              "顧客": "顧客台帳",
+              "LINE・メッセージ": "通知・送信履歴",
+              "LINE配信・通知": "通知・送信履歴",
+            });''',
+          "top title map"
+          ),
+          (
+          '''  const FLOW_STEPS = Object.freeze([
+              { view: "inquiries", label: "相談受付", note: "新しい相談" },
+              { view: "leads", label: "営業案件", note: "成約まで追う" },
+              { view: "site-checks", label: "現地確認", note: "設置条件を確認" },
+              { view: "customers", label: "顧客台帳", note: "成約後を管理" },
+            ]);''',
+          '''  const FLOW_STEPS = Object.freeze([
+              { view: "inquiries", label: "顧客対応", note: "WEB・LINE・電話" },
+              { view: "leads", label: "営業案件", note: "成約まで追う" },
+              { view: "site-checks", label: "現地確認", note: "設置条件を確認" },
+              { view: "customers", label: "顧客台帳", note: "成約後を管理" },
+            ]);''',
+          "flow steps"
+          ),
+          (
+          '''  const GROUPS = Object.freeze([
+              { label: "新規相談・営業", keys: ["inquiries", "leads", "site-checks"] },
+              { label: "顧客・契約", keys: ["customers", "contracts", "sites"] },
+              { label: "レンタル・現場", keys: ["assets", "installations", "visits", "reports", "replacements"] },
+              { label: "コミュニケーション", keys: ["contact", "messages"] },
+              { label: "販売・在庫", keys: ["stock", "shop"] },
+              { label: "店舗設定", keys: ["facility-settings", "business-calendar", "announcements", "features"] },
+            ]);''',
+          '''  const GROUPS = Object.freeze([
+              { label: "顧客対応・営業", keys: ["inquiries", "leads", "site-checks"] },
+              { label: "顧客・契約", keys: ["customers", "contracts", "sites"] },
+              { label: "レンタル・現場", keys: ["assets", "installations", "visits", "reports", "replacements"] },
+              { label: "コミュニケーション", keys: ["messages"] },
+              { label: "販売・在庫", keys: ["stock", "shop"] },
+              { label: "店舗設定", keys: ["facility-settings", "business-calendar", "announcements", "features"] },
+            ]);''',
+          "flow groups"
+          ),
+          (
+          '''    setButtonLabel($("#green-contact-menu"), "LINE・顧客対応", "LINEで継続中の会話を確認・返信");
+              setButtonLabel($("#green-shop-nav"), "販売・SHOP", "商品登録・オンライン注文・販売管理");''',
+          '''    $("#green-contact-menu")?.remove();
+              setButtonLabel($("#green-shop-nav"), "販売・SHOP", "商品登録・オンライン注文・販売管理");''',
+          "sync nav labels"
+          ),
+          (
+          '''        <button type="button" data-role-go="inquiries">
+                    <span class="owner-role-guide__number">1</span>
+                    <strong>相談受付</strong>
+                    <small>HP・LINE・電話から届いた最初の相談</small>
+                  </button>
+                  <button type="button" data-role-go="leads">
+                    <span class="owner-role-guide__number">2</span>
+                    <strong>営業案件</strong>
+                    <small>ヒアリング・現地確認・成約までの進捗</small>
+                  </button>
+                  <button type="button" data-role-go="contact">
+                    <span class="owner-role-guide__number">3</span>
+                    <strong>LINE・顧客対応</strong>
+                    <small>LINEで継続中の会話を確認・返信</small>
+                  </button>
+                </div>`;
+              $$("[data-role-go]", box).forEach((button) => {
+                button.addEventListener("click", () => {
+                  if (button.dataset.roleGo === "contact") {
+                    location.href = window.GREEN_CONFIG?.CONTACT_URL || "contact-green.html";
+                    return;
+                  }
+                  clickView(button.dataset.roleGo);
+                });
+              });''',
+          '''        <button type="button" data-role-go="inquiries">
+                    <span class="owner-role-guide__number">1</span>
+                    <strong>顧客対応</strong>
+                    <small>WEB・LINE・電話の連絡を確認・返信</small>
+                  </button>
+                  <button type="button" data-role-go="leads">
+                    <span class="owner-role-guide__number">2</span>
+                    <strong>営業案件</strong>
+                    <small>ヒアリング・現地確認・成約までの進捗</small>
+                  </button>
+                  <button type="button" data-role-go="customers">
+                    <span class="owner-role-guide__number">3</span>
+                    <strong>顧客台帳</strong>
+                    <small>成約後・利用中のお客様情報</small>
+                  </button>
+                </div>`;
+              $$("[data-role-go]", box).forEach((button) => {
+                button.addEventListener("click", () => clickView(button.dataset.roleGo));
+              });''',
+          "role guide"
+          ),
+          (
+          'loginLead.textContent = "相談受付、営業案件、顧客台帳、現地確認、レンタル業務を仕事の流れに沿ってまとめて管理します。";',
+          'loginLead.textContent = "顧客対応、営業案件、顧客台帳、現地確認、レンタル業務を仕事の流れに沿ってまとめて管理します。";',
+          "login lead"
+          ),
+          (
+          '''      if (text === "新着問い合わせ") el.textContent = "新着相談";
+                if (text === "問い合わせ") el.textContent = "相談受付";''',
+          '''      if (text === "新着問い合わせ") el.textContent = "新着顧客対応";
+                if (text === "新着相談") el.textContent = "新着顧客対応";
+                if (text === "問い合わせ") el.textContent = "顧客対応";''',
+          "dashboard wording"
+          ),
+          (
+          '''      if (text === "問い合わせ詳細") text = "相談受付詳細";
+                else if (text === "電話問い合わせを登録") text = "電話相談を登録";
+                else if (text.startsWith("問い合わせ ")) text = text.replace(/^問い合わせ /, "相談受付 ");''',
+          '''      if (text === "問い合わせ詳細") text = "顧客対応詳細";
+                else if (text === "相談受付詳細") text = "顧客対応詳細";
+                else if (text === "電話問い合わせを登録") text = "電話相談を登録";
+                else if (text.startsWith("問い合わせ ")) text = text.replace(/^問い合わせ /, "顧客対応 ");''',
+          "dialog wording"
+          ),
+          (
+          '''.replaceAll("問い合わせを更新しました", "相談受付を更新しました")
+                  .replaceAll("問い合わせ", "相談");''',
+          '''.replaceAll("問い合わせを更新しました", "顧客対応を更新しました")
+                  .replaceAll("相談受付を更新しました", "顧客対応を更新しました")
+                  .replaceAll("問い合わせ", "相談");''',
+          "toast wording"
+          ),
+          (
+          '''        text = text
+                    .replaceAll("問い合わせ", "相談受付")
+                    .replaceAll("営業対応", "営業案件")
+                    .replaceAll("「顧客」", "「顧客台帳」")
+                    .replaceAll("顧客対応", "LINE・顧客対応");''',
+          '''        text = text
+                    .replaceAll("問い合わせ", "顧客対応")
+                    .replaceAll("相談受付", "顧客対応")
+                    .replaceAll("営業対応", "営業案件")
+                    .replaceAll("「顧客」", "「顧客台帳」")
+                    .replaceAll("LINE・顧客対応", "顧客対応");''',
+          "guide wording"
+          ),
+          ]
+
+          for old, new, label in repls:
+              s = replace_once(s, old, new, label)
+
+          p.write_text(s, encoding="utf-8")
+
+          # owner.html cache busts
+          p = Path("owner.html")
+          s = p.read_text(encoding="utf-8")
+          s = replace_once(
+              s,
+              'config.js?v=GREEN-OWNER-R5.9-SITE-CHECK-NATIVE-TABS-20260929',
+              'config.js?v=GREEN-CUSTOMER-CONTACT-R1.2-20261004',
+              "owner config cache bust"
+          )
+          s = s.replace(
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.1-20261004",
+              "green-customer-contact-r1.js?v=GREEN-CUSTOMER-CONTACT-R1.2-20261004"
+          )
+          p.write_text(s, encoding="utf-8")
+
+          # unified customer contact supports direct view
+          p = Path("green-customer-contact-r1.js")
+          s = p.read_text(encoding="utf-8")
+          s = replace_once(
+              s,
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.1-20261004";',
+              'const VERSION = "GREEN-CUSTOMER-CONTACT-R1.2-20261004";',
+              "customer contact version"
+          )
+          old_init = '''  function init() {
+              renameNavigation();
+              ensureUi();
+            }'''
+          new_init = '''  function init() {
+              renameNavigation();
+              ensureUi();
+              const params = new URLSearchParams(location.search);
+              if (params.get("view") === "customer-contact" || location.hash === "#customer-contact") {
+                setTimeout(activateCustomerContact, 0);
+              }
+            }'''
+          s = replace_once(s, old_init, new_init, "customer contact direct view")
+          p.write_text(s, encoding="utf-8")
+
+          # legacy LINE-only page redirects to the unified view unless explicitly opened for maintenance
+          p = Path("contact-green.html")
+          s = p.read_text(encoding="utf-8")
+          redirect = '''  <script>
+            (() => {
+              const params = new URLSearchParams(location.search);
+              if (params.get("legacy") === "1") return;
+              const target = new URL("owner.html", location.href);
+              if (params.get("dpro_build") === "1") target.searchParams.set("dpro_build", "1");
+              target.searchParams.set("view", "customer-contact");
+              target.hash = "customer-contact";
+              location.replace(target.toString());
+            })();
+            </script>
+          '''
+          if 'params.get("legacy") === "1"' not in s:
+              s = s.replace(
+                  '  <title>LINE・顧客対応 | DPRO GREEN RENTAL</title>\n',
+                  '  <title>顧客対応 | DPRO GREEN RENTAL</title>\n' + redirect,
+                  1
+              )
+          p.write_text(s, encoding="utf-8")
+          PY
+
+      - name: Static validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check config.js
+          node --check green-owner-flow.js
+          node --check green-customer-contact-r1.js
+
+          grep -q 'GREEN-OWNER-FLOW-R1.4-CUSTOMER-CONTACT-20261004' config.js
+          grep -q 'GREEN-OWNER-FLOW-R1.4-CUSTOMER-CONTACT-20261004' green-owner-flow.js
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.2-20261004' green-customer-contact-r1.js
+          grep -q 'GREEN-CUSTOMER-CONTACT-R1.2-20261004' owner.html
+
+          grep -q 'nav: "顧客対応"' green-owner-flow.js
+          grep -q 'nav: "通知・送信履歴"' green-owner-flow.js
+          grep -q 'label: "顧客対応・営業"' green-owner-flow.js
+          grep -q 'keys: \["messages"\]' green-owner-flow.js
+
+          ! grep -q 'setButtonLabel($("#green-contact-menu"), "LINE・顧客対応"' green-owner-flow.js
+          ! grep -q 'keys: \["contact", "messages"\]' green-owner-flow.js
+          ! grep -q 'button.innerHTML = "<span>話</span>LINE・顧客対応"' config.js
+
+          grep -q 'document.getElementById("green-contact-menu")?.remove();' config.js
+          grep -q 'params.get("view") === "customer-contact"' green-customer-contact-r1.js
+          grep -q 'params.get("legacy") === "1"' contact-green.html
+          grep -q 'target.searchParams.set("view", "customer-contact")' contact-green.html
+
+          grep -q 'const EMAIL_READY = false' green-customer-contact-r1.js
+          grep -q 'function lineAttachmentHtml' green-customer-contact-r1.js
+          grep -q 'item.inquiry?.status || item.raw?.status || "new"' green-customer-contact-r1.js
+
+          git diff --check
+          echo "GREEN CUSTOMER CONTACT R1.2 STATIC QA PASS"
+
+      - name: Commit R1.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "DPRO GREEN CUSTOMER CONTACT R1.2"
+          git config user.email "actions@users.noreply.github.com"
+          git add config.js green-owner-flow.js owner.html green-customer-contact-r1.js contact-green.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Unify GREEN customer contact navigation R1.2"
+          git push origin HEAD:main
