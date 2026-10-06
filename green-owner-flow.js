@@ -62,7 +62,7 @@
     { label: "レンタル・現場", keys: ["assets", "installations", "visits", "reports", "replacements"] },
     { label: "コミュニケーション", keys: ["messages"] },
     { label: "販売・在庫", keys: ["stock", "shop"] },
-    { label: "店舗設定", keys: ["facility-settings", "business-calendar", "announcements", "features"] },
+    { label: "店舗設定", keys: ["facility-settings", "business-calendar", "announcements", "blog", "features"] },
   ]);
 
   function navNode(key) {

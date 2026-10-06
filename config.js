@@ -114,3 +114,28 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   function boot(){ installContactMenu(); installCustomerHeroAdmin(); installTutorialRuntime(); installShopModule(); installShopCollectionsOwner(); installShopOrderWorkflow(); installOwnerFlowClarity(); installOwnerUxFix(); installOwnerSpeciesList(); installOwnerAtlasStatus(); installOwnerJstDatetimeFix(); installAnnouncementJstFix(); installLineAccess(); installBrushupR30(); installStaffManagementR31(); installInstallationUiR32(); installCareOverdueR33(); installContactFlowCopy(); }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
 })();
+
+/* GREEN BLOG CMS OWNER R1 / GREEN-BLOG-CMS-OWNER-R1-20261006 */
+(() => {
+  "use strict";
+  const VERSION = "GREEN-BLOG-CMS-OWNER-R1-20261006";
+  if (!/\/owner\.html$/i.test(location.pathname)) return;
+  if (!document.querySelector("link[data-green-blog-cms-owner]")) {
+    const css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = `green-owner-blog-r1.css?v=${VERSION}`;
+    css.dataset.greenBlogCmsOwner = VERSION;
+    document.head.append(css);
+  }
+  const install = () => {
+    if (document.querySelector("script[data-green-blog-cms-owner]")) return;
+    const script = document.createElement("script");
+    script.src = `green-owner-blog-r1.js?v=${VERSION}`;
+    script.defer = true;
+    script.dataset.greenBlogCmsOwner = VERSION;
+    document.head.append(script);
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, { once:true });
+  else install();
+})();
+
