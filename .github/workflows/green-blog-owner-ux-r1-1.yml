@@ -1,0 +1,88 @@
+name: DPRO GREEN Blog Owner UX R1.1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Polish blog owner UX
+        shell: python
+        run: |
+          from pathlib import Path
+
+          js_path = Path("green-owner-blog-r1.js")
+          js = js_path.read_text(encoding="utf-8")
+
+          old = "${item.publishedAt?`<span>公開 ${esc(fmtDate(item.publishedAt))}</span>`:''}"
+          new = "${item.status==='published'&&item.publishedAt?`<span>公開 ${esc(fmtDate(item.publishedAt))}</span>`:''}"
+          if old in js:
+              js = js.replace(old, new, 1)
+
+          old = '<button type="button" class="btn btn--primary" id="green-blog-save">保存</button>'
+          new = '<button type="button" class="btn btn--primary" id="green-blog-save">下書きを保存</button>'
+          if old in js:
+              js = js.replace(old, new, 1)
+
+          old = '$("#green-blog-save").addEventListener(\'click\',save);'
+          new = """const saveBtn=$("#green-blog-save");
+              const syncSaveLabel=()=>{const s=value(form,'status');saveBtn.textContent=s==='published'?'公開して保存':s==='archived'?'非公開で保存':'下書きを保存';};
+              form.elements.status.addEventListener('change',syncSaveLabel);syncSaveLabel();
+              saveBtn.addEventListener('click',save);"""
+          if old in js:
+              js = js.replace(old, new, 1)
+
+          old = "const status=value(form,'status');let publishedAt=value(form,'publishedAt');if(status==='published'&&!publishedAt)publishedAt=new Date().toISOString();"
+          new = """const status=value(form,'status');
+              if(status==='published' && state.editing?.status!=='published' && !confirm('この記事をホームページへ公開しますか？')) return;
+              let publishedAt=value(form,'publishedAt');if(status==='published'&&!publishedAt)publishedAt=new Date().toISOString();"""
+          if old in js:
+              js = js.replace(old, new, 1)
+
+          old = "}finally{btn.disabled=false;btn.textContent='保存';}"
+          new = "}finally{btn.disabled=false;const s=value(form,'status');btn.textContent=s==='published'?'公開して保存':s==='archived'?'非公開で保存':'下書きを保存';}"
+          if old in js:
+              js = js.replace(old, new, 1)
+
+          js_path.write_text(js, encoding="utf-8")
+
+          for path in [Path("config.js"), Path("owner.html")]:
+              text = path.read_text(encoding="utf-8")
+              text = text.replace("GREEN-BLOG-CMS-OWNER-R1-20261006", "GREEN-BLOG-CMS-OWNER-R1.1-20261006")
+              path.write_text(text, encoding="utf-8")
+
+      - name: Validate
+        shell: bash
+        run: |
+          node --check green-owner-blog-r1.js
+          node --check config.js
+          grep -q "下書きを保存" green-owner-blog-r1.js
+          grep -q "公開して保存" green-owner-blog-r1.js
+          grep -q "ホームページへ公開しますか" green-owner-blog-r1.js
+          grep -q "item.status==='published'" green-owner-blog-r1.js
+          grep -q "GREEN-BLOG-CMS-OWNER-R1.1-20261006" config.js
+          grep -q "GREEN-BLOG-CMS-OWNER-R1.1-20261006" owner.html
+
+      - name: Remove installer workflow
+        shell: bash
+        run: rm -f .github/workflows/green-blog-owner-ux-r1-1.yml
+
+      - name: Commit and push
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Polish GREEN blog owner UX R1.1"
+          git push
