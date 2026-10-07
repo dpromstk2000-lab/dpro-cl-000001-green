@@ -115,10 +115,10 @@ window.DPRO_CUSTOMER_HERO_CONFIG = window.GREEN_CONFIG.CUSTOMER_HERO;
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot,{once:true}); else boot();
 })();
 
-/* GREEN BLOG CMS OWNER R1 / GREEN-BLOG-CMS-OWNER-R1.2-20261006 */
+/* GREEN BLOG CMS OWNER R1 / GREEN-BLOG-CMS-OWNER-R1.3-SCHEDULE-20261007 */
 (() => {
   "use strict";
-  const VERSION = "GREEN-BLOG-CMS-OWNER-R1.2-20261006";
+  const VERSION = "GREEN-BLOG-CMS-OWNER-R1.3-SCHEDULE-20261007";
   if (!/\/owner\.html$/i.test(location.pathname)) return;
   if (!document.querySelector("link[data-green-blog-cms-owner]")) {
     const css = document.createElement("link");

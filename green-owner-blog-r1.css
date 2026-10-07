@@ -46,3 +46,20 @@
   .green-blog-form.is-body-expanded .green-blog-body-field textarea{min-height:66vh}
   .green-blog-body-expand{width:100%}
 }
+
+
+/* GREEN BLOG SCHEDULE R1.3 */
+.green-blog-pill.scheduled{background:#e7edff;color:#3458a1}
+.green-blog-schedule-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:12px;
+  border:1px solid #d5e2dc;
+  border-radius:12px;
+  background:#f7faf8;
+}
+.green-blog-schedule-fields[hidden]{display:none!important}
+@media(max-width:760px){
+  .green-blog-schedule-fields{grid-template-columns:1fr}
+}
