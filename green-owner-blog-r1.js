@@ -1,6 +1,6 @@
 (() => {
   "use strict";
-  const VERSION = "GREEN-OWNER-BLOG-R1.3-SCHEDULE-20261007";
+  const VERSION = "GREEN-OWNER-BLOG-R1.3.1-SCHEDULE-FIX-20261007";
   if (window.__GREEN_OWNER_BLOG_R1__ === VERSION) return;
   window.__GREEN_OWNER_BLOG_R1__ = VERSION;
 
@@ -125,8 +125,21 @@
       const scheduled=value(form,'status')==='scheduled';
       scheduleBox.hidden=!scheduled;
       form.elements.scheduleDate.required=scheduled;
-      if(scheduled&&!form.elements.scheduleDate.value)form.elements.scheduleDate.value=tomorrowJst();
-      if(scheduled&&!form.elements.scheduleTime.value)form.elements.scheduleTime.value='09:00';
+      if(scheduled){
+        const currentDate=form.elements.scheduleDate.value;
+        const currentTime=form.elements.scheduleTime.value||'09:00';
+        let invalid=!currentDate;
+        if(currentDate){
+          const planned=new Date(`${currentDate}T${currentTime}:00+09:00`);
+          invalid=Number.isNaN(planned.getTime())||planned.getTime()<=Date.now();
+        }
+        if(invalid){
+          form.elements.scheduleDate.value=tomorrowJst();
+          form.elements.scheduleTime.value='09:00';
+        }else if(!form.elements.scheduleTime.value){
+          form.elements.scheduleTime.value='09:00';
+        }
+      }
     };
     const syncSaveLabel=()=>{const s=value(form,'status');saveBtn.textContent=s==='scheduled'?'予約を保存':s==='published'?'公開して保存':s==='archived'?'非公開で保存':'下書きを保存';};
     form.elements.status.addEventListener('change',()=>{syncSchedule();syncSaveLabel();});syncSchedule();syncSaveLabel();
